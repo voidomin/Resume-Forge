@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  profile   Profile?
+  resumes   Resume[]
+}
+
+model Profile {
+  id           String       @id @default(uuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Personal Info (stored as JSON)
+  firstName    String
+  lastName     String
+  email        String
+  phone        String?
+  location     String?
+  linkedin     String?
+  github       String?
+  portfolio    String?
+  
+  // Professional Summary
+  summary      String?
+  
+  // Related data
+  experiences  Experience[]
+  education    Education[]
+  skills       Skill[]
+  
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Experience {
+  id               String   @id @default(uuid())
+  profileId        String
+  profile          Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  company          String
+  role             String
+  location         String?
+  startDate        String
+  endDate          String?
+  current          Boolean  @default(false)
+  bullets          String   // JSON array of bullet points
+  keywords         String?  // JSON array of keywords for matching
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Education {
+  id          String   @id @default(uuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  institution String
+  degree      String
+  field       String
+  location    String?
+  startDate   String?
+  endDate     String?
+  gpa         String?
+  achievements String? // JSON array
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Skill {
+  id          String   @id @default(uuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name        String
+  category    String   // technical, soft, tool, language
+  proficiency String?  // beginner, intermediate, advanced, expert
+  createdAt   DateTime @default(now())
+}
+
+model Resume {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  jobDescription  String?
+  targetRole      String?
+  generatedContent String  // JSON - the generated resume content
+  atsScore        Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
