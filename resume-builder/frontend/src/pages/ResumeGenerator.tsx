@@ -37,6 +37,17 @@ interface GeneratedResume {
     gpa?: string;
   }[];
   skills: string[];
+  projects?: {
+    name: string;
+    description: string;
+    technologies?: string;
+    link?: string;
+  }[];
+  certifications?: {
+    name: string;
+    issuer: string;
+    date?: string;
+  }[];
   atsScore: number;
   atsScoreBreakdown?: {
     keywordMatch: number;

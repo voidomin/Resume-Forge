@@ -5,6 +5,8 @@ import {
   Briefcase,
   GraduationCap,
   Code,
+  Award,
+  Folder,
   Plus,
   Trash2,
   Save,
@@ -46,6 +48,22 @@ interface Skill {
   id?: string;
   name: string;
   category: string;
+}
+
+interface Project {
+  id?: string;
+  name: string;
+  description: string;
+  link: string;
+  technologies: string;
+}
+
+interface Certification {
+  id?: string;
+  name: string;
+  issuer: string;
+  date: string;
+  link: string;
 }
 
 interface ProfileData {
@@ -92,9 +110,28 @@ const INITIAL_EDUCATION: Education = {
   gpa: "",
 };
 
+const INITIAL_PROJECT: Project = {
+  name: "",
+  description: "",
+  link: "",
+  technologies: "",
+};
+
+const INITIAL_CERTIFICATION: Certification = {
+  name: "",
+  issuer: "",
+  date: "",
+  link: "",
+};
+
 function ProfileEdit() {
   const [activeTab, setActiveTab] = useState<
-    "personal" | "experience" | "education" | "skills"
+    | "personal"
+    | "experience"
+    | "education"
+    | "skills"
+    | "projects"
+    | "certifications"
   >("personal");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -103,8 +140,12 @@ function ProfileEdit() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [education, setEducation] = useState<Education[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
   const [newSkill, setNewSkill] = useState("");
   const [expandedExp, setExpandedExp] = useState<number | null>(null);
+  const [expandedProject, setExpandedProject] = useState<number | null>(null);
+  const [expandedCert, setExpandedCert] = useState<number | null>(null);
 
   // Resume upload states
   const [uploading, setUploading] = useState(false);
@@ -198,9 +239,38 @@ function ProfileEdit() {
           portfolio: data.portfolio || "",
           summary: data.summary || "",
         });
-        setExperiences(data.experiences || []);
-        setEducation(data.education || []);
+        setExperiences(
+          (data.experiences || []).map((exp: any) => ({
+            ...exp,
+            location: exp.location || "",
+            endDate: exp.endDate || "",
+          })),
+        );
+        setEducation(
+          (data.education || []).map((edu: any) => ({
+            ...edu,
+            location: edu.location || "",
+            startDate: edu.startDate || "",
+            endDate: edu.endDate || "",
+            gpa: edu.gpa || "",
+          })),
+        );
         setSkills(data.skills || []);
+        setProjects(
+          (data.projects || []).map((p: any) => ({
+            ...p,
+            description: p.description || "",
+            technologies: p.technologies || "",
+            link: p.link || "",
+          })),
+        );
+        setCertifications(
+          (data.certifications || []).map((c: any) => ({
+            ...c,
+            date: c.date || "",
+            link: c.link || "",
+          })),
+        );
       }
     } catch (error) {
       console.error("Failed to fetch profile:", error);
@@ -274,6 +344,8 @@ function ProfileEdit() {
         experiences: experiences,
         education: education,
         skills: skills,
+        projects: projects,
+        certifications: certifications,
       });
       toast.success("Experiences saved!");
     } catch (error) {
@@ -309,6 +381,8 @@ function ProfileEdit() {
         experiences: experiences,
         education: education,
         skills: skills,
+        projects: projects,
+        certifications: certifications,
       });
       toast.success("Education saved!");
     } catch (error) {
@@ -335,6 +409,84 @@ function ProfileEdit() {
       toast.success("Skills saved!");
     } catch (error) {
       toast.error("Failed to save skills");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- Projects Helpers ---
+  const addProject = () => {
+    setProjects([...projects, { ...INITIAL_PROJECT }]);
+    setExpandedProject(projects.length);
+  };
+
+  const updateProject = (
+    index: number,
+    field: keyof Project,
+    value: string,
+  ) => {
+    const updated = [...projects];
+    updated[index] = { ...updated[index], [field]: value };
+    setProjects(updated);
+  };
+
+  const removeProject = (index: number) => {
+    setProjects(projects.filter((_, i) => i !== index));
+  };
+
+  const saveProjects = async () => {
+    setSaving(true);
+    try {
+      await api.post("/profile/import", {
+        ...profile,
+        experiences,
+        education,
+        skills,
+        projects,
+        certifications,
+      });
+      toast.success("Projects saved!");
+    } catch (error) {
+      toast.error("Failed to save projects");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- Certifications Helpers ---
+  const addCertification = () => {
+    setCertifications([...certifications, { ...INITIAL_CERTIFICATION }]);
+    setExpandedCert(certifications.length);
+  };
+
+  const updateCertification = (
+    index: number,
+    field: keyof Certification,
+    value: string,
+  ) => {
+    const updated = [...certifications];
+    updated[index] = { ...updated[index], [field]: value };
+    setCertifications(updated);
+  };
+
+  const removeCertification = (index: number) => {
+    setCertifications(certifications.filter((_, i) => i !== index));
+  };
+
+  const saveCertifications = async () => {
+    setSaving(true);
+    try {
+      await api.post("/profile/import", {
+        ...profile,
+        experiences,
+        education,
+        skills,
+        projects,
+        certifications,
+      });
+      toast.success("Certifications saved!");
+    } catch (error) {
+      toast.error("Failed to save certifications");
     } finally {
       setSaving(false);
     }
@@ -393,6 +545,8 @@ function ProfileEdit() {
     { id: "personal", label: "Personal Info", icon: User },
     { id: "experience", label: "Experience", icon: Briefcase },
     { id: "education", label: "Education", icon: GraduationCap },
+    { id: "projects", label: "Projects", icon: Folder },
+    { id: "certifications", label: "Certifications", icon: Award },
     { id: "skills", label: "Skills", icon: Code },
   ];
 
@@ -495,6 +649,45 @@ function ProfileEdit() {
                     {parsedData.education.map((edu: any, i: number) => (
                       <li key={i} className="text-gray-700">
                         {edu.degree} in {edu.field} - {edu.institution}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Projects */}
+              {parsedData.projects?.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <Folder className="w-4 h-4 mr-2" />{" "}
+                    {parsedData.projects.length} Projects
+                  </h3>
+                  <ul className="space-y-1 text-sm">
+                    {parsedData.projects.map((proj: any, i: number) => (
+                      <li key={i} className="text-gray-700">
+                        <span className="font-medium">{proj.name}</span>
+                        {proj.technologies && (
+                          <span className="text-gray-500 text-xs ml-2">
+                            ({proj.technologies})
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Certifications */}
+              {parsedData.certifications?.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <Award className="w-4 h-4 mr-2" />{" "}
+                    {parsedData.certifications.length} Certifications
+                  </h3>
+                  <ul className="space-y-1 text-sm">
+                    {parsedData.certifications.map((cert: any, i: number) => (
+                      <li key={i} className="text-gray-700">
+                        {cert.name} - {cert.issuer}
                       </li>
                     ))}
                   </ul>
@@ -786,13 +979,22 @@ function ProfileEdit() {
                     key={expIndex}
                     className="border border-gray-200 rounded-lg overflow-hidden"
                   >
-                    <button
+                    <div
                       onClick={() =>
                         setExpandedExp(
                           expandedExp === expIndex ? null : expIndex,
                         )
                       }
-                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          setExpandedExp(
+                            expandedExp === expIndex ? null : expIndex,
+                          );
+                        }
+                      }}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
                     >
                       <div className="text-left">
                         <h3 className="font-semibold text-gray-900">
@@ -818,7 +1020,7 @@ function ProfileEdit() {
                           <ChevronDown className="w-5 h-5 text-gray-400" />
                         )}
                       </div>
-                    </button>
+                    </div>
 
                     {expandedExp === expIndex && (
                       <div className="p-4 space-y-4">
@@ -1154,6 +1356,324 @@ function ProfileEdit() {
                   <Save className="w-5 h-5 mr-2" />
                 )}
                 Save Education
+              </button>
+            </div>
+          )}
+
+          {/* Projects Tab */}
+          {activeTab === "projects" && (
+            <div className="space-y-6">
+              {projects.length === 0 ? (
+                <div className="text-center py-12">
+                  <Folder className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    No projects yet
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Add your key projects to showcase your work
+                  </p>
+                </div>
+              ) : (
+                projects.map((proj, index) => (
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-lg overflow-hidden"
+                  >
+                    <div
+                      onClick={() =>
+                        setExpandedProject(
+                          expandedProject === index ? null : index,
+                        )
+                      }
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          setExpandedProject(
+                            expandedProject === index ? null : index,
+                          );
+                        }
+                      }}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      <div className="text-left">
+                        <h3 className="font-semibold text-gray-900">
+                          {proj.name || "New Project"}
+                        </h3>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeProject(index);
+                          }}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        {expandedProject === index ? (
+                          <ChevronUp className="w-5 h-5 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+
+                    {expandedProject === index && (
+                      <div className="p-4 space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Project Name *
+                          </label>
+                          <input
+                            type="text"
+                            value={proj.name}
+                            onChange={(e) =>
+                              updateProject(index, "name", e.target.value)
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            placeholder="Project Name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Project Link
+                          </label>
+                          <input
+                            type="text"
+                            value={proj.link}
+                            onChange={(e) =>
+                              updateProject(index, "link", e.target.value)
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            placeholder="https://github.com/..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Technologies
+                          </label>
+                          <input
+                            type="text"
+                            value={proj.technologies}
+                            onChange={(e) =>
+                              updateProject(
+                                index,
+                                "technologies",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            placeholder="React, Node.js, TypeScript"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Description
+                          </label>
+                          <textarea
+                            value={proj.description}
+                            onChange={(e) =>
+                              updateProject(
+                                index,
+                                "description",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            rows={3}
+                            placeholder="Describe what you built and your role..."
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+
+              <button
+                onClick={addProject}
+                className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Project
+              </button>
+
+              <button
+                onClick={saveProjects}
+                disabled={saving}
+                className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {saving ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <Save className="w-5 h-5 mr-2" />
+                )}
+                Save Projects
+              </button>
+            </div>
+          )}
+
+          {/* Certifications Tab */}
+          {activeTab === "certifications" && (
+            <div className="space-y-6">
+              {certifications.length === 0 ? (
+                <div className="text-center py-12">
+                  <Award className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    No certifications yet
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Add your certifications and licenses
+                  </p>
+                </div>
+              ) : (
+                certifications.map((cert, index) => (
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-lg overflow-hidden"
+                  >
+                    <div
+                      onClick={() =>
+                        setExpandedCert(expandedCert === index ? null : index)
+                      }
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          setExpandedCert(
+                            expandedCert === index ? null : index,
+                          );
+                        }
+                      }}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      <div className="text-left">
+                        <h3 className="font-semibold text-gray-900">
+                          {cert.name || "New Certification"}
+                        </h3>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeCertification(index);
+                          }}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        {expandedCert === index ? (
+                          <ChevronUp className="w-5 h-5 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+
+                    {expandedCert === index && (
+                      <div className="p-4 space-y-4">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={cert.name}
+                              onChange={(e) =>
+                                updateCertification(
+                                  index,
+                                  "name",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              placeholder="Cert Name"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Issuer *
+                            </label>
+                            <input
+                              type="text"
+                              value={cert.issuer}
+                              onChange={(e) =>
+                                updateCertification(
+                                  index,
+                                  "issuer",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              placeholder="Issuer Organization"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Date
+                            </label>
+                            <input
+                              type="text"
+                              value={cert.date}
+                              onChange={(e) =>
+                                updateCertification(
+                                  index,
+                                  "date",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              placeholder="Jan 2023"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Link
+                            </label>
+                            <input
+                              type="text"
+                              value={cert.link}
+                              onChange={(e) =>
+                                updateCertification(
+                                  index,
+                                  "link",
+                                  e.target.value,
+                                )
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              placeholder="Verification URL"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+
+              <button
+                onClick={addCertification}
+                className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Certification
+              </button>
+
+              <button
+                onClick={saveCertifications}
+                disabled={saving}
+                className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {saving ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <Save className="w-5 h-5 mr-2" />
+                )}
+                Save Certifications
               </button>
             </div>
           )}

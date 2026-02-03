@@ -37,6 +37,18 @@ export interface ParsedProfile {
     name: string;
     category: string;
   }[];
+  projects: {
+    name: string;
+    description: string;
+    technologies?: string;
+    link?: string;
+  }[];
+  certifications: {
+    name: string;
+    issuer: string;
+    date?: string;
+    link?: string;
+  }[];
 }
 
 class ResumeParserService {
@@ -123,13 +135,29 @@ Extract and return a JSON object with the following structure. Be thorough and e
       "name": "string (skill name)",
       "category": "string (one of: 'technical', 'language', 'soft', 'tool', 'framework', 'other')"
     }
+  ],
+  "projects": [
+    {
+      "name": "string",
+      "description": "string (brief description)",
+      "technologies": "string (comma separated)",
+      "link": "string (url or null)"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "string",
+      "issuer": "string (organization)",
+      "date": "string (year or date)",
+      "link": "string (url or null)"
+    }
   ]
 }
 
 IMPORTANT:
 - Extract ALL work experiences, not just recent ones
 - Extract ALL education entries
-- Extract ALL skills mentioned anywhere in the resume
+- Extract ALL skills, projects, and certifications
 - For bullet points in experiences, keep them as-is with quantifiable metrics if present
 - If the resume has a summary/objective section, include it
 - Parse dates intelligently (handle various formats)
@@ -219,6 +247,18 @@ Return the JSON object:`;
         skills: (parsed.skills || []).map((skill: any) => ({
           name: typeof skill === "string" ? skill : skill.name || "",
           category: skill.category || "technical",
+        })),
+        projects: (parsed.projects || []).map((proj: any) => ({
+          name: proj.name || "Project",
+          description: proj.description || "",
+          technologies: proj.technologies || undefined,
+          link: proj.link || undefined,
+        })),
+        certifications: (parsed.certifications || []).map((cert: any) => ({
+          name: cert.name || "Certification",
+          issuer: cert.issuer || "",
+          date: cert.date || undefined,
+          link: cert.link || undefined,
         })),
       };
     } catch (error: any) {

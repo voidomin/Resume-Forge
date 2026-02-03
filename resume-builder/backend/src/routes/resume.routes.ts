@@ -38,6 +38,8 @@ async function resumeRoutes(server: FastifyInstance) {
             experiences: { orderBy: { startDate: "desc" } },
             education: { orderBy: { endDate: "desc" } },
             skills: true,
+            projects: true,
+            certifications: true,
           },
         });
 
@@ -79,6 +81,17 @@ async function resumeRoutes(server: FastifyInstance) {
           skills: profile.skills.map((skill) => ({
             name: skill.name,
             category: skill.category,
+          })),
+          projects: profile.projects.map((p) => ({
+            name: p.name,
+            description: p.description,
+            technologies: p.technologies || undefined,
+            link: p.link || undefined,
+          })),
+          certifications: profile.certifications.map((c) => ({
+            name: c.name,
+            issuer: c.issuer,
+            date: c.date || undefined,
           })),
         };
 
@@ -212,7 +225,7 @@ async function resumeRoutes(server: FastifyInstance) {
         }
 
         const content = JSON.parse(resume.generatedContent);
-        const pdfBuffer = pdfService.generateResumePDF(content);
+        const pdfBuffer = await pdfService.generateResumePDF(content);
 
         const filename = `${content.contactInfo.name.replace(/\s+/g, "_")}_Resume.pdf`;
 
@@ -334,6 +347,8 @@ async function resumeRoutes(server: FastifyInstance) {
             experiences: { orderBy: { startDate: "desc" } },
             education: { orderBy: { endDate: "desc" } },
             skills: true,
+            projects: true,
+            certifications: true,
           },
         });
 
@@ -370,6 +385,17 @@ async function resumeRoutes(server: FastifyInstance) {
           skills: profile.skills.map((skill) => ({
             name: skill.name,
             category: skill.category,
+          })),
+          projects: profile.projects.map((p) => ({
+            name: p.name,
+            description: p.description,
+            technologies: p.technologies || undefined,
+            link: p.link || undefined,
+          })),
+          certifications: profile.certifications.map((c) => ({
+            name: c.name,
+            issuer: c.issuer,
+            date: c.date || undefined,
           })),
         };
 

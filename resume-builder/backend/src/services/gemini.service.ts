@@ -37,6 +37,17 @@ export interface ProfileData {
     name: string;
     category: string;
   }[];
+  projects?: {
+    name: string;
+    description: string;
+    technologies?: string;
+    link?: string;
+  }[];
+  certifications?: {
+    name: string;
+    issuer: string;
+    date?: string;
+  }[];
 }
 
 export interface GeneratedResume {
@@ -64,6 +75,18 @@ export interface GeneratedResume {
     gpa?: string;
   }[];
   skills: string[];
+  projects?: {
+    name: string;
+    description: string;
+    technologies?: string;
+    link?: string;
+  }[];
+  certifications?: {
+    name: string;
+    issuer: string;
+    date?: string;
+    link?: string;
+  }[];
   atsScore: number;
   atsScoreBreakdown?: {
     keywordMatch: number;
@@ -175,6 +198,33 @@ ${edu.endDate || "N/A"}${edu.gpa ? ` | GPA: ${edu.gpa}` : ""}
 SKILLS:
 ${profile.skills.map((s) => s.name).join(", ")}
 
+PROJECTS:
+${
+  profile.projects
+    ?.map(
+      (p) => `
+Name: ${p.name}
+Description: ${p.description}
+Technologies: ${p.technologies || "N/A"}
+Link: ${p.link || "N/A"}
+`,
+    )
+    .join("\n") || "None provided"
+}
+
+CERTIFICATIONS:
+${
+  profile.certifications
+    ?.map(
+      (c) => `
+Name: ${c.name}
+Issuer: ${c.issuer}
+Date: ${c.date || "N/A"}
+`,
+    )
+    .join("\n") || "None provided"
+}
+
 TARGET JOB:
 Title: ${jobAnalysis.roleTitle}
 Required Skills: ${jobAnalysis.requiredSkills.join(", ")}
@@ -185,20 +235,41 @@ JOB DESCRIPTION:
 ${jobDescription}
 
 INSTRUCTIONS:
-1. **REWRITE SUMMARY**: Create a NEW 3-4 sentence professional summary. It MUST be substantial and fill space. Specifically target the job title and keywords.
-2. **EXPAND EXPERIENCES**: 
-   - Select the most relevant experiences (up to 3).
-   - **CRITICAL**: Generate **5-7 DETAILED bullet points** for the main experience. 
-   - Each bullet should be **2 full lines long** if possible, adding context, tools used, and impact.
-   - Use "Result - Action - Context" format.
-   - **CRITICAL**: Incorporate these keywords naturally: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
-3. **FILL THE PAGE**: Do not be brief. The user wants the resume to look "full" and substantial.
-4. **REORDER SKILLS**: List skills in order of relevance to the JD.
-5. **CALCULATE ATS SCORE**: 
-   - Compare the candidate's original profile against the JD.
-   - Base score on: Keyword match (40%), Skills match (30%), Experience relevance (30%).
-   - Return a Realistic score (0-100).
-   - Provide a BREAKDOWN of why this score was given.
+**GOAL: Create a PROFESSIONAL, COMPLETE-LOOKING ONE A4 PAGE RESUME that maximizes the candidate's fit for this job.**
+
+**FIRST, ASSESS THE PROFILE:**
+- If the candidate has LIMITED data (few experiences, few skills, no projects): EXPAND and ENRICH content to create a substantial resume.
+- If the candidate has ABUNDANT data: CONDENSE and SELECT only the most relevant content to fit one page.
+
+**WHEN PROFILE IS SPARSE (limited info), do this:**
+1. **EXPAND SUMMARY**: Write a detailed 3-4 sentence professional summary highlighting transferable skills and career objectives.
+2. **ENRICH EXPERIENCES**: 
+   - Use ALL available experiences.
+   - Generate 5-7 DETAILED bullet points per experience with specific metrics, tools, and impact.
+   - Each bullet should be 2 lines long, adding context and achievements.
+   - Infer additional accomplishments that are reasonable for the role.
+3. **ADD TRANSFERABLE SKILLS**: Infer skills from the job description that the candidate likely has based on their experience.
+4. **INCLUDE ALL PROJECTS & CERTIFICATIONS**: Use all available projects and certifications with expanded descriptions.
+5. **DETAILED EDUCATION**: Include GPA, relevant coursework, honors, or achievements if available.
+
+**WHEN PROFILE IS RICH (lots of info), do this:**
+1. **CONCISE SUMMARY**: Keep to 2-3 sentences.
+2. **SELECT STRATEGICALLY**: Choose only 2-3 most relevant experiences with 3-4 bullets each.
+3. **LIMIT SKILLS**: Include only 10-15 most relevant skills.
+4. **SELECTIVE PROJECTS**: Include only 1-2 most relevant projects.
+5. **PRIORITIZE**: Summary > Experience > Skills > Education > Projects > Certifications. Skip sections if needed.
+
+**ALWAYS:**
+- Use "Result - Action - Context" format with metrics where possible.
+- Incorporate these keywords naturally: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
+- Reorder skills by relevance to the job description.
+- **THE RESUME SHOULD LOOK COMPLETE AND PROFESSIONAL - not sparse or empty.**
+
+**CALCULATE ATS SCORE**: 
+- Compare the candidate's original profile against the JD.
+- Base score on: Keyword match (40%), Skills match (30%), Experience relevance (30%).
+- Return a Realistic score (0-100).
+- Provide a BREAKDOWN of why this score was given.
 
 Return ONLY valid JSON with this structure:
 {
@@ -230,6 +301,21 @@ Return ONLY valid JSON with this structure:
     }
   ],
   "skills": ["Skill 1", "Skill 2"],
+  "projects": [
+    {
+      "name": "Project Name",
+      "description": "Tailored description...",
+      "technologies": "Tech 1, Tech 2",
+      "link": "Link or null"
+    }
+  ],
+  "certifications": [
+    {
+       "name": "Cert Name",
+       "issuer": "Issuer",
+       "date": "Date"
+    }
+  ],
   "atsScore": 75,
   "atsScoreBreakdown": {
     "keywordMatch": 35,

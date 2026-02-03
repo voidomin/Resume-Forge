@@ -23,6 +23,17 @@ interface GeneratedResume {
     gpa?: string;
   }[];
   skills: string[];
+  projects?: {
+    name: string;
+    description: string;
+    technologies?: string;
+    link?: string;
+  }[];
+  certifications?: {
+    name: string;
+    issuer: string;
+    date?: string;
+  }[];
   atsScore?: number;
   keywords?: string[];
 }
@@ -194,6 +205,103 @@ function ResumePreview({ resume }: ResumePreviewProps) {
                 {edu.gpa && <span> | GPA: {edu.gpa}</span>}
               </div>
               <span style={{ fontSize: "10pt" }}>{edu.dateRange}</span>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Projects */}
+      {resume.projects && resume.projects.length > 0 && (
+        <section>
+          <h2
+            style={{
+              fontSize: "11pt",
+              fontWeight: "bold",
+              textTransform: "uppercase",
+              borderBottom: "1px solid #000",
+              paddingBottom: "2px",
+              marginTop: "10px",
+              marginBottom: "6px",
+            }}
+          >
+            Projects
+          </h2>
+          {resume.projects.map((proj, index) => (
+            <div key={index} style={{ marginBottom: "8px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                }}
+              >
+                <div>
+                  <span style={{ fontWeight: "bold" }}>{proj.name}</span>
+                  {proj.link && (
+                    <span>
+                      {" "}
+                      |{" "}
+                      <a
+                        href={proj.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "inherit", textDecoration: "none" }}
+                      >
+                        {proj.link}
+                      </a>
+                    </span>
+                  )}
+                </div>
+              </div>
+              {proj.technologies && (
+                <div
+                  style={{
+                    fontStyle: "italic",
+                    fontSize: "9pt",
+                    marginBottom: "2px",
+                  }}
+                >
+                  {proj.technologies}
+                </div>
+              )}
+              <p style={{ margin: 0 }}>{proj.description}</p>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Certifications */}
+      {resume.certifications && resume.certifications.length > 0 && (
+        <section>
+          <h2
+            style={{
+              fontSize: "11pt",
+              fontWeight: "bold",
+              textTransform: "uppercase",
+              borderBottom: "1px solid #000",
+              paddingBottom: "2px",
+              marginTop: "10px",
+              marginBottom: "6px",
+            }}
+          >
+            Certifications
+          </h2>
+          {resume.certifications.map((cert, index) => (
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "2px",
+              }}
+            >
+              <div>
+                <span style={{ fontWeight: "bold" }}>{cert.name}</span>
+                <span> | {cert.issuer}</span>
+              </div>
+              {cert.date && (
+                <span style={{ fontSize: "10pt" }}>{cert.date}</span>
+              )}
             </div>
           ))}
         </section>

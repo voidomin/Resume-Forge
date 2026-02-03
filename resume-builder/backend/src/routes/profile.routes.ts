@@ -55,9 +55,11 @@ async function profileRoutes(server: FastifyInstance) {
         const profile = await prisma.profile.findUnique({
           where: { userId },
           include: {
-            experiences: { orderBy: { startDate: "desc" } },
             education: { orderBy: { endDate: "desc" } },
+            experiences: { orderBy: { startDate: "desc" } },
             skills: true,
+            projects: true,
+            certifications: true,
           },
         });
 
@@ -174,12 +176,16 @@ async function profileRoutes(server: FastifyInstance) {
           },
         });
 
-        // Delete existing experiences, education, skills
+        // Delete existing experiences, education, skills, projects, certifications
         await prisma.experience.deleteMany({
           where: { profileId: profile.id },
         });
         await prisma.education.deleteMany({ where: { profileId: profile.id } });
         await prisma.skill.deleteMany({ where: { profileId: profile.id } });
+        await prisma.project.deleteMany({ where: { profileId: profile.id } });
+        await prisma.certification.deleteMany({
+          where: { profileId: profile.id },
+        });
 
         // Add experiences
         if (data.experiences && Array.isArray(data.experiences)) {
@@ -235,6 +241,36 @@ async function profileRoutes(server: FastifyInstance) {
           }
         }
 
+        // Add projects
+        if (data.projects && Array.isArray(data.projects)) {
+          for (const proj of data.projects) {
+            await prisma.project.create({
+              data: {
+                profileId: profile.id,
+                name: proj.name,
+                description: proj.description,
+                technologies: proj.technologies,
+                link: proj.link,
+              },
+            });
+          }
+        }
+
+        // Add certifications
+        if (data.certifications && Array.isArray(data.certifications)) {
+          for (const cert of data.certifications) {
+            await prisma.certification.create({
+              data: {
+                profileId: profile.id,
+                name: cert.name,
+                issuer: cert.issuer,
+                date: cert.date,
+                link: cert.link,
+              },
+            });
+          }
+        }
+
         return reply.send({
           message: "Profile imported successfully",
           profileId: profile.id,
@@ -260,6 +296,8 @@ async function profileRoutes(server: FastifyInstance) {
             experiences: { orderBy: { startDate: "desc" } },
             education: { orderBy: { endDate: "desc" } },
             skills: true,
+            projects: true,
+            certifications: true,
           },
         });
 
@@ -299,6 +337,18 @@ async function profileRoutes(server: FastifyInstance) {
             name: skill.name,
             category: skill.category,
             proficiency: skill.proficiency,
+          })),
+          projects: profile.projects.map((p) => ({
+            name: p.name,
+            description: p.description,
+            technologies: p.technologies,
+            link: p.link,
+          })),
+          certifications: profile.certifications.map((c) => ({
+            name: c.name,
+            issuer: c.issuer,
+            date: c.date,
+            link: c.link,
           })),
         };
 
@@ -688,11 +738,16 @@ async function profileRoutes(server: FastifyInstance) {
         });
 
         // Delete existing data and add new
+        // Delete existing data and add new
         await prisma.experience.deleteMany({
           where: { profileId: profile.id },
         });
         await prisma.education.deleteMany({ where: { profileId: profile.id } });
         await prisma.skill.deleteMany({ where: { profileId: profile.id } });
+        await prisma.project.deleteMany({ where: { profileId: profile.id } });
+        await prisma.certification.deleteMany({
+          where: { profileId: profile.id },
+        });
 
         // Add experiences
         if (data.experiences && Array.isArray(data.experiences)) {
@@ -738,6 +793,36 @@ async function profileRoutes(server: FastifyInstance) {
                 profileId: profile.id,
                 name: skill.name,
                 category: skill.category || "technical",
+              },
+            });
+          }
+        }
+
+        // Add projects
+        if (data.projects && Array.isArray(data.projects)) {
+          for (const proj of data.projects) {
+            await prisma.project.create({
+              data: {
+                profileId: profile.id,
+                name: proj.name,
+                description: proj.description,
+                technologies: proj.technologies,
+                link: proj.link,
+              },
+            });
+          }
+        }
+
+        // Add certifications
+        if (data.certifications && Array.isArray(data.certifications)) {
+          for (const cert of data.certifications) {
+            await prisma.certification.create({
+              data: {
+                profileId: profile.id,
+                name: cert.name,
+                issuer: cert.issuer,
+                date: cert.date,
+                link: cert.link,
               },
             });
           }

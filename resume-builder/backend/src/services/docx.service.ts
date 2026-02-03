@@ -35,12 +35,12 @@ export class DocxService {
             // Header - Name
             new Paragraph({
               alignment: AlignmentType.CENTER,
-              spacing: { after: 80 },
+              spacing: { after: 60 },
               children: [
                 new TextRun({
                   text: resume.contactInfo.name.toUpperCase(),
                   bold: true,
-                  size: 36, // 18pt
+                  size: 28, // 14pt
                   font: "Arial",
                 }),
               ],
@@ -65,9 +65,19 @@ export class DocxService {
               ? this.createExperienceSection(resume.experiences)
               : []),
 
+            // Projects
+            ...(resume.projects && resume.projects.length > 0
+              ? this.createProjectsSection(resume.projects)
+              : []),
+
             // Education
             ...(resume.education.length > 0
               ? this.createEducationSection(resume.education)
+              : []),
+
+            // Certifications
+            ...(resume.certifications && resume.certifications.length > 0
+              ? this.createCertificationsSection(resume.certifications)
               : []),
 
             // Skills
@@ -93,11 +103,11 @@ export class DocxService {
 
     return new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { after: 40 },
+      spacing: { after: 30 },
       children: [
         new TextRun({
           text: parts.join("  |  "),
-          size: 18, // 9pt
+          size: 16, // 8pt
           font: "Arial",
         }),
       ],
@@ -116,11 +126,11 @@ export class DocxService {
     return [
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { after: 40 },
+        spacing: { after: 30 },
         children: [
           new TextRun({
             text: parts.join("  |  "),
-            size: 18,
+            size: 16, // 8pt
             font: "Arial",
           }),
         ],
@@ -130,7 +140,7 @@ export class DocxService {
 
   private createSectionHeader(title: string): Paragraph {
     return new Paragraph({
-      spacing: { before: 160, after: 80 },
+      spacing: { before: 120, after: 60 },
       border: {
         bottom: {
           color: "000000",
@@ -143,7 +153,7 @@ export class DocxService {
         new TextRun({
           text: title,
           bold: true,
-          size: 22, // 11pt
+          size: 20, // 10pt
           font: "Arial",
         }),
       ],
@@ -154,11 +164,11 @@ export class DocxService {
     return [
       this.createSectionHeader("PROFESSIONAL SUMMARY"),
       new Paragraph({
-        spacing: { after: 80 },
+        spacing: { after: 60 },
         children: [
           new TextRun({
             text: summary,
-            size: 20, // 10pt
+            size: 18, // 9pt
             font: "Arial",
           }),
         ],
@@ -188,26 +198,26 @@ export class DocxService {
             new TextRun({
               text: exp.role,
               bold: true,
-              size: 20,
+              size: 18, // 9pt
               font: "Arial",
             }),
             new TextRun({
               text: `  |  ${exp.company}`,
-              size: 20,
+              size: 18, // 9pt
               font: "Arial",
             }),
             ...(exp.location
               ? [
                   new TextRun({
                     text: `  |  ${exp.location}`,
-                    size: 20,
+                    size: 18, // 9pt
                     font: "Arial",
                   }),
                 ]
               : []),
             new TextRun({
               text: "\t" + exp.dateRange,
-              size: 20,
+              size: 18, // 9pt
               font: "Arial",
             }),
           ],
@@ -223,7 +233,7 @@ export class DocxService {
             children: [
               new TextRun({
                 text: `•  ${bullet}`,
-                size: 20,
+                size: 18, // 9pt
                 font: "Arial",
               }),
             ],
@@ -254,17 +264,17 @@ export class DocxService {
             new TextRun({
               text: `${edu.degree} in ${edu.field}`,
               bold: true,
-              size: 20,
+              size: 18, // 9pt
               font: "Arial",
             }),
             new TextRun({
               text: `  |  ${edu.institution}`,
-              size: 20,
+              size: 18, // 9pt
               font: "Arial",
             }),
             new TextRun({
               text: "\t" + (edu.dateRange || ""),
-              size: 20,
+              size: 18, // 9pt
               font: "Arial",
             }),
           ],
@@ -278,7 +288,7 @@ export class DocxService {
             children: [
               new TextRun({
                 text: `GPA: ${edu.gpa}`,
-                size: 18,
+                size: 16, // 8pt
                 font: "Arial",
               }),
             ],
@@ -294,16 +304,132 @@ export class DocxService {
     return [
       this.createSectionHeader("SKILLS"),
       new Paragraph({
-        spacing: { after: 80 },
+        spacing: { after: 60 },
         children: [
           new TextRun({
             text: skills.join("  •  "),
-            size: 20,
+            size: 18, // 9pt
             font: "Arial",
           }),
         ],
       }),
     ];
+  }
+
+  private createProjectsSection(
+    projects: NonNullable<GeneratedResume["projects"]>,
+  ): Paragraph[] {
+    const paragraphs: Paragraph[] = [this.createSectionHeader("PROJECTS")];
+
+    projects.forEach((proj) => {
+      const headerParts: any[] = [
+        new TextRun({
+          text: proj.name,
+          bold: true,
+          size: 18, // 9pt
+          font: "Arial",
+        }),
+      ];
+
+      if (proj.link) {
+        headerParts.push(
+          new TextRun({
+            text: `  |  ${proj.link}`,
+            size: 18, // 9pt
+            font: "Arial",
+          }),
+        );
+      }
+
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 40 },
+          children: headerParts,
+        }),
+      );
+
+      if (proj.technologies) {
+        paragraphs.push(
+          new Paragraph({
+            spacing: { after: 30 },
+            children: [
+              new TextRun({
+                text: proj.technologies,
+                italics: true,
+                size: 16, // 8pt
+                font: "Arial",
+              }),
+            ],
+          }),
+        );
+      }
+
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 60 },
+          children: [
+            new TextRun({
+              text: proj.description,
+              size: 18, // 9pt
+              font: "Arial",
+            }),
+          ],
+        }),
+      );
+    });
+
+    return paragraphs;
+  }
+
+  private createCertificationsSection(
+    certifications: NonNullable<GeneratedResume["certifications"]>,
+  ): Paragraph[] {
+    const paragraphs: Paragraph[] = [
+      this.createSectionHeader("CERTIFICATIONS"),
+    ];
+
+    certifications.forEach((cert) => {
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: 40 },
+          tabStops: [
+            {
+              type: TabStopType.RIGHT,
+              position: TabStopPosition.MAX,
+            },
+          ],
+          children: [
+            new TextRun({
+              text: cert.name,
+              bold: true,
+              size: 18, // 9pt
+              font: "Arial",
+            }),
+            new TextRun({
+              text: `  |  ${cert.issuer}`,
+              size: 18, // 9pt
+              font: "Arial",
+            }),
+            ...(cert.link
+              ? [
+                  new TextRun({
+                    text: `  |  ${cert.link}`,
+                    size: 18, // 9pt
+                    font: "Arial",
+                  }),
+                ]
+              : []),
+            new TextRun({
+              text: "\t" + (cert.date || ""),
+              size: 18, // 9pt
+              font: "Arial",
+            }),
+          ],
+        }),
+      );
+    });
+
+    return paragraphs;
   }
 }
 
