@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import pdfParse from "pdf-parse";
-import mammoth from "mammoth";
+// pdf-parse and mammoth need require syntax for CommonJS compatibility
+const pdfParse = require("pdf-parse");
+const mammoth = require("mammoth");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -39,7 +40,7 @@ export interface ParsedProfile {
 }
 
 class ResumeParserService {
-  private model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  private model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   /**
    * Parse text from PDF file
@@ -71,10 +72,17 @@ class ResumeParserService {
    * Extract structured profile data from resume text using Gemini AI
    */
   async extractProfileFromText(resumeText: string): Promise<ParsedProfile> {
+    console.log(
+      `Extracted resume text length: ${resumeText.length} characters`,
+    );
+
+    // Truncate if too long (Gemini has limits)
+    const processedText = resumeText.slice(0, 30000);
+
     const prompt = `You are a resume parser. Extract structured profile information from the following resume text.
 
 RESUME TEXT:
-${resumeText}
+${processedText}
 
 Extract and return a JSON object with the following structure. Be thorough and extract ALL information available. For dates, use formats like "Jan 2020" or "2020". If information is not available, use null.
 
@@ -129,9 +137,43 @@ IMPORTANT:
 
 Return the JSON object:`;
 
+    // Helper to try generation with fallback
+    const generateWithFallback = async (retries = 2) => {
+      // List of models to try in order
+      const modelsToTry = [
+        "gemini-2.0-flash-001",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash",
+      ];
+
+      for (const modelName of modelsToTry) {
+        try {
+          console.log(`Attempting with model: ${modelName}...`);
+          const currentModel = genAI.getGenerativeModel({ model: modelName });
+          const result = await currentModel.generateContent(prompt);
+          return result.response.text();
+        } catch (error: any) {
+          console.log(`Failed with ${modelName}: ${error.message}`);
+
+          if (error.message?.includes("429")) {
+            console.log(`Rate limit hit. Waiting 2s before next model...`);
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            continue; // Try next model
+          }
+
+          // If 404 (not found), just continue to next model
+          if (error.message?.includes("404")) {
+            continue;
+          }
+        }
+      }
+
+      throw new Error("All AI models failed. Please try again later.");
+    };
+
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = result.response.text();
+      const response = await generateWithFallback();
+      console.log("Received response from Gemini AI");
 
       // Extract JSON from response (handle potential markdown code blocks)
       let jsonStr = response;
@@ -179,9 +221,12 @@ Return the JSON object:`;
           category: skill.category || "technical",
         })),
       };
-    } catch (error) {
-      console.error("AI extraction error:", error);
-      throw new Error("Failed to extract profile information from resume");
+    } catch (error: any) {
+      console.error("AI extraction error details:", error);
+      // Return specific error message for debugging
+      throw new Error(
+        `AI Extraction Failed: ${error.message || error.toString()}`,
+      );
     }
   }
 

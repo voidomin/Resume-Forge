@@ -570,13 +570,22 @@ async function profileRoutes(server: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { userId } = (request as any).user;
+        console.log("Resume upload started for user:", userId);
 
         // Get the file from multipart request
         const data = await request.file();
+        console.log("File received:", data ? "yes" : "no");
 
         if (!data) {
+          console.log("No file in request");
           return reply.status(400).send({ error: "No file uploaded" });
         }
+
+        console.log("File info:", {
+          filename: data.filename,
+          mimetype: data.mimetype,
+          fieldname: data.fieldname,
+        });
 
         // Check file type
         const allowedTypes = [
@@ -586,17 +595,27 @@ async function profileRoutes(server: FastifyInstance) {
         ];
 
         if (!allowedTypes.includes(data.mimetype)) {
+          console.log("Invalid file type:", data.mimetype);
           return reply
             .status(400)
             .send({ error: "Please upload a PDF or DOCX file" });
         }
 
-        // Read file buffer
-        const chunks: Buffer[] = [];
-        for await (const chunk of data.file) {
-          chunks.push(chunk);
+        // Read file buffer using toBuffer method
+        let buffer: Buffer;
+        try {
+          buffer = await data.toBuffer();
+          console.log("Buffer size:", buffer.length);
+        } catch (bufferError) {
+          console.error("Error reading file buffer:", bufferError);
+          // Fallback to chunks method
+          const chunks: Buffer[] = [];
+          for await (const chunk of data.file) {
+            chunks.push(chunk);
+          }
+          buffer = Buffer.concat(chunks);
+          console.log("Buffer size (fallback):", buffer.length);
         }
-        const buffer = Buffer.concat(chunks);
 
         // Check file size (max 5MB)
         if (buffer.length > 5 * 1024 * 1024) {
@@ -605,17 +624,24 @@ async function profileRoutes(server: FastifyInstance) {
             .send({ error: "File size must be less than 5MB" });
         }
 
+        if (buffer.length === 0) {
+          return reply.status(400).send({ error: "Empty file uploaded" });
+        }
+
+        console.log("Starting resume parsing...");
         // Parse resume and extract profile data
         const parsedProfile = await resumeParserService.parseResume(
           buffer,
           data.mimetype,
         );
+        console.log("Resume parsed successfully");
 
         return reply.send({
           message: "Resume parsed successfully",
           profile: parsedProfile,
         });
       } catch (error: any) {
+        console.error("Resume upload error:", error);
         request.log.error(error);
         return reply
           .status(500)

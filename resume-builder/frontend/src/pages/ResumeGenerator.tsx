@@ -38,6 +38,13 @@ interface GeneratedResume {
   }[];
   skills: string[];
   atsScore: number;
+  atsScoreBreakdown?: {
+    keywordMatch: number;
+    skillsMatch: number;
+    formatting: number;
+    missingKeywords: string[];
+    explanation: string;
+  };
   keywords: string[];
 }
 
@@ -290,6 +297,51 @@ Required Skills:
                         style={{ width: `${generatedResume.atsScore}%` }}
                       />
                     </div>
+
+                    {/* Score Breakdown */}
+                    {generatedResume.atsScoreBreakdown && (
+                      <div className="mt-4 text-xs space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Keywords:</span>
+                          <span className="font-medium">
+                            {generatedResume.atsScoreBreakdown.keywordMatch}/40
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Skills:</span>
+                          <span className="font-medium">
+                            {generatedResume.atsScoreBreakdown.skillsMatch}/30
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Experience:</span>
+                          <span className="font-medium">
+                            {generatedResume.atsScoreBreakdown.formatting}/30
+                          </span>
+                        </div>
+
+                        {generatedResume.atsScoreBreakdown.missingKeywords
+                          ?.length > 0 && (
+                          <div className="pt-2 border-t border-gray-200 mt-2">
+                            <span className="block text-gray-500 mb-1">
+                              Missing Keywords:
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                              {generatedResume.atsScoreBreakdown.missingKeywords
+                                .slice(0, 3)
+                                .map((k, i) => (
+                                  <span
+                                    key={i}
+                                    className="px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-100 rounded text-[10px]"
+                                  >
+                                    {k}
+                                  </span>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Matched Keywords */}

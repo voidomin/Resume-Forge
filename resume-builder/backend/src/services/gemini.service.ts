@@ -65,11 +65,18 @@ export interface GeneratedResume {
   }[];
   skills: string[];
   atsScore: number;
+  atsScoreBreakdown?: {
+    keywordMatch: number;
+    skillsMatch: number;
+    formatting: number;
+    missingKeywords: string[];
+    explanation: string;
+  };
   keywords: string[];
 }
 
 export class GeminiService {
-  private model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  private model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
 
   /**
    * Analyze job description and extract key requirements
@@ -119,6 +126,9 @@ Return this exact JSON structure:
   /**
    * Generate an ATS-optimized resume tailored to the job description
    */
+  /**
+   * Generate an ATS-optimized resume tailored to the job description
+   */
   async generateOptimizedResume(
     profile: ProfileData,
     jobDescription: string,
@@ -137,7 +147,7 @@ GitHub: ${profile.github || "N/A"}
 
 Current Summary: ${profile.summary || "None provided"}
 
-WORK EXPERIENCE:
+WORK EXPERIENCE (Original):
 ${profile.experiences
   .map(
     (exp) => `
@@ -175,16 +185,20 @@ JOB DESCRIPTION:
 ${jobDescription}
 
 INSTRUCTIONS:
-1. Create a compelling 2-3 sentence professional summary that matches the job requirements
-2. Select and rewrite the MOST RELEVANT 2-3 work experiences (prioritize recent and relevant)
-3. Rewrite bullet points to:
-   - Start with strong action verbs
-   - Include quantifiable achievements where possible
-   - Incorporate keywords from the job description naturally
-   - Keep each bullet to 1-2 lines maximum
-4. Include 3-4 impactful bullets per experience (fewer is better for one page)
-5. Order skills to prioritize those mentioned in the job description
-6. Keep everything concise to fit on ONE PAGE
+1. **REWRITE SUMMARY**: Create a NEW 3-4 sentence professional summary. It MUST be substantial and fill space. Specifically target the job title and keywords.
+2. **EXPAND EXPERIENCES**: 
+   - Select the most relevant experiences (up to 3).
+   - **CRITICAL**: Generate **5-7 DETAILED bullet points** for the main experience. 
+   - Each bullet should be **2 full lines long** if possible, adding context, tools used, and impact.
+   - Use "Result - Action - Context" format.
+   - **CRITICAL**: Incorporate these keywords naturally: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
+3. **FILL THE PAGE**: Do not be brief. The user wants the resume to look "full" and substantial.
+4. **REORDER SKILLS**: List skills in order of relevance to the JD.
+5. **CALCULATE ATS SCORE**: 
+   - Compare the candidate's original profile against the JD.
+   - Base score on: Keyword match (40%), Skills match (30%), Experience relevance (30%).
+   - Return a Realistic score (0-100).
+   - Provide a BREAKDOWN of why this score was given.
 
 Return ONLY valid JSON with this structure:
 {
@@ -196,14 +210,14 @@ Return ONLY valid JSON with this structure:
     "linkedin": "linkedin url or null",
     "github": "github url or null"
   },
-  "summary": "2-3 sentence professional summary tailored to the role",
+  "summary": "Rewritten tailored summary",
   "experiences": [
     {
       "company": "Company Name",
       "role": "Job Title",
       "location": "City, State",
       "dateRange": "Month Year - Month Year",
-      "bullets": ["Achievement 1", "Achievement 2", "Achievement 3"]
+      "bullets": ["Rewritten tailored bullet 1", "Rewritten tailored bullet 2"]
     }
   ],
   "education": [
@@ -212,17 +226,58 @@ Return ONLY valid JSON with this structure:
       "degree": "Degree Type",
       "field": "Field of Study",
       "dateRange": "Year",
-      "gpa": "GPA if above 3.5, otherwise null"
+      "gpa": "GPA or null"
     }
   ],
-  "skills": ["Skill 1", "Skill 2", "...prioritized by job relevance"],
-  "atsScore": 85,
-  "keywords": ["matched", "keywords", "from", "job"]
+  "skills": ["Skill 1", "Skill 2"],
+  "atsScore": 75,
+  "atsScoreBreakdown": {
+    "keywordMatch": 35,
+    "skillsMatch": 25,
+    "formatting": 15,
+    "missingKeywords": ["missing1", "missing2"],
+    "explanation": "Brief explanation of calculation"
+  },
+  "keywords": ["matched", "keywords"]
 }`;
 
+    // Helper to try generation with fallback (Same strategy as ResumeParser)
+    const generateWithFallback = async () => {
+      // List of models to try in order
+      const modelsToTry = [
+        "gemini-2.0-flash-001",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash",
+      ];
+
+      for (const modelName of modelsToTry) {
+        try {
+          console.log(`Generating resume with model: ${modelName}...`);
+          const currentModel = genAI.getGenerativeModel({ model: modelName });
+          const result = await currentModel.generateContent(prompt);
+          return result.response.text();
+        } catch (error: any) {
+          console.log(`Failed with ${modelName}: ${error.message}`);
+
+          if (error.message?.includes("429")) {
+            console.log(`Rate limit hit. Waiting 2s before next model...`);
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            continue; // Try next model
+          }
+
+          if (error.message?.includes("404")) {
+            continue; // Not found, try next
+          }
+
+          // Other errors, continue to next model just in case
+        }
+      }
+
+      throw new Error("All AI models failed to generate resume.");
+    };
+
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = result.response.text();
+      const response = await generateWithFallback();
       const cleanJson = response
         .replace(/```json\n?/g, "")
         .replace(/```\n?/g, "")
@@ -230,7 +285,8 @@ Return ONLY valid JSON with this structure:
       return JSON.parse(cleanJson);
     } catch (error) {
       console.error("Error generating resume:", error);
-      // Return a basic resume structure from profile data
+      // Return a basic resume structure from profile data ONLY if all AIs fail
+      // This explains why the user saw "not tailored" content and "70%" score
       return this.createBasicResume(profile);
     }
   }
