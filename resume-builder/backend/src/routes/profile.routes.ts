@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { PrismaClient } from "@prisma/client";
 import { authenticateToken } from "./auth.routes";
+import { resumeParserService } from "../services/resumeParser.service";
 
 const prisma = new PrismaClient();
 
@@ -558,6 +559,171 @@ async function profileRoutes(server: FastifyInstance) {
       } catch (error) {
         request.log.error(error);
         return reply.status(500).send({ error: "Failed to update skills" });
+      }
+    },
+  );
+
+  // Upload resume (PDF/DOCX) and auto-fill profile
+  server.post(
+    "/upload-resume",
+    { preHandler: authenticateToken },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { userId } = (request as any).user;
+
+        // Get the file from multipart request
+        const data = await request.file();
+
+        if (!data) {
+          return reply.status(400).send({ error: "No file uploaded" });
+        }
+
+        // Check file type
+        const allowedTypes = [
+          "application/pdf",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "application/msword",
+        ];
+
+        if (!allowedTypes.includes(data.mimetype)) {
+          return reply
+            .status(400)
+            .send({ error: "Please upload a PDF or DOCX file" });
+        }
+
+        // Read file buffer
+        const chunks: Buffer[] = [];
+        for await (const chunk of data.file) {
+          chunks.push(chunk);
+        }
+        const buffer = Buffer.concat(chunks);
+
+        // Check file size (max 5MB)
+        if (buffer.length > 5 * 1024 * 1024) {
+          return reply
+            .status(400)
+            .send({ error: "File size must be less than 5MB" });
+        }
+
+        // Parse resume and extract profile data
+        const parsedProfile = await resumeParserService.parseResume(
+          buffer,
+          data.mimetype,
+        );
+
+        return reply.send({
+          message: "Resume parsed successfully",
+          profile: parsedProfile,
+        });
+      } catch (error: any) {
+        request.log.error(error);
+        return reply
+          .status(500)
+          .send({ error: error.message || "Failed to parse resume" });
+      }
+    },
+  );
+
+  // Import profile from parsed resume data
+  server.post(
+    "/import-from-resume",
+    { preHandler: authenticateToken },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { userId } = (request as any).user;
+        const data = request.body as any;
+
+        // Create or update profile
+        const profile = await prisma.profile.upsert({
+          where: { userId },
+          update: {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
+            location: data.location,
+            linkedin: data.linkedin,
+            github: data.github,
+            portfolio: data.portfolio,
+            summary: data.summary,
+          },
+          create: {
+            userId,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
+            location: data.location,
+            linkedin: data.linkedin,
+            github: data.github,
+            portfolio: data.portfolio,
+            summary: data.summary,
+          },
+        });
+
+        // Delete existing data and add new
+        await prisma.experience.deleteMany({
+          where: { profileId: profile.id },
+        });
+        await prisma.education.deleteMany({ where: { profileId: profile.id } });
+        await prisma.skill.deleteMany({ where: { profileId: profile.id } });
+
+        // Add experiences
+        if (data.experiences && Array.isArray(data.experiences)) {
+          for (const exp of data.experiences) {
+            await prisma.experience.create({
+              data: {
+                profileId: profile.id,
+                company: exp.company,
+                role: exp.role,
+                location: exp.location,
+                startDate: exp.startDate,
+                endDate: exp.endDate,
+                current: exp.current || false,
+                bullets: JSON.stringify(exp.bullets || []),
+              },
+            });
+          }
+        }
+
+        // Add education
+        if (data.education && Array.isArray(data.education)) {
+          for (const edu of data.education) {
+            await prisma.education.create({
+              data: {
+                profileId: profile.id,
+                institution: edu.institution,
+                degree: edu.degree,
+                field: edu.field,
+                location: edu.location,
+                startDate: edu.startDate,
+                endDate: edu.endDate,
+                gpa: edu.gpa,
+              },
+            });
+          }
+        }
+
+        // Add skills
+        if (data.skills && Array.isArray(data.skills)) {
+          for (const skill of data.skills) {
+            await prisma.skill.create({
+              data: {
+                profileId: profile.id,
+                name: skill.name,
+                category: skill.category || "technical",
+              },
+            });
+          }
+        }
+
+        return reply.send({
+          message: "Profile imported from resume successfully",
+          profileId: profile.id,
+        });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to import profile" });
       }
     },
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "../api/client";
 import {
   User,
@@ -13,6 +13,10 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
+  FileText,
+  Sparkles,
+  Check,
+  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -101,6 +105,77 @@ function ProfileEdit() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [newSkill, setNewSkill] = useState("");
   const [expandedExp, setExpandedExp] = useState<number | null>(null);
+
+  // Resume upload states
+  const [uploading, setUploading] = useState(false);
+  const [parsedData, setParsedData] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Resume upload handler
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/msword",
+    ];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload a PDF or Word document");
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await api.post("/profile/upload-resume", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setParsedData(response.data.profile);
+      setShowPreview(true);
+      toast.success("Resume parsed successfully! Review and confirm.");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Failed to parse resume");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // Apply parsed resume data
+  const applyParsedData = async () => {
+    if (!parsedData) return;
+
+    try {
+      await api.post("/profile/import-from-resume", parsedData);
+      toast.success("Profile updated from resume!");
+      setShowPreview(false);
+      setParsedData(null);
+      fetchProfile(); // Reload the form
+    } catch (error) {
+      toast.error("Failed to apply resume data");
+    }
+  };
+
+  // Cancel parsed data
+  const cancelParsedData = () => {
+    setShowPreview(false);
+    setParsedData(null);
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -323,8 +398,167 @@ function ProfileEdit() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Resume Upload Preview Modal */}
+      {showPreview && parsedData && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-green-100 p-2 rounded-lg">
+                    <Sparkles className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Resume Parsed Successfully!
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      Review the extracted information
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={cancelParsedData}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Personal Info */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
+                  <User className="w-4 h-4 mr-2" /> Personal Info
+                </h3>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">Name:</span>{" "}
+                    {parsedData.firstName} {parsedData.lastName}
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Email:</span>{" "}
+                    {parsedData.email}
+                  </div>
+                  {parsedData.phone && (
+                    <div>
+                      <span className="text-gray-500">Phone:</span>{" "}
+                      {parsedData.phone}
+                    </div>
+                  )}
+                  {parsedData.location && (
+                    <div>
+                      <span className="text-gray-500">Location:</span>{" "}
+                      {parsedData.location}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Experiences */}
+              {parsedData.experiences?.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <Briefcase className="w-4 h-4 mr-2" />{" "}
+                    {parsedData.experiences.length} Experience(s)
+                  </h3>
+                  <ul className="space-y-2 text-sm">
+                    {parsedData.experiences
+                      .slice(0, 3)
+                      .map((exp: any, i: number) => (
+                        <li key={i} className="text-gray-700">
+                          <span className="font-medium">{exp.role}</span> at{" "}
+                          {exp.company}
+                          <span className="text-gray-500 ml-2">
+                            ({exp.startDate} - {exp.endDate || "Present"})
+                          </span>
+                        </li>
+                      ))}
+                    {parsedData.experiences.length > 3 && (
+                      <li className="text-gray-500">
+                        ... and {parsedData.experiences.length - 3} more
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              {/* Education */}
+              {parsedData.education?.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <GraduationCap className="w-4 h-4 mr-2" />{" "}
+                    {parsedData.education.length} Education
+                  </h3>
+                  <ul className="space-y-1 text-sm">
+                    {parsedData.education.map((edu: any, i: number) => (
+                      <li key={i} className="text-gray-700">
+                        {edu.degree} in {edu.field} - {edu.institution}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Skills */}
+              {parsedData.skills?.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <Code className="w-4 h-4 mr-2" /> {parsedData.skills.length}{" "}
+                    Skills
+                  </h3>
+                  <div className="flex flex-wrap gap-1">
+                    {parsedData.skills
+                      .slice(0, 15)
+                      .map((skill: any, i: number) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full"
+                        >
+                          {skill.name}
+                        </span>
+                      ))}
+                    {parsedData.skills.length > 15 && (
+                      <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full">
+                        +{parsedData.skills.length - 15} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex space-x-3">
+              <button
+                onClick={cancelParsedData}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={applyParsedData}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center"
+              >
+                <Check className="w-5 h-5 mr-2" />
+                Apply to Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleResumeUpload}
+        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        className="hidden"
+      />
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Edit Profile
@@ -333,13 +567,31 @@ function ProfileEdit() {
             Add your experiences, education, and skills
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
+          {/* Upload Resume Button - Primary Action */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md disabled:opacity-50"
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Parsing...
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4 mr-2" />
+                Upload Resume
+              </>
+            )}
+          </button>
           <button
             onClick={importProfile}
             className="flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Upload className="w-4 h-4 mr-2" />
-            Import
+            Import JSON
           </button>
           <button
             onClick={exportProfile}
