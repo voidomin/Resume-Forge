@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ResumePreview from "../components/Resume/ResumePreview";
+import KeywordAnalysisPanel from "../components/Resume/KeywordAnalysisPanel";
 
 interface GeneratedResume {
   contactInfo: {
@@ -57,6 +58,15 @@ interface GeneratedResume {
     explanation: string;
   };
   keywords: string[];
+  keywordAnalysis?: {
+    matchedKeywords: {
+      keyword: string;
+      locations: string[];
+    }[];
+    missingKeywords: string[];
+    totalJobKeywords: number;
+    matchPercentage: number;
+  };
 }
 
 function ResumeGenerator() {
@@ -355,8 +365,18 @@ Required Skills:
                     )}
                   </div>
 
-                  {/* Matched Keywords */}
-                  {generatedResume.keywords &&
+                  {/* Keyword Analysis Panel */}
+                  {generatedResume.keywordAnalysis && (
+                    <div className="mb-6">
+                      <KeywordAnalysisPanel
+                        keywordAnalysis={generatedResume.keywordAnalysis}
+                      />
+                    </div>
+                  )}
+
+                  {/* Fallback: Basic Matched Keywords (if no keywordAnalysis) */}
+                  {!generatedResume.keywordAnalysis &&
+                    generatedResume.keywords &&
                     generatedResume.keywords.length > 0 && (
                       <div className="mb-6">
                         <h3 className="text-sm font-medium text-gray-700 mb-2">

@@ -96,6 +96,15 @@ export interface GeneratedResume {
     explanation: string;
   };
   keywords: string[];
+  keywordAnalysis?: {
+    matchedKeywords: {
+      keyword: string;
+      locations: string[]; // e.g., ["summary", "experience.0.bullets.1", "skills"]
+    }[];
+    missingKeywords: string[];
+    totalJobKeywords: number;
+    matchPercentage: number;
+  };
 }
 
 export class GeminiService {
@@ -125,25 +134,55 @@ Return this exact JSON structure:
   "roleTitle": "extracted job title"
 }`;
 
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = result.response.text();
-      // Clean up response - remove markdown code blocks if present
-      const cleanJson = response
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-      return JSON.parse(cleanJson);
-    } catch (error) {
-      console.error("Error analyzing job description:", error);
-      return {
-        requiredSkills: [],
-        preferredSkills: [],
-        keywords: [],
-        experienceLevel: "mid",
-        roleTitle: "Software Engineer",
-      };
+    // List of models to try in order
+    // Prioritizing models with available quota based on user report
+    const modelsToTry = [
+      "gemini-2.5-flash-lite-001", // Likely ID for 2.5 Flash Lite
+      "gemini-2.5-flash-lite",
+      "gemini-3.0-flash-001", // Likely ID for 3.0 Flash
+      "gemini-3.0-flash",
+      "gemini-2.0-flash-001",
+      "gemini-2.0-flash",
+    ];
+
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`Analyzing JD with model: ${modelName}...`);
+        const model = genAI.getGenerativeModel(
+          { model: modelName },
+          { apiVersion: "v1" },
+        );
+        const result = await model.generateContent(prompt);
+        const response = result.response.text();
+        // Clean up response - remove markdown code blocks if present
+        const cleanJson = response
+          .replace(/```json\n?/g, "")
+          .replace(/```\n?/g, "")
+          .trim();
+        console.log(`✅ JD analysis successful with ${modelName}`);
+        return JSON.parse(cleanJson);
+      } catch (error: any) {
+        console.log(
+          `JD analysis failed with ${modelName}: ${error.message?.slice(0, 100)}...`,
+        );
+
+        // Rate limited
+        if (error.message?.includes("429")) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          continue;
+        }
+        if (error.message?.includes("404")) continue;
+      }
     }
+
+    console.error("All models failed for JD analysis, using defaults");
+    return {
+      requiredSkills: [],
+      preferredSkills: [],
+      keywords: [],
+      experienceLevel: "mid",
+      roleTitle: "Software Engineer",
+    };
   }
 
   /**
@@ -235,41 +274,35 @@ JOB DESCRIPTION:
 ${jobDescription}
 
 INSTRUCTIONS:
-**GOAL: Create a PROFESSIONAL, COMPLETE-LOOKING ONE A4 PAGE RESUME that maximizes the candidate's fit for this job.**
+**GOAL: Create a PROFESSIONAL, ONE A4 PAGE RESUME tailored to this job.**
 
-**FIRST, ASSESS THE PROFILE:**
-- If the candidate has LIMITED data (few experiences, few skills, no projects): EXPAND and ENRICH content to create a substantial resume.
-- If the candidate has ABUNDANT data: CONDENSE and SELECT only the most relevant content to fit one page.
+**CRITICAL - CONTENT DENSITY RULES:**
+1. **ONE PAGE LIMIT:** The resume MUST fit on a single A4 page. Condense text if necessary.
+2. **PROFESSIONAL SUMMARY**: Concise 2-3 sentence summary.
+3. **WORK EXPERIENCE**: 
+   - Select most relevant experiences (max 3).
+   - Generate 3-5 IMPACTFUL bullet points per experience.
+   - Keep bullets concise (1-2 lines max).
+   - Incorporate these keywords naturally: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
+4. **SKILLS**: Include 8-12 most relevant skills.
+5. **PROJECTS**: Include 1-2 relevant projects (short descriptions).
+6. **CERTIFICATIONS**: Include top 1-2 certifications only.
 
-**WHEN PROFILE IS SPARSE (limited info), do this:**
-1. **EXPAND SUMMARY**: Write a detailed 3-4 sentence professional summary highlighting transferable skills and career objectives.
-2. **ENRICH EXPERIENCES**: 
-   - Use ALL available experiences.
-   - Generate 5-7 DETAILED bullet points per experience with specific metrics, tools, and impact.
-   - Each bullet should be 2 lines long, adding context and achievements.
-   - Infer additional accomplishments that are reasonable for the role.
-3. **ADD TRANSFERABLE SKILLS**: Infer skills from the job description that the candidate likely has based on their experience.
-4. **INCLUDE ALL PROJECTS & CERTIFICATIONS**: Use all available projects and certifications with expanded descriptions.
-5. **DETAILED EDUCATION**: Include GPA, relevant coursework, honors, or achievements if available.
-
-**WHEN PROFILE IS RICH (lots of info), do this:**
-1. **CONCISE SUMMARY**: Keep to 2-3 sentences.
-2. **SELECT STRATEGICALLY**: Choose only 2-3 most relevant experiences with 3-4 bullets each.
-3. **LIMIT SKILLS**: Include only 10-15 most relevant skills.
-4. **SELECTIVE PROJECTS**: Include only 1-2 most relevant projects.
-5. **PRIORITIZE**: Summary > Experience > Skills > Education > Projects > Certifications. Skip sections if needed.
-
-**ALWAYS:**
-- Use "Result - Action - Context" format with metrics where possible.
-- Incorporate these keywords naturally: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
-- Reorder skills by relevance to the job description.
-- **THE RESUME SHOULD LOOK COMPLETE AND PROFESSIONAL - not sparse or empty.**
+**BALANCE INSTRUCTION:**
+- If the candidate has LITTLE experience, expand bullets to fill the page.
+- If the candidate has EXTENSIVE experience, condense bullets to fit one page.
 
 **CALCULATE ATS SCORE**: 
 - Compare the candidate's original profile against the JD.
 - Base score on: Keyword match (40%), Skills match (30%), Experience relevance (30%).
 - Return a Realistic score (0-100).
 - Provide a BREAKDOWN of why this score was given.
+
+**KEYWORD ANALYSIS (REQUIRED)**:
+- Extract ALL important keywords from the job description (technologies, skills, tools, methodologies).
+- For each keyword found in the resume, track WHERE it appears (summary, experience.0.bullets.1, skills, projects, etc.).
+- List keywords from the JD that are NOT in the resume as "missingKeywords".
+- Calculate matchPercentage = (matched / total) * 100.
 
 Return ONLY valid JSON with this structure:
 {
@@ -324,38 +357,66 @@ Return ONLY valid JSON with this structure:
     "missingKeywords": ["missing1", "missing2"],
     "explanation": "Brief explanation of calculation"
   },
-  "keywords": ["matched", "keywords"]
+  "keywords": ["matched", "keywords"],
+  "keywordAnalysis": {
+    "matchedKeywords": [
+      {
+        "keyword": "React",
+        "locations": ["summary", "experience.0.bullets.1", "skills"]
+      },
+      {
+        "keyword": "Node.js",
+        "locations": ["experience.0.bullets.2", "skills"]
+      }
+    ],
+    "missingKeywords": ["AWS", "Docker", "CI/CD"],
+    "totalJobKeywords": 12,
+    "matchPercentage": 67
+  }
 }`;
 
     // Helper to try generation with fallback (Same strategy as ResumeParser)
     const generateWithFallback = async () => {
       // List of models to try in order
+      // Prioritizing models with available quota based on user report
       const modelsToTry = [
+        "gemini-2.5-flash-lite-001", // Likely ID for 2.5 Flash Lite
+        "gemini-2.5-flash-lite",
+        "gemini-3.0-flash-001", // Likely ID for 3.0 Flash
+        "gemini-3.0-flash",
         "gemini-2.0-flash-001",
         "gemini-2.0-flash",
-        "gemini-2.5-flash",
       ];
 
       for (const modelName of modelsToTry) {
         try {
           console.log(`Generating resume with model: ${modelName}...`);
-          const currentModel = genAI.getGenerativeModel({ model: modelName });
+          // Use v1 API version
+          const currentModel = genAI.getGenerativeModel(
+            { model: modelName },
+            { apiVersion: "v1" },
+          );
           const result = await currentModel.generateContent(prompt);
           return result.response.text();
         } catch (error: any) {
-          console.log(`Failed with ${modelName}: ${error.message}`);
+          console.log(
+            `Failed with ${modelName}: ${error.message?.slice(0, 100)}...`,
+          );
 
+          // Run out of quota?
           if (error.message?.includes("429")) {
-            console.log(`Rate limit hit. Waiting 2s before next model...`);
+            console.log(`Rate limit (429) hit for ${modelName}. Waiting 2s...`);
             await new Promise((resolve) => setTimeout(resolve, 2000));
-            continue; // Try next model
+            continue;
           }
 
+          // Model not found?
           if (error.message?.includes("404")) {
-            continue; // Not found, try next
+            console.log(`Model ${modelName} not found (404). Skipping.`);
+            continue;
           }
 
-          // Other errors, continue to next model just in case
+          // Other errors, continue
         }
       }
 
@@ -363,16 +424,35 @@ Return ONLY valid JSON with this structure:
     };
 
     try {
+      console.log("Calling AI to generate resume...");
       const response = await generateWithFallback();
+      console.log("=== RAW AI RESPONSE ===");
+      console.log("Response length:", response?.length || 0);
+      console.log("First 500 chars:", response?.slice(0, 500));
+      console.log("Last 200 chars:", response?.slice(-200));
+      console.log("=== END RAW RESPONSE ===");
+
       const cleanJson = response
         .replace(/```json\n?/g, "")
         .replace(/```\n?/g, "")
         .trim();
-      return JSON.parse(cleanJson);
-    } catch (error) {
-      console.error("Error generating resume:", error);
+      console.log("Cleaned JSON length:", cleanJson.length);
+      console.log("Attempting JSON.parse...");
+
+      const parsed = JSON.parse(cleanJson);
+      console.log(
+        "✅ AI Response parsed successfully! ATS Score:",
+        parsed.atsScore,
+      );
+      console.log("Has keywordAnalysis:", !!parsed.keywordAnalysis);
+      return parsed;
+    } catch (error: any) {
+      console.error("=== AI GENERATION FAILED ===");
+      console.error("Error type:", error.constructor.name);
+      console.error("Error message:", error.message);
+      console.error("Stack:", error.stack?.slice(0, 500));
+      console.error("Using fallback basic resume...");
       // Return a basic resume structure from profile data ONLY if all AIs fail
-      // This explains why the user saw "not tailored" content and "70%" score
       return this.createBasicResume(profile);
     }
   }
@@ -406,8 +486,25 @@ Return ONLY valid JSON with this structure:
         gpa: edu.gpa,
       })),
       skills: profile.skills.map((s) => s.name),
+      projects: profile.projects?.map((p) => ({
+        name: p.name,
+        description: p.description,
+        technologies: p.technologies,
+        link: p.link,
+      })),
+      certifications: profile.certifications?.map((c) => ({
+        name: c.name,
+        issuer: c.issuer,
+        date: c.date,
+      })),
       atsScore: 70,
       keywords: [],
+      keywordAnalysis: {
+        matchedKeywords: [],
+        missingKeywords: [],
+        totalJobKeywords: 0,
+        matchPercentage: 0,
+      },
     };
   }
 
