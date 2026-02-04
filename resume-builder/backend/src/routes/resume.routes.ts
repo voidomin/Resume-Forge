@@ -183,11 +183,20 @@ async function resumeRoutes(server: FastifyInstance) {
           return reply.status(404).send({ error: "Resume not found" });
         }
 
+        const content = JSON.parse(resume.generatedContent);
+
+        // Run ATS compatibility check on the fly
+        const atsReport = atsCheckerService.checkResume(
+          content,
+          resume.jobDescription || "",
+        );
+
         return reply.send({
           resume: {
             ...resume,
-            content: JSON.parse(resume.generatedContent),
+            content,
           },
+          atsReport,
         });
       } catch (error) {
         request.log.error(error);

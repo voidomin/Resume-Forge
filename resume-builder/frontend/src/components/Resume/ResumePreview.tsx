@@ -82,9 +82,9 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
     fontWeight: "bold" as const,
     textTransform: "uppercase" as const,
     borderBottom: borderStyle,
-    paddingBottom: "2px",
-    marginTop: "6px",
-    marginBottom: "4px",
+    paddingBottom: "1px",
+    marginTop: "4px",
+    marginBottom: "3px",
     textAlign: sectionHeaderAlignment as any,
     color: accentColor,
   };
@@ -149,22 +149,25 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
               resume.contactInfo.github ||
               resume.contactInfo.portfolio) && <span>|</span>}
 
-          {resume.contactInfo.linkedin && (
-            <a
-              href={resume.contactInfo.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: linkColor, textDecoration: "underline" }}
-            >
-              {formatUrl(resume.contactInfo.linkedin)}
-            </a>
-          )}
           {resume.contactInfo.linkedin &&
-            (resume.contactInfo.github || resume.contactInfo.portfolio) && (
-              <span>|</span>
+            resume.contactInfo.linkedin !== "N/A" && (
+              <a
+                href={resume.contactInfo.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: linkColor, textDecoration: "underline" }}
+              >
+                {formatUrl(resume.contactInfo.linkedin)}
+              </a>
             )}
+          {resume.contactInfo.linkedin &&
+            resume.contactInfo.linkedin !== "N/A" &&
+            ((resume.contactInfo.github &&
+              resume.contactInfo.github !== "N/A") ||
+              (resume.contactInfo.portfolio &&
+                resume.contactInfo.portfolio !== "N/A")) && <span>|</span>}
 
-          {resume.contactInfo.github && (
+          {resume.contactInfo.github && resume.contactInfo.github !== "N/A" && (
             <a
               href={resume.contactInfo.github}
               target="_blank"
@@ -174,20 +177,22 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
               {formatUrl(resume.contactInfo.github)}
             </a>
           )}
-          {resume.contactInfo.github && resume.contactInfo.portfolio && (
-            <span>|</span>
-          )}
+          {resume.contactInfo.github &&
+            resume.contactInfo.github !== "N/A" &&
+            resume.contactInfo.portfolio &&
+            resume.contactInfo.portfolio !== "N/A" && <span>|</span>}
 
-          {resume.contactInfo.portfolio && (
-            <a
-              href={resume.contactInfo.portfolio}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: linkColor, textDecoration: "underline" }}
-            >
-              {formatUrl(resume.contactInfo.portfolio)}
-            </a>
-          )}
+          {resume.contactInfo.portfolio &&
+            resume.contactInfo.portfolio !== "N/A" && (
+              <a
+                href={resume.contactInfo.portfolio}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: linkColor, textDecoration: "underline" }}
+              >
+                {formatUrl(resume.contactInfo.portfolio)}
+              </a>
+            )}
         </div>
       </div>
 

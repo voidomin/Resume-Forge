@@ -14,6 +14,7 @@ import TemplateSelector, {
   TemplateType,
 } from "../components/Resume/TemplateSelector";
 import KeywordAnalysisPanel from "../components/Resume/KeywordAnalysisPanel";
+import ATSChecklist from "../components/Resume/ATSChecklist";
 
 interface GeneratedResume {
   contactInfo: {
@@ -41,6 +42,13 @@ interface GeneratedResume {
   }[];
   skills: string[];
   atsScore: number;
+  atsScoreBreakdown?: {
+    keywordMatch: number;
+    skillsMatch: number;
+    formatting: number;
+    missingKeywords: string[];
+    explanation: string;
+  };
   keywords: string[];
   keywordAnalysis?: {
     matchedKeywords: {
@@ -71,6 +79,7 @@ function ResumeView() {
     useState<TemplateType>("modern");
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
+  const [atsReport, setAtsReport] = useState<any>(null);
 
   useEffect(() => {
     fetchResume();
@@ -80,6 +89,7 @@ function ResumeView() {
     try {
       const response = await api.get(`/resumes/${id}`);
       setResume(response.data.resume);
+      setAtsReport(response.data.atsReport || null);
     } catch (error) {
       toast.error("Failed to load resume");
       navigate("/dashboard");
@@ -131,6 +141,7 @@ function ResumeView() {
         ...resume,
         content: response.data.content,
       });
+      setAtsReport(response.data.atsReport || null);
       toast.success("Resume regenerated!");
     } catch (error) {
       toast.error("Failed to regenerate resume");
@@ -189,22 +200,66 @@ function ResumeView() {
                 </p>
 
                 {/* ATS Score */}
-                {resume.content.atsScore && (
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-600">ATS Score</span>
-                      <span className="font-bold text-lg text-green-600">
-                        {resume.content.atsScore}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-500 h-2 rounded-full"
-                        style={{ width: `${resume.content.atsScore}%` }}
-                      />
-                    </div>
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">ATS Score</span>
+                    <span className="font-bold text-lg text-green-600">
+                      {resume.content.atsScore}%
+                    </span>
                   </div>
-                )}
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${resume.content.atsScore}%` }}
+                    />
+                  </div>
+
+                  {/* Score Breakdown */}
+                  {resume.content.atsScoreBreakdown && (
+                    <div className="mt-4 text-xs space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Keywords:</span>
+                        <span className="font-medium">
+                          {resume.content.atsScoreBreakdown.keywordMatch}/40
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Skills:</span>
+                        <span className="font-medium">
+                          {resume.content.atsScoreBreakdown.skillsMatch}/30
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Experience:</span>
+                        <span className="font-medium">
+                          {resume.content.atsScoreBreakdown.formatting}/30
+                        </span>
+                      </div>
+
+                      {resume.content.atsScoreBreakdown.missingKeywords &&
+                        resume.content.atsScoreBreakdown.missingKeywords
+                          .length > 0 && (
+                          <div className="pt-2 border-t border-gray-200 mt-2">
+                            <span className="block text-gray-500 mb-1">
+                              Missing Keywords:
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                              {resume.content.atsScoreBreakdown.missingKeywords
+                                .slice(0, 3)
+                                .map((k, i) => (
+                                  <span
+                                    key={i}
+                                    className="px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-100 rounded text-[10px]"
+                                  >
+                                    {k}
+                                  </span>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Keyword Analysis Panel */}
                 {resume.content.keywordAnalysis && (
@@ -212,6 +267,13 @@ function ResumeView() {
                     <KeywordAnalysisPanel
                       keywordAnalysis={resume.content.keywordAnalysis}
                     />
+                  </div>
+                )}
+
+                {/* ATS Compatibility Checklist */}
+                {atsReport && (
+                  <div className="mb-6">
+                    <ATSChecklist report={atsReport} />
                   </div>
                 )}
 
