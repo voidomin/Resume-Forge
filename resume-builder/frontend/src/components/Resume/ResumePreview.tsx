@@ -64,6 +64,15 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
   const isExecutive = template === "executive";
   const isMinimalist = template === "minimalist";
 
+  const formatUrl = (url: string) => {
+    return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+  };
+
+  // Colors - blue accent for modern template
+  const accentColor = template === "modern" ? "#2563eb" : "#000";
+  const borderStyle = isMinimalist ? "none" : `1px solid ${accentColor}`;
+  const linkColor = template === "modern" ? "#2563eb" : "#000";
+
   const isValid = (val: string | undefined) =>
     val &&
     val.trim().toLowerCase() !== "n/a" &&
@@ -77,7 +86,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
   ) => {
     if (!isValid(value)) return null;
     return (
-      <>
+      <Fragment key={label}>
         {isLink ? (
           <a
             href={href || value}
@@ -93,7 +102,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
         ) : (
           <span>{value}</span>
         )}
-      </>
+      </Fragment>
     );
   };
 
@@ -110,18 +119,9 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
     renderContactItem("Portfolio", resume.contactInfo.portfolio, true),
   ].filter(Boolean);
 
-  const formatUrl = (url: string) => {
-    return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
-  };
-
   // Dynamic Styles for reference-like design
   const headerAlignment = isMinimalist ? "left" : "center";
   const sectionHeaderAlignment = isExecutive ? "center" : "left";
-
-  // Colors - blue accent for modern template
-  const accentColor = template === "modern" ? "#2563eb" : "#000";
-  const borderStyle = isMinimalist ? "none" : `1px solid ${accentColor}`;
-  const linkColor = template === "modern" ? "#2563eb" : "#000";
 
   // Section header style (reusable)
   const sectionHeaderStyle = {
