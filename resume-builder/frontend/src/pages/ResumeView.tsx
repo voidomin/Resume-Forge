@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ResumePreview from "../components/Resume/ResumePreview";
+import TemplateSelector, {
+  TemplateType,
+} from "../components/Resume/TemplateSelector";
+import KeywordAnalysisPanel from "../components/Resume/KeywordAnalysisPanel";
 
 interface GeneratedResume {
   contactInfo: {
@@ -38,6 +42,15 @@ interface GeneratedResume {
   skills: string[];
   atsScore: number;
   keywords: string[];
+  keywordAnalysis?: {
+    matchedKeywords: {
+      keyword: string;
+      locations: string[];
+    }[];
+    missingKeywords: string[];
+    totalJobKeywords: number;
+    matchPercentage: number;
+  };
 }
 
 interface Resume {
@@ -54,6 +67,8 @@ function ResumeView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [resume, setResume] = useState<Resume | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<TemplateType>("modern");
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
 
@@ -78,6 +93,7 @@ function ResumeView() {
 
     try {
       const response = await api.get(`/resumes/${id}/export/${format}`, {
+        params: format === "pdf" ? { template: selectedTemplate } : undefined,
         responseType: "blob",
       });
 
@@ -190,27 +206,25 @@ function ResumeView() {
                   </div>
                 )}
 
-                {/* Matched Keywords */}
-                {resume.content.keywords &&
-                  resume.content.keywords.length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">
-                        Matched Keywords
-                      </h3>
-                      <div className="flex flex-wrap gap-1">
-                        {resume.content.keywords
-                          .slice(0, 8)
-                          .map((keyword, i) => (
-                            <span
-                              key={i}
-                              className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full"
-                            >
-                              {keyword}
-                            </span>
-                          ))}
-                      </div>
-                    </div>
-                  )}
+                {/* Keyword Analysis Panel */}
+                {resume.content.keywordAnalysis && (
+                  <div className="mb-6">
+                    <KeywordAnalysisPanel
+                      keywordAnalysis={resume.content.keywordAnalysis}
+                    />
+                  </div>
+                )}
+
+                {/* Template Selector */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">
+                    Choose Template
+                  </h3>
+                  <TemplateSelector
+                    selectedTemplate={selectedTemplate}
+                    onSelect={setSelectedTemplate}
+                  />
+                </div>
 
                 {/* Export Buttons */}
                 <div className="space-y-3">
@@ -258,7 +272,10 @@ function ResumeView() {
           {/* Right: Preview */}
           <div className="flex-1 overflow-auto">
             <div className="bg-gray-100 rounded-xl p-8 flex justify-center">
-              <ResumePreview resume={resume.content} />
+              <ResumePreview
+                resume={resume.content}
+                template={selectedTemplate}
+              />
             </div>
           </div>
         </div>

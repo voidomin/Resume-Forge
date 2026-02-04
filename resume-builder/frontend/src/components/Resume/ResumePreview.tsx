@@ -40,9 +40,33 @@ interface GeneratedResume {
 
 interface ResumePreviewProps {
   resume: GeneratedResume;
+  template?: "modern" | "executive" | "minimalist";
 }
 
-function ResumePreview({ resume }: ResumePreviewProps) {
+function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
+  const getFontFamily = () => {
+    switch (template) {
+      case "executive":
+        return '"Times New Roman", Times, serif';
+      case "minimalist":
+      case "modern":
+      default:
+        return "Arial, Helvetica, sans-serif";
+    }
+  };
+
+  const isExecutive = template === "executive";
+  const isMinimalist = template === "minimalist";
+
+  // Dynamic Styles
+  const headerAlignment = isMinimalist ? "left" : "center";
+  const sectionHeaderAlignment = isExecutive ? "center" : "left";
+
+  // Colors
+  const accentColor = template === "modern" ? "#2563eb" : "#000000";
+  const headerColor = template === "modern" ? "#2563eb" : "#000000";
+  const borderStyle = isMinimalist ? "none" : `1px solid ${accentColor}`;
+
   return (
     <div
       className="resume-preview bg-white"
@@ -51,7 +75,7 @@ function ResumePreview({ resume }: ResumePreviewProps) {
         minHeight: "11in",
         maxHeight: "11in",
         padding: "0.5in",
-        fontFamily: "Arial, Helvetica, sans-serif",
+        fontFamily: getFontFamily(),
         fontSize: "10pt",
         lineHeight: "1.4",
         color: "#000",
@@ -60,20 +84,21 @@ function ResumePreview({ resume }: ResumePreviewProps) {
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: "center", marginBottom: "12px" }}>
+      <div style={{ textAlign: headerAlignment, marginBottom: "12px" }}>
         <h1
           style={{
-            fontSize: "18pt",
+            fontSize: isMinimalist ? "22pt" : "18pt",
             fontWeight: "bold",
             textTransform: "uppercase",
             margin: 0,
             marginBottom: "4px",
+            color: headerColor,
           }}
         >
           {resume.contactInfo.name}
         </h1>
 
-        <div style={{ fontSize: "9pt", color: "#333", marginBottom: "2px" }}>
+        <div style={{ fontSize: "9pt", color: "#666", marginBottom: "2px" }}>
           {[
             resume.contactInfo.email,
             resume.contactInfo.phone,
@@ -84,7 +109,7 @@ function ResumePreview({ resume }: ResumePreviewProps) {
         </div>
 
         {(resume.contactInfo.linkedin || resume.contactInfo.github) && (
-          <div style={{ fontSize: "9pt", color: "#333" }}>
+          <div style={{ fontSize: "9pt", color: "#666" }}>
             {[resume.contactInfo.linkedin, resume.contactInfo.github]
               .filter(Boolean)
               .join("  |  ")}
@@ -100,13 +125,15 @@ function ResumePreview({ resume }: ResumePreviewProps) {
               fontSize: "11pt",
               fontWeight: "bold",
               textTransform: "uppercase",
-              borderBottom: "1px solid #000",
+              borderBottom: borderStyle,
               paddingBottom: "2px",
               marginTop: "10px",
               marginBottom: "6px",
+              textAlign: sectionHeaderAlignment,
+              color: accentColor,
             }}
           >
-            Professional Summary
+            {isMinimalist ? "Profile" : "Professional Summary"}
           </h2>
           <p style={{ margin: 0, textAlign: "justify" }}>{resume.summary}</p>
         </section>
@@ -120,10 +147,12 @@ function ResumePreview({ resume }: ResumePreviewProps) {
               fontSize: "11pt",
               fontWeight: "bold",
               textTransform: "uppercase",
-              borderBottom: "1px solid #000",
+              borderBottom: borderStyle,
               paddingBottom: "2px",
               marginTop: "10px",
               marginBottom: "6px",
+              textAlign: sectionHeaderAlignment,
+              color: accentColor,
             }}
           >
             Work Experience
@@ -178,10 +207,12 @@ function ResumePreview({ resume }: ResumePreviewProps) {
               fontSize: "11pt",
               fontWeight: "bold",
               textTransform: "uppercase",
-              borderBottom: "1px solid #000",
+              borderBottom: borderStyle,
               paddingBottom: "2px",
               marginTop: "10px",
               marginBottom: "6px",
+              textAlign: sectionHeaderAlignment,
+              color: accentColor,
             }}
           >
             Education
@@ -218,10 +249,12 @@ function ResumePreview({ resume }: ResumePreviewProps) {
               fontSize: "11pt",
               fontWeight: "bold",
               textTransform: "uppercase",
-              borderBottom: "1px solid #000",
+              borderBottom: borderStyle,
               paddingBottom: "2px",
               marginTop: "10px",
               marginBottom: "6px",
+              textAlign: sectionHeaderAlignment,
+              color: accentColor,
             }}
           >
             Projects
@@ -278,10 +311,12 @@ function ResumePreview({ resume }: ResumePreviewProps) {
               fontSize: "11pt",
               fontWeight: "bold",
               textTransform: "uppercase",
-              borderBottom: "1px solid #000",
+              borderBottom: borderStyle,
               paddingBottom: "2px",
               marginTop: "10px",
               marginBottom: "6px",
+              textAlign: sectionHeaderAlignment,
+              color: accentColor,
             }}
           >
             Certifications
@@ -315,10 +350,12 @@ function ResumePreview({ resume }: ResumePreviewProps) {
               fontSize: "11pt",
               fontWeight: "bold",
               textTransform: "uppercase",
-              borderBottom: "1px solid #000",
+              borderBottom: borderStyle,
               paddingBottom: "2px",
               marginTop: "10px",
               marginBottom: "6px",
+              textAlign: sectionHeaderAlignment,
+              color: accentColor,
             }}
           >
             Skills

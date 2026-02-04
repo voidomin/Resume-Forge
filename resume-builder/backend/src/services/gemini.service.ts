@@ -426,25 +426,14 @@ Return ONLY valid JSON with this structure:
     try {
       console.log("Calling AI to generate resume...");
       const response = await generateWithFallback();
-      console.log("=== RAW AI RESPONSE ===");
-      console.log("Response length:", response?.length || 0);
-      console.log("First 500 chars:", response?.slice(0, 500));
-      console.log("Last 200 chars:", response?.slice(-200));
-      console.log("=== END RAW RESPONSE ===");
 
       const cleanJson = response
         .replace(/```json\n?/g, "")
         .replace(/```\n?/g, "")
         .trim();
-      console.log("Cleaned JSON length:", cleanJson.length);
-      console.log("Attempting JSON.parse...");
 
       const parsed = JSON.parse(cleanJson);
-      console.log(
-        "✅ AI Response parsed successfully! ATS Score:",
-        parsed.atsScore,
-      );
-      console.log("Has keywordAnalysis:", !!parsed.keywordAnalysis);
+
       return parsed;
     } catch (error: any) {
       console.error("=== AI GENERATION FAILED ===");

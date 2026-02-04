@@ -208,15 +208,19 @@ async function resumeRoutes(server: FastifyInstance) {
   );
 
   // Export resume as PDF
-  server.get<{ Params: { id: string } }>(
+  server.get<{ Params: { id: string }; Querystring: { template?: string } }>(
     "/:id/export/pdf",
     { preHandler: authenticateToken },
     async (
-      request: FastifyRequest<{ Params: { id: string } }>,
+      request: FastifyRequest<{
+        Params: { id: string };
+        Querystring: { template?: string };
+      }>,
       reply: FastifyReply,
     ) => {
       try {
         const { id } = request.params;
+        const { template } = request.query;
 
         const resume = await prisma.resume.findUnique({ where: { id } });
 
@@ -225,9 +229,19 @@ async function resumeRoutes(server: FastifyInstance) {
         }
 
         const content = JSON.parse(resume.generatedContent);
-        const pdfBuffer = await pdfService.generateResumePDF(content);
+        // Cast template string to TemplateType, defaulting to 'modern' if invalid or missing
+        const selectedTemplate = (
+          ["modern", "executive", "minimalist"].includes(template || "")
+            ? template
+            : "modern"
+        ) as any;
 
-        const filename = `${content.contactInfo.name.replace(/\s+/g, "_")}_Resume.pdf`;
+        const pdfBuffer = await pdfService.generateResumePDF(
+          content,
+          selectedTemplate,
+        );
+
+        const filename = `${content.contactInfo.name.replace(/\s+/g, "_")}_${selectedTemplate}_Resume.pdf`;
 
         reply.header("Content-Type", "application/pdf");
         reply.header(

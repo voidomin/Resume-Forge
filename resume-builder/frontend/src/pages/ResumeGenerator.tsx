@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ResumePreview from "../components/Resume/ResumePreview";
+import TemplateSelector, {
+  TemplateType,
+} from "../components/Resume/TemplateSelector";
 import KeywordAnalysisPanel from "../components/Resume/KeywordAnalysisPanel";
 
 interface GeneratedResume {
@@ -71,6 +74,8 @@ interface GeneratedResume {
 
 function ResumeGenerator() {
   const [step, setStep] = useState<"input" | "generating" | "preview">("input");
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<TemplateType>("modern");
   const [jobDescription, setJobDescription] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [generatedResume, setGeneratedResume] =
@@ -111,6 +116,7 @@ function ResumeGenerator() {
 
     try {
       const response = await api.get(`/resumes/${resumeId}/export/${format}`, {
+        params: format === "pdf" ? { template: selectedTemplate } : undefined,
         responseType: "blob",
       });
 
@@ -397,6 +403,17 @@ Required Skills:
                       </div>
                     )}
 
+                  {/* Template Selector */}
+                  <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Choose Template
+                    </h3>
+                    <TemplateSelector
+                      selectedTemplate={selectedTemplate}
+                      onSelect={setSelectedTemplate}
+                    />
+                  </div>
+
                   {/* Export Buttons */}
                   <div className="space-y-3">
                     <button
@@ -445,7 +462,10 @@ Required Skills:
             {/* Right: Preview */}
             <div className="flex-1 overflow-auto">
               <div className="bg-gray-100 rounded-xl p-8 flex justify-center">
-                <ResumePreview resume={generatedResume} />
+                <ResumePreview
+                  resume={generatedResume}
+                  template={selectedTemplate}
+                />
               </div>
             </div>
           </div>
