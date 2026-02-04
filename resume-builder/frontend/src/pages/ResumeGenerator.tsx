@@ -15,6 +15,7 @@ import TemplateSelector, {
   TemplateType,
 } from "../components/Resume/TemplateSelector";
 import KeywordAnalysisPanel from "../components/Resume/KeywordAnalysisPanel";
+import ATSChecklist from "../components/Resume/ATSChecklist";
 
 interface GeneratedResume {
   contactInfo: {
@@ -81,6 +82,7 @@ function ResumeGenerator() {
   const [generatedResume, setGeneratedResume] =
     useState<GeneratedResume | null>(null);
   const [resumeId, setResumeId] = useState<string | null>(null);
+  const [atsReport, setAtsReport] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -101,6 +103,7 @@ function ResumeGenerator() {
 
       setGeneratedResume(response.data.content);
       setResumeId(response.data.resume.id);
+      setAtsReport(response.data.atsReport || null);
       setStep("preview");
       toast.success("Resume generated successfully!");
     } catch (err: any) {
@@ -377,6 +380,13 @@ Required Skills:
                       <KeywordAnalysisPanel
                         keywordAnalysis={generatedResume.keywordAnalysis}
                       />
+                    </div>
+                  )}
+
+                  {/* ATS Compatibility Checklist */}
+                  {atsReport && (
+                    <div className="mb-6">
+                      <ATSChecklist report={atsReport} />
                     </div>
                   )}
 

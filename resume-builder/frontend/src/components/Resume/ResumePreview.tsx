@@ -63,91 +63,94 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
     return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
   };
 
-  // Dynamic Styles
+  // Dynamic Styles for reference-like design
   const headerAlignment = isMinimalist ? "left" : "center";
   const sectionHeaderAlignment = isExecutive ? "center" : "left";
 
-  // Colors
-  const accentColor = template === "modern" ? "#2563eb" : "#000000";
-  const headerColor = template === "modern" ? "#2563eb" : "#000000";
+  // Colors - blue accent for modern template
+  const accentColor = template === "modern" ? "#2563eb" : "#000";
   const borderStyle = isMinimalist ? "none" : `1px solid ${accentColor}`;
+  const linkColor = template === "modern" ? "#2563eb" : "#000";
+
+  // Section header style (reusable)
+  const sectionHeaderStyle = {
+    fontSize: "10pt",
+    fontWeight: "bold" as const,
+    textTransform: "uppercase" as const,
+    borderBottom: borderStyle,
+    paddingBottom: "2px",
+    marginTop: "6px",
+    marginBottom: "4px",
+    textAlign: sectionHeaderAlignment as any,
+    color: accentColor,
+  };
 
   return (
     <div
       className="resume-preview bg-white"
       style={{
-        width: "8.5in",
-        minHeight: "11in",
-        maxHeight: "11in",
-        padding: "0.5in",
+        width: "8.27in", // A4 width
+        minHeight: "11.69in", // A4 height
+        maxHeight: "11.69in",
+        padding: "0.4in", // Tighter margins
         fontFamily: getFontFamily(),
-        fontSize: "10pt",
-        lineHeight: "1.4",
+        fontSize: "9pt", // Smaller base font
+        lineHeight: "1.3", // Tighter line height
         color: "#000",
         overflow: "hidden",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+        border: "1px solid #e0e0e0",
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: headerAlignment, marginBottom: "12px" }}>
+      <div style={{ textAlign: headerAlignment, marginBottom: "8px" }}>
         <h1
           style={{
-            fontSize: isMinimalist ? "22pt" : "18pt",
+            fontSize: isMinimalist ? "18pt" : "16pt",
             fontWeight: "bold",
             textTransform: "uppercase",
             margin: 0,
-            marginBottom: "4px",
-            color: headerColor,
+            marginBottom: "2px",
+            color: accentColor,
           }}
         >
           {resume.contactInfo.name}
         </h1>
 
+        {/* Contact Line */}
         <div
           style={{
             fontSize: "9pt",
-            color: "#666",
-            marginBottom: "2px",
             display: "flex",
             flexWrap: "wrap",
             justifyContent:
-              headerAlignment === "left" ? "flex-start" : "center",
-            gap: "8px",
+              headerAlignment === "center" ? "center" : "flex-start",
+            gap: "6px",
           }}
         >
+          {resume.contactInfo.phone && <span>{resume.contactInfo.phone}</span>}
+          {resume.contactInfo.phone && resume.contactInfo.email && (
+            <span>|</span>
+          )}
           {resume.contactInfo.email && (
             <a
               href={`mailto:${resume.contactInfo.email}`}
-              style={{ color: "inherit", textDecoration: "none" }}
+              style={{ color: linkColor, textDecoration: "none" }}
             >
               {resume.contactInfo.email}
             </a>
           )}
-          {resume.contactInfo.phone && (
-            <span>| {resume.contactInfo.phone}</span>
-          )}
-          {resume.contactInfo.location && (
-            <span>| {resume.contactInfo.location}</span>
-          )}
-        </div>
+          {resume.contactInfo.email &&
+            (resume.contactInfo.linkedin ||
+              resume.contactInfo.github ||
+              resume.contactInfo.portfolio) && <span>|</span>}
 
-        <div
-          style={{
-            fontSize: "9pt",
-            color: "#666",
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent:
-              headerAlignment === "left" ? "flex-start" : "center",
-            gap: "8px",
-          }}
-        >
           {resume.contactInfo.linkedin && (
             <a
               href={resume.contactInfo.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "inherit", textDecoration: "none" }}
+              style={{ color: linkColor, textDecoration: "underline" }}
             >
               {formatUrl(resume.contactInfo.linkedin)}
             </a>
@@ -162,7 +165,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
               href={resume.contactInfo.github}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "inherit", textDecoration: "none" }}
+              style={{ color: linkColor, textDecoration: "underline" }}
             >
               {formatUrl(resume.contactInfo.github)}
             </a>
@@ -176,7 +179,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
               href={resume.contactInfo.portfolio}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "inherit", textDecoration: "none" }}
+              style={{ color: linkColor, textDecoration: "underline" }}
             >
               {formatUrl(resume.contactInfo.portfolio)}
             </a>
@@ -187,50 +190,44 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
       {/* Professional Summary */}
       {resume.summary && (
         <section>
-          <h2
-            style={{
-              fontSize: "11pt",
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              borderBottom: borderStyle,
-              paddingBottom: "2px",
-              marginTop: "10px",
-              marginBottom: "6px",
-              textAlign: sectionHeaderAlignment,
-              color: accentColor,
-            }}
-          >
-            {isMinimalist ? "Profile" : "Professional Summary"}
-          </h2>
-          <p style={{ margin: 0, textAlign: "justify" }}>{resume.summary}</p>
+          <h2 style={sectionHeaderStyle}>Professional Summary</h2>
+          <p style={{ margin: 0, textAlign: "justify", fontSize: "9pt" }}>
+            {resume.summary}
+          </p>
+        </section>
+      )}
+
+      {/* Education - Moved up like reference */}
+      {resume.education && resume.education.length > 0 && (
+        <section>
+          <h2 style={sectionHeaderStyle}>Education</h2>
+          {resume.education.map((edu, index) => (
+            <div key={index} style={{ marginBottom: "2px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div>
+                  <span style={{ fontWeight: "bold" }}>{edu.institution}</span>
+                  {edu.gpa && <span>, {edu.gpa} CGPA</span>}
+                </div>
+              </div>
+              <div style={{ fontSize: "9pt" }}>
+                {edu.degree} ({edu.field})
+                {edu.dateRange && ` - ${edu.dateRange}`}
+              </div>
+            </div>
+          ))}
         </section>
       )}
 
       {/* Work Experience */}
       {resume.experiences && resume.experiences.length > 0 && (
         <section>
-          <h2
-            style={{
-              fontSize: "11pt",
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              borderBottom: borderStyle,
-              paddingBottom: "2px",
-              marginTop: "10px",
-              marginBottom: "6px",
-              textAlign: sectionHeaderAlignment,
-              color: accentColor,
-            }}
-          >
-            Work Experience
-          </h2>
-
+          <h2 style={sectionHeaderStyle}>Work Experience</h2>
           {resume.experiences.map((exp, index) => (
             <div
               key={index}
               style={{
                 marginBottom:
-                  index < resume.experiences.length - 1 ? "8px" : "0",
+                  index < resume.experiences.length - 1 ? "6px" : "0",
               }}
             >
               <div
@@ -242,21 +239,25 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
               >
                 <div>
                   <span style={{ fontWeight: "bold" }}>{exp.role}</span>
-                  <span> | {exp.company}</span>
+                  <span>, {exp.company}</span>
                   {exp.location && <span> | {exp.location}</span>}
                 </div>
-                <span style={{ fontSize: "10pt" }}>{exp.dateRange}</span>
+                <span style={{ fontSize: "9pt", flexShrink: 0 }}>
+                  {exp.dateRange}
+                </span>
               </div>
-
               <ul
                 style={{
-                  margin: "4px 0 0 0",
-                  paddingLeft: "15px",
+                  margin: "2px 0 0 0",
+                  paddingLeft: "14px",
                   listStyleType: "disc",
                 }}
               >
                 {exp.bullets.map((bullet, bIndex) => (
-                  <li key={bIndex} style={{ marginBottom: "2px" }}>
+                  <li
+                    key={bIndex}
+                    style={{ marginBottom: "1px", fontSize: "9pt" }}
+                  >
                     {bullet}
                   </li>
                 ))}
@@ -266,168 +267,56 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
         </section>
       )}
 
-      {/* Education */}
-      {resume.education && resume.education.length > 0 && (
+      {/* Projects */}
+      {resume.projects && resume.projects.length > 0 && (
         <section>
-          <h2
-            style={{
-              fontSize: "11pt",
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              borderBottom: borderStyle,
-              paddingBottom: "2px",
-              marginTop: "10px",
-              marginBottom: "6px",
-              textAlign: sectionHeaderAlignment,
-              color: accentColor,
-            }}
-          >
-            Education
-          </h2>
-
-          {resume.education.map((edu, index) => (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "baseline",
-                marginBottom: "4px",
-              }}
-            >
+          <h2 style={sectionHeaderStyle}>Projects</h2>
+          {resume.projects.map((proj, index) => (
+            <div key={index} style={{ marginBottom: "4px" }}>
               <div>
-                <span style={{ fontWeight: "bold" }}>
-                  {edu.degree} in {edu.field}
-                </span>
-                <span> | {edu.institution}</span>
-                {edu.gpa && <span> | GPA: {edu.gpa}</span>}
+                <span style={{ fontWeight: "bold" }}>{proj.name}</span>
+                {proj.technologies && (
+                  <span style={{ fontWeight: "bold" }}>
+                    {" "}
+                    | {proj.technologies}
+                  </span>
+                )}
               </div>
-              <span style={{ fontSize: "10pt" }}>{edu.dateRange}</span>
+              <ul
+                style={{
+                  margin: "1px 0 0 0",
+                  paddingLeft: "14px",
+                  listStyleType: "disc",
+                }}
+              >
+                <li style={{ fontSize: "9pt" }}>{proj.description}</li>
+              </ul>
             </div>
           ))}
         </section>
       )}
 
-      {/* Projects */}
-      {resume.projects && resume.projects.length > 0 && (
+      {/* Technical Skills */}
+      {resume.skills && resume.skills.length > 0 && (
         <section>
-          <h2
-            style={{
-              fontSize: "11pt",
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              borderBottom: borderStyle,
-              paddingBottom: "2px",
-              marginTop: "10px",
-              marginBottom: "6px",
-              textAlign: sectionHeaderAlignment,
-              color: accentColor,
-            }}
-          >
-            Projects
-          </h2>
-          {resume.projects.map((proj, index) => (
-            <div key={index} style={{ marginBottom: "8px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                }}
-              >
-                <div>
-                  <span style={{ fontWeight: "bold" }}>{proj.name}</span>
-                  {proj.link && (
-                    <span>
-                      {" "}
-                      |{" "}
-                      <a
-                        href={proj.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: "inherit", textDecoration: "none" }}
-                      >
-                        {proj.link}
-                      </a>
-                    </span>
-                  )}
-                </div>
-              </div>
-              {proj.technologies && (
-                <div
-                  style={{
-                    fontStyle: "italic",
-                    fontSize: "9pt",
-                    marginBottom: "2px",
-                  }}
-                >
-                  {proj.technologies}
-                </div>
-              )}
-              <p style={{ margin: 0 }}>{proj.description}</p>
-            </div>
-          ))}
+          <h2 style={sectionHeaderStyle}>Technical Skills</h2>
+          <p style={{ margin: 0, fontSize: "9pt" }}>
+            {resume.skills.join("  •  ")}
+          </p>
         </section>
       )}
 
       {/* Certifications */}
       {resume.certifications && resume.certifications.length > 0 && (
         <section>
-          <h2
-            style={{
-              fontSize: "11pt",
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              borderBottom: borderStyle,
-              paddingBottom: "2px",
-              marginTop: "10px",
-              marginBottom: "6px",
-              textAlign: sectionHeaderAlignment,
-              color: accentColor,
-            }}
-          >
-            Certifications
-          </h2>
+          <h2 style={sectionHeaderStyle}>Certifications</h2>
           {resume.certifications.map((cert, index) => (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: "2px",
-              }}
-            >
-              <div>
-                <span style={{ fontWeight: "bold" }}>{cert.name}</span>
-                <span> | {cert.issuer}</span>
-              </div>
-              {cert.date && (
-                <span style={{ fontSize: "10pt" }}>{cert.date}</span>
-              )}
+            <div key={index} style={{ fontSize: "9pt", marginBottom: "1px" }}>
+              <span style={{ fontWeight: "bold" }}>{cert.name}</span>
+              <span> – {cert.issuer}</span>
+              {cert.date && <span> ({cert.date})</span>}
             </div>
           ))}
-        </section>
-      )}
-
-      {/* Skills */}
-      {resume.skills && resume.skills.length > 0 && (
-        <section>
-          <h2
-            style={{
-              fontSize: "11pt",
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              borderBottom: borderStyle,
-              paddingBottom: "2px",
-              marginTop: "10px",
-              marginBottom: "6px",
-              textAlign: sectionHeaderAlignment,
-              color: accentColor,
-            }}
-          >
-            Skills
-          </h2>
-          <p style={{ margin: 0 }}>{resume.skills.join("  •  ")}</p>
         </section>
       )}
     </div>

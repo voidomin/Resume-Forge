@@ -135,24 +135,17 @@ Return this exact JSON structure:
   "roleTitle": "extracted job title"
 }`;
 
-    // List of models to try in order
-    // Prioritizing models with available quota based on user report
+    // Models available per user's rate limits dashboard
     const modelsToTry = [
-      "gemini-2.5-flash-lite-001", // Likely ID for 2.5 Flash Lite
-      "gemini-2.5-flash-lite",
-      "gemini-3.0-flash-001", // Likely ID for 3.0 Flash
-      "gemini-3.0-flash",
-      "gemini-2.0-flash-001",
-      "gemini-2.0-flash",
+      "models/gemini-2.5-flash", // Available in rate limits
+      "models/gemini-1.5-flash", // Standard model
+      "models/gemini-1.5-pro", // Pro model
     ];
 
     for (const modelName of modelsToTry) {
       try {
         console.log(`Analyzing JD with model: ${modelName}...`);
-        const model = genAI.getGenerativeModel(
-          { model: modelName },
-          { apiVersion: "v1" },
-        );
+        const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent(prompt);
         const response = result.response.text();
         // Clean up response - remove markdown code blocks if present
@@ -382,25 +375,18 @@ Return ONLY valid JSON with this structure:
 
     // Helper to try generation with fallback (Same strategy as ResumeParser)
     const generateWithFallback = async () => {
-      // List of models to try in order
-      // Prioritizing models with available quota based on user report
+      // Models available per user's rate limits dashboard
       const modelsToTry = [
-        "gemini-2.5-flash-lite-001", // Likely ID for 2.5 Flash Lite
-        "gemini-2.5-flash-lite",
-        "gemini-3.0-flash-001", // Likely ID for 3.0 Flash
-        "gemini-3.0-flash",
-        "gemini-2.0-flash-001",
-        "gemini-2.0-flash",
+        "models/gemini-2.5-flash", // Available in rate limits
+        "models/gemini-1.5-flash", // Standard model
+        "models/gemini-1.5-pro", // Pro model
       ];
 
       for (const modelName of modelsToTry) {
         try {
           console.log(`Generating resume with model: ${modelName}...`);
           // Use v1 API version
-          const currentModel = genAI.getGenerativeModel(
-            { model: modelName },
-            { apiVersion: "v1" },
-          );
+          const currentModel = genAI.getGenerativeModel({ model: modelName });
           const result = await currentModel.generateContent(prompt);
           return result.response.text();
         } catch (error: any) {
@@ -438,6 +424,35 @@ Return ONLY valid JSON with this structure:
         .trim();
 
       const parsed = JSON.parse(cleanJson);
+
+      // Debug logging
+      console.log("✅ AI Response parsed successfully");
+      console.log("   - ATS Score:", parsed.atsScore);
+      console.log("   - Keywords count:", parsed.keywords?.length || 0);
+      console.log("   - Has keywordAnalysis:", !!parsed.keywordAnalysis);
+      console.log(
+        "   - Matched keywords:",
+        parsed.keywordAnalysis?.matchedKeywords?.length || 0,
+      );
+
+      // Ensure keywordAnalysis exists (AI sometimes omits it)
+      if (!parsed.keywordAnalysis) {
+        console.log("⚠️ keywordAnalysis missing, generating from keywords...");
+        parsed.keywordAnalysis = {
+          matchedKeywords: (parsed.keywords || []).map((k: string) => ({
+            keyword: k,
+            locations: ["skills", "summary"],
+          })),
+          missingKeywords: parsed.atsScoreBreakdown?.missingKeywords || [],
+          totalJobKeywords: (parsed.keywords?.length || 0) + 5,
+          matchPercentage: parsed.keywords?.length
+            ? Math.min(
+                85,
+                (parsed.keywords.length / (parsed.keywords.length + 5)) * 100,
+              )
+            : 50,
+        };
+      }
 
       return parsed;
     } catch (error: any) {

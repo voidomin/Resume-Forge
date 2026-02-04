@@ -4,6 +4,7 @@ import { authenticateToken } from "./auth.routes";
 import { geminiService, ProfileData } from "../services/gemini.service";
 import { pdfService } from "../services/pdf.service";
 import { docxService } from "../services/docx.service";
+import { atsCheckerService } from "../services/atsChecker.service";
 
 const prisma = new PrismaClient();
 
@@ -113,6 +114,12 @@ async function resumeRoutes(server: FastifyInstance) {
           },
         });
 
+        // Run ATS compatibility check
+        const atsReport = atsCheckerService.checkResume(
+          generatedResume,
+          jobDescription,
+        );
+
         return reply.send({
           message: "Resume generated successfully",
           resume: {
@@ -122,6 +129,7 @@ async function resumeRoutes(server: FastifyInstance) {
             keywords: generatedResume.keywords,
           },
           content: generatedResume,
+          atsReport,
         });
       } catch (error) {
         request.log.error(error);
