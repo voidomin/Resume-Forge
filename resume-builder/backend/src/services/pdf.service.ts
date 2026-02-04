@@ -300,10 +300,26 @@ export class PDFService {
       drawHeader("Education");
       resume.education.forEach((edu) => {
         if (doc.y > 800) return;
+
+        const currentY = doc.y;
         doc.font(fontBold).fontSize(10).text(edu.institution);
+
+        // Date on the right
+        if (edu.dateRange) {
+          doc
+            .font(fontRegular)
+            .fontSize(9)
+            .text(edu.dateRange, { align: "right" });
+          doc.y = doc.y - doc.currentLineHeight(); // Match baseline if possible or just avoid moveUp
+          // Reset y to handle title line
+          doc.y = currentY + doc.currentLineHeight();
+        }
+
         doc.font(fontRegular).fontSize(9).text(`${edu.degree} in ${edu.field}`);
-        doc.fillColor("#666666").text(edu.dateRange, { align: "left" });
-        doc.fillColor("#000000"); // Reset
+        if (edu.gpa) {
+          doc.fillColor("#666666").text(`CGPA: ${edu.gpa}`, { align: "left" });
+          doc.fillColor("#000000");
+        }
         doc.moveDown(0.5);
       });
       doc.moveDown(1);
@@ -328,38 +344,43 @@ export class PDFService {
     align: "center" | "left" | "right" = "center",
   ) {
     const parts: { text: string; link?: string }[] = [];
-    if (resume.contactInfo.email)
+    const isValid = (val: string | undefined) =>
+      val &&
+      val.trim().toLowerCase() !== "n/a" &&
+      val.trim().toLowerCase() !== "none";
+
+    if (resume.contactInfo.email && isValid(resume.contactInfo.email))
       parts.push({
         text: resume.contactInfo.email,
         link: `mailto:${resume.contactInfo.email}`,
       });
-    if (resume.contactInfo.phone)
+    if (resume.contactInfo.phone && isValid(resume.contactInfo.phone))
       parts.push({
         text: resume.contactInfo.phone,
         link: `tel:${resume.contactInfo.phone}`,
       });
-    if (resume.contactInfo.location)
+    if (resume.contactInfo.location && isValid(resume.contactInfo.location))
       parts.push({ text: resume.contactInfo.location });
 
     // Helper to strip protocol for display
     const formatUrl = (url: string) =>
       url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 
-    if (resume.contactInfo.linkedin)
+    if (resume.contactInfo.linkedin && isValid(resume.contactInfo.linkedin))
       parts.push({
         text: formatUrl(resume.contactInfo.linkedin),
         link: resume.contactInfo.linkedin.startsWith("http")
           ? resume.contactInfo.linkedin
           : `https://${resume.contactInfo.linkedin}`,
       });
-    if (resume.contactInfo.github)
+    if (resume.contactInfo.github && isValid(resume.contactInfo.github))
       parts.push({
         text: formatUrl(resume.contactInfo.github),
         link: resume.contactInfo.github.startsWith("http")
           ? resume.contactInfo.github
           : `https://${resume.contactInfo.github}`,
       });
-    if (resume.contactInfo.portfolio)
+    if (resume.contactInfo.portfolio && isValid(resume.contactInfo.portfolio))
       parts.push({
         text: formatUrl(resume.contactInfo.portfolio),
         link: resume.contactInfo.portfolio.startsWith("http")

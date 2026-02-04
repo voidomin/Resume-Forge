@@ -166,21 +166,26 @@ export class DocxService {
     const formatUrl = (url: string) =>
       url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 
-    if (contact.linkedin) {
+    const isValid = (val: string | undefined) =>
+      val &&
+      val.trim().toLowerCase() !== "n/a" &&
+      val.trim().toLowerCase() !== "none";
+
+    if (contact.linkedin && isValid(contact.linkedin)) {
       const url = contact.linkedin.startsWith("http")
         ? contact.linkedin
         : `https://${contact.linkedin}`;
       items.push({ text: formatUrl(contact.linkedin), url });
     }
 
-    if (contact.github) {
+    if (contact.github && isValid(contact.github)) {
       const url = contact.github.startsWith("http")
         ? contact.github
         : `https://${contact.github}`;
       items.push({ text: formatUrl(contact.github), url });
     }
 
-    if (contact.portfolio) {
+    if (contact.portfolio && isValid(contact.portfolio)) {
       const url = contact.portfolio.startsWith("http")
         ? contact.portfolio
         : `https://${contact.portfolio}`;
@@ -342,7 +347,7 @@ export class DocxService {
           tabStops: [
             {
               type: TabStopType.RIGHT,
-              position: TabStopPosition.MAX,
+              position: 10400, // Near right margin for A4
             },
           ],
           children: [
@@ -420,7 +425,7 @@ export class DocxService {
       const formatUrl = (url: string) =>
         url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 
-      if (proj.link) {
+      if (proj.link && proj.link.trim().toLowerCase() !== "n/a") {
         const url = proj.link.startsWith("http")
           ? proj.link
           : `https://${proj.link}`;
@@ -503,7 +508,7 @@ export class DocxService {
           tabStops: [
             {
               type: TabStopType.RIGHT,
-              position: TabStopPosition.MAX,
+              position: 10400, // Near right margin for A4
             },
           ],
           children: [

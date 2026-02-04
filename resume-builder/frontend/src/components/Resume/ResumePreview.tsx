@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 interface GeneratedResume {
   contactInfo: {
     name: string;
@@ -63,6 +64,52 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
   const isExecutive = template === "executive";
   const isMinimalist = template === "minimalist";
 
+  const isValid = (val: string | undefined) =>
+    val &&
+    val.trim().toLowerCase() !== "n/a" &&
+    val.trim().toLowerCase() !== "none";
+
+  const renderContactItem = (
+    label: string,
+    value: string | undefined,
+    isLink: boolean = false,
+    href?: string,
+  ) => {
+    if (!isValid(value)) return null;
+    return (
+      <>
+        {isLink ? (
+          <a
+            href={href || value}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: linkColor,
+              textDecoration: label === "Email" ? "none" : "underline",
+            }}
+          >
+            {label === "Email" || label === "Phone" ? value : formatUrl(value!)}
+          </a>
+        ) : (
+          <span>{value}</span>
+        )}
+      </>
+    );
+  };
+
+  const contactParts = [
+    renderContactItem("Phone", resume.contactInfo.phone),
+    renderContactItem(
+      "Email",
+      resume.contactInfo.email,
+      true,
+      `mailto:${resume.contactInfo.email}`,
+    ),
+    renderContactItem("LinkedIn", resume.contactInfo.linkedin, true),
+    renderContactItem("GitHub", resume.contactInfo.github, true),
+    renderContactItem("Portfolio", resume.contactInfo.portfolio, true),
+  ].filter(Boolean);
+
   const formatUrl = (url: string) => {
     return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
   };
@@ -78,12 +125,12 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
 
   // Section header style (reusable)
   const sectionHeaderStyle = {
-    fontSize: "10pt",
+    fontSize: "9.5pt",
     fontWeight: "bold" as const,
     textTransform: "uppercase" as const,
     borderBottom: borderStyle,
     paddingBottom: "1px",
-    marginTop: "4px",
+    marginTop: "3px",
     marginBottom: "3px",
     textAlign: sectionHeaderAlignment as any,
     color: accentColor,
@@ -96,10 +143,10 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
         width: "8.27in", // A4 width
         minHeight: "11.69in", // A4 height
         maxHeight: "11.69in",
-        padding: "0.4in", // Tighter margins
+        padding: "0.35in 0.4in", // Slightly Tighter vertical margins
         fontFamily: getFontFamily(),
-        fontSize: "9pt", // Smaller base font
-        lineHeight: "1.3", // Tighter line height
+        fontSize: "8.8pt", // Slightly smaller base font
+        lineHeight: "1.25", // Tighter line height
         color: "#000",
         overflow: "hidden",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
@@ -107,14 +154,14 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: headerAlignment, marginBottom: "8px" }}>
+      <div style={{ textAlign: headerAlignment, marginBottom: "6px" }}>
         <h1
           style={{
-            fontSize: isMinimalist ? "18pt" : "16pt",
+            fontSize: isMinimalist ? "17pt" : "15pt", // Slightly smaller
             fontWeight: "bold",
             textTransform: "uppercase",
             margin: 0,
-            marginBottom: "2px",
+            marginBottom: "1px",
             color: accentColor,
           }}
         >
@@ -124,75 +171,20 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
         {/* Contact Line */}
         <div
           style={{
-            fontSize: "9pt",
+            fontSize: "8.8pt",
             display: "flex",
             flexWrap: "wrap",
             justifyContent:
               headerAlignment === "center" ? "center" : "flex-start",
-            gap: "6px",
+            gap: "5px",
           }}
         >
-          {resume.contactInfo.phone && <span>{resume.contactInfo.phone}</span>}
-          {resume.contactInfo.phone && resume.contactInfo.email && (
-            <span>|</span>
-          )}
-          {resume.contactInfo.email && (
-            <a
-              href={`mailto:${resume.contactInfo.email}`}
-              style={{ color: linkColor, textDecoration: "none" }}
-            >
-              {resume.contactInfo.email}
-            </a>
-          )}
-          {resume.contactInfo.email &&
-            (resume.contactInfo.linkedin ||
-              resume.contactInfo.github ||
-              resume.contactInfo.portfolio) && <span>|</span>}
-
-          {resume.contactInfo.linkedin &&
-            resume.contactInfo.linkedin !== "N/A" && (
-              <a
-                href={resume.contactInfo.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: linkColor, textDecoration: "underline" }}
-              >
-                {formatUrl(resume.contactInfo.linkedin)}
-              </a>
-            )}
-          {resume.contactInfo.linkedin &&
-            resume.contactInfo.linkedin !== "N/A" &&
-            ((resume.contactInfo.github &&
-              resume.contactInfo.github !== "N/A") ||
-              (resume.contactInfo.portfolio &&
-                resume.contactInfo.portfolio !== "N/A")) && <span>|</span>}
-
-          {resume.contactInfo.github && resume.contactInfo.github !== "N/A" && (
-            <a
-              href={resume.contactInfo.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: linkColor, textDecoration: "underline" }}
-            >
-              {formatUrl(resume.contactInfo.github)}
-            </a>
-          )}
-          {resume.contactInfo.github &&
-            resume.contactInfo.github !== "N/A" &&
-            resume.contactInfo.portfolio &&
-            resume.contactInfo.portfolio !== "N/A" && <span>|</span>}
-
-          {resume.contactInfo.portfolio &&
-            resume.contactInfo.portfolio !== "N/A" && (
-              <a
-                href={resume.contactInfo.portfolio}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: linkColor, textDecoration: "underline" }}
-              >
-                {formatUrl(resume.contactInfo.portfolio)}
-              </a>
-            )}
+          {contactParts.map((part, index) => (
+            <Fragment key={index}>
+              {part}
+              {index < contactParts.length - 1 && <span>|</span>}
+            </Fragment>
+          ))}
         </div>
       </div>
 
@@ -251,7 +243,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
                   <span>, {exp.company}</span>
                   {exp.location && <span> | {exp.location}</span>}
                 </div>
-                <span style={{ fontSize: "9pt", flexShrink: 0 }}>
+                <span style={{ fontSize: "8.5pt", flexShrink: 0 }}>
                   {exp.dateRange}
                 </span>
               </div>
