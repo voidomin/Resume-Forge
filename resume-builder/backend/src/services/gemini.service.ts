@@ -58,6 +58,7 @@ export interface GeneratedResume {
     location?: string;
     linkedin?: string;
     github?: string;
+    portfolio?: string;
   };
   summary: string;
   experiences: {
@@ -206,6 +207,9 @@ Phone: ${profile.phone || "N/A"}
 Location: ${profile.location || "N/A"}
 LinkedIn: ${profile.linkedin || "N/A"}
 GitHub: ${profile.github || "N/A"}
+Portfolio: ${profile.portfolio || "N/A"}
+
+**IMPORTANT PRE-INSTRUCTION**: You MUST include the exact Portfolio, LinkedIn, and GitHub links provided above in the final JSON. Do not omit them.
 
 Current Summary: ${profile.summary || "None provided"}
 
@@ -312,7 +316,8 @@ Return ONLY valid JSON with this structure:
     "phone": "phone number",
     "location": "City, State",
     "linkedin": "linkedin url or null",
-    "github": "github url or null"
+    "github": "github url or null",
+    "portfolio": "portfolio url or null"
   },
   "summary": "Rewritten tailored summary",
   "experiences": [
@@ -458,6 +463,7 @@ Return ONLY valid JSON with this structure:
         location: profile.location,
         linkedin: profile.linkedin,
         github: profile.github,
+        portfolio: profile.portfolio,
       },
       summary: profile.summary || "",
       experiences: profile.experiences.slice(0, 3).map((exp) => ({

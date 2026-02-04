@@ -6,6 +6,7 @@ interface GeneratedResume {
     location?: string;
     linkedin?: string;
     github?: string;
+    portfolio?: string;
   };
   summary: string;
   experiences: {
@@ -58,6 +59,10 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
   const isExecutive = template === "executive";
   const isMinimalist = template === "minimalist";
 
+  const formatUrl = (url: string) => {
+    return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+  };
+
   // Dynamic Styles
   const headerAlignment = isMinimalist ? "left" : "center";
   const sectionHeaderAlignment = isExecutive ? "center" : "left";
@@ -98,23 +103,85 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
           {resume.contactInfo.name}
         </h1>
 
-        <div style={{ fontSize: "9pt", color: "#666", marginBottom: "2px" }}>
-          {[
-            resume.contactInfo.email,
-            resume.contactInfo.phone,
-            resume.contactInfo.location,
-          ]
-            .filter(Boolean)
-            .join("  |  ")}
+        <div
+          style={{
+            fontSize: "9pt",
+            color: "#666",
+            marginBottom: "2px",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent:
+              headerAlignment === "left" ? "flex-start" : "center",
+            gap: "8px",
+          }}
+        >
+          {resume.contactInfo.email && (
+            <a
+              href={`mailto:${resume.contactInfo.email}`}
+              style={{ color: "inherit", textDecoration: "none" }}
+            >
+              {resume.contactInfo.email}
+            </a>
+          )}
+          {resume.contactInfo.phone && (
+            <span>| {resume.contactInfo.phone}</span>
+          )}
+          {resume.contactInfo.location && (
+            <span>| {resume.contactInfo.location}</span>
+          )}
         </div>
 
-        {(resume.contactInfo.linkedin || resume.contactInfo.github) && (
-          <div style={{ fontSize: "9pt", color: "#666" }}>
-            {[resume.contactInfo.linkedin, resume.contactInfo.github]
-              .filter(Boolean)
-              .join("  |  ")}
-          </div>
-        )}
+        <div
+          style={{
+            fontSize: "9pt",
+            color: "#666",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent:
+              headerAlignment === "left" ? "flex-start" : "center",
+            gap: "8px",
+          }}
+        >
+          {resume.contactInfo.linkedin && (
+            <a
+              href={resume.contactInfo.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "inherit", textDecoration: "none" }}
+            >
+              {formatUrl(resume.contactInfo.linkedin)}
+            </a>
+          )}
+          {resume.contactInfo.linkedin &&
+            (resume.contactInfo.github || resume.contactInfo.portfolio) && (
+              <span>|</span>
+            )}
+
+          {resume.contactInfo.github && (
+            <a
+              href={resume.contactInfo.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "inherit", textDecoration: "none" }}
+            >
+              {formatUrl(resume.contactInfo.github)}
+            </a>
+          )}
+          {resume.contactInfo.github && resume.contactInfo.portfolio && (
+            <span>|</span>
+          )}
+
+          {resume.contactInfo.portfolio && (
+            <a
+              href={resume.contactInfo.portfolio}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "inherit", textDecoration: "none" }}
+            >
+              {formatUrl(resume.contactInfo.portfolio)}
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Professional Summary */}

@@ -327,18 +327,103 @@ export class PDFService {
     center: boolean,
     align: "center" | "left" | "right" = "center",
   ) {
-    const parts = [
-      resume.contactInfo.email,
-      resume.contactInfo.phone,
-      resume.contactInfo.location,
-      resume.contactInfo.linkedin,
-      resume.contactInfo.github,
-    ].filter(Boolean);
+    const parts: { text: string; link?: string }[] = [];
+    if (resume.contactInfo.email)
+      parts.push({
+        text: resume.contactInfo.email,
+        link: `mailto:${resume.contactInfo.email}`,
+      });
+    if (resume.contactInfo.phone)
+      parts.push({
+        text: resume.contactInfo.phone,
+        link: `tel:${resume.contactInfo.phone}`,
+      });
+    if (resume.contactInfo.location)
+      parts.push({ text: resume.contactInfo.location });
 
-    doc
-      .font(font)
-      .fontSize(size)
-      .text(parts.join("  |  "), { align: center ? "center" : align });
+    // Helper to strip protocol for display
+    const formatUrl = (url: string) =>
+      url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+
+    if (resume.contactInfo.linkedin)
+      parts.push({
+        text: formatUrl(resume.contactInfo.linkedin),
+        link: resume.contactInfo.linkedin.startsWith("http")
+          ? resume.contactInfo.linkedin
+          : `https://${resume.contactInfo.linkedin}`,
+      });
+    if (resume.contactInfo.github)
+      parts.push({
+        text: formatUrl(resume.contactInfo.github),
+        link: resume.contactInfo.github.startsWith("http")
+          ? resume.contactInfo.github
+          : `https://${resume.contactInfo.github}`,
+      });
+    if (resume.contactInfo.portfolio)
+      parts.push({
+        text: formatUrl(resume.contactInfo.portfolio),
+        link: resume.contactInfo.portfolio.startsWith("http")
+          ? resume.contactInfo.portfolio
+          : `https://${resume.contactInfo.portfolio}`,
+      });
+
+    // Calculate total width if centered (approximated) to center correctly?
+    // PDFKit "center" align works for single text command.
+    // For multiple pieces with different links, "continued: true" is tricky with center align.
+    // A trick: Render everything twice? No.
+    // Better: If centered, we might have to lose individual links OR use x/y calculations.
+    // PDFKit's `text` with `continued` works well for left align.
+
+    // For simplicity and robustness with links:
+    // If align is center, we can just use simple text if links are hard.
+    // BUT user specifically requested clickable links.
+    // So we MUST use `continued: true`.
+    // However, `continued` with `align: center` in PDFKit is buggy/hard.
+
+    // Alternative: Just render them one by one with calculated positions? Hard.
+    // Let's try standard flow. If "center", it's hard.
+    // Maybe render as one line string? But we need different links.
+
+    // Compromise: If styling allows, use widely supported way.
+    // Actually, modern PDFKit supports `continued` with links.
+    // Centering a set of continued texts is the issue.
+
+    // Let's assume standard left flow helper, and if center is needed, we start at a calculated X?
+    // Calculating width of all text...
+
+    doc.font(font).fontSize(size);
+
+    let startX = doc.x;
+    if (align === "center" || center) {
+      // Calculate total width
+      const fullString = parts.map((p) => p.text).join("  |  ");
+      const w = doc.widthOfString(fullString);
+      startX = (doc.page.width - w) / 2;
+      doc.x = startX;
+    } else if (align === "right") {
+      const fullString = parts.map((p) => p.text).join("  |  ");
+      const w = doc.widthOfString(fullString);
+      startX = doc.page.width - doc.page.margins.right - w;
+      doc.x = startX;
+    }
+
+    parts.forEach((part, index) => {
+      const isLast = index === parts.length - 1;
+      const separator = isLast ? "" : "  |  ";
+
+      doc.text(part.text, {
+        continued: true,
+        link: part.link,
+        underline: !!part.link,
+      });
+
+      doc.text(separator, {
+        continued: !isLast,
+        underline: false,
+        link: null,
+      });
+    });
+    doc.text("", { continued: false }); // End line
   }
 
   private drawModernHeader(doc: PDFKit.PDFDocument, title: string) {
@@ -392,8 +477,14 @@ export class PDFService {
     fontRegular: string,
   ) {
     doc.font(fontBold).fontSize(9).text(proj.name, { continued: true });
-    if (proj.link) doc.font(fontRegular).text(`  |  ${proj.link}`);
-    else doc.text("");
+    if (proj.link) {
+      doc.font(fontRegular).text(`  |  ${proj.link}`, {
+        link: proj.link.startsWith("http") ? proj.link : `https://${proj.link}`,
+        underline: true,
+      });
+    } else {
+      doc.text("");
+    }
 
     if (proj.technologies)
       doc.font(fontRegular).fontSize(8).text(proj.technologies);

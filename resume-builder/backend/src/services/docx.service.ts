@@ -9,6 +9,7 @@ import {
   convertInchesToTwip,
   TabStopPosition,
   TabStopType,
+  ExternalHyperlink,
 } from "docx";
 import { GeneratedResume } from "./gemini.service";
 
@@ -46,11 +47,11 @@ export class DocxService {
               ],
             }),
 
-            // Contact Info Line
+            // Contact Info Line (Email, Phone, Location)
             this.createContactLine(resume.contactInfo),
 
-            // Links Line (if any)
-            ...this.createLinksLine(resume.contactInfo),
+            // Links Line (LinkedIn, GitHub, Portfolio)
+            this.createLinksLine(resume.contactInfo),
 
             // Spacing
             new Paragraph({ spacing: { after: 200 } }),
@@ -96,46 +97,130 @@ export class DocxService {
   private createContactLine(
     contact: GeneratedResume["contactInfo"],
   ): Paragraph {
-    const parts: string[] = [];
-    if (contact.email) parts.push(contact.email);
-    if (contact.phone) parts.push(contact.phone);
-    if (contact.location) parts.push(contact.location);
+    const children: (TextRun | ExternalHyperlink)[] = [];
+    const parts: any[] = [];
+
+    if (contact.email) {
+      parts.push(
+        new ExternalHyperlink({
+          children: [
+            new TextRun({
+              text: contact.email,
+              size: 16,
+              font: "Arial",
+              color: "0000FF", // Standard link color
+              underline: {},
+            }),
+          ],
+          link: `mailto:${contact.email}`,
+        }),
+      );
+    }
+
+    if (contact.phone) {
+      parts.push(
+        new TextRun({
+          text: contact.phone,
+          size: 16,
+          font: "Arial",
+        }),
+      );
+    }
+
+    if (contact.location) {
+      parts.push(
+        new TextRun({
+          text: contact.location,
+          size: 16,
+          font: "Arial",
+        }),
+      );
+    }
+
+    // Join with " | "
+    parts.forEach((part, index) => {
+      children.push(part);
+      if (index < parts.length - 1) {
+        children.push(
+          new TextRun({
+            text: "  |  ",
+            size: 16,
+            font: "Arial",
+          }),
+        );
+      }
+    });
 
     return new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: { after: 30 },
-      children: [
-        new TextRun({
-          text: parts.join("  |  "),
-          size: 16, // 8pt
-          font: "Arial",
-        }),
-      ],
+      children: children,
     });
   }
 
-  private createLinksLine(
-    contact: GeneratedResume["contactInfo"],
-  ): Paragraph[] {
-    const parts: string[] = [];
-    if (contact.linkedin) parts.push(contact.linkedin);
-    if (contact.github) parts.push(contact.github);
+  private createLinksLine(contact: GeneratedResume["contactInfo"]): Paragraph {
+    const children: (TextRun | ExternalHyperlink)[] = [];
+    const items: { text: string; url: string }[] = [];
 
-    if (parts.length === 0) return [];
+    // Helper to strip protocol for display
+    const formatUrl = (url: string) =>
+      url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 
-    return [
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 30 },
-        children: [
+    if (contact.linkedin) {
+      const url = contact.linkedin.startsWith("http")
+        ? contact.linkedin
+        : `https://${contact.linkedin}`;
+      items.push({ text: formatUrl(contact.linkedin), url });
+    }
+
+    if (contact.github) {
+      const url = contact.github.startsWith("http")
+        ? contact.github
+        : `https://${contact.github}`;
+      items.push({ text: formatUrl(contact.github), url });
+    }
+
+    if (contact.portfolio) {
+      const url = contact.portfolio.startsWith("http")
+        ? contact.portfolio
+        : `https://${contact.portfolio}`;
+      items.push({ text: formatUrl(contact.portfolio), url });
+    }
+
+    if (items.length === 0) return new Paragraph({});
+
+    items.forEach((item, index) => {
+      children.push(
+        new ExternalHyperlink({
+          children: [
+            new TextRun({
+              text: item.text,
+              size: 16,
+              font: "Arial",
+              color: "0000FF",
+              underline: {},
+            }),
+          ],
+          link: item.url,
+        }),
+      );
+
+      if (index < items.length - 1) {
+        children.push(
           new TextRun({
-            text: parts.join("  |  "),
-            size: 16, // 8pt
+            text: "  |  ",
+            size: 16,
             font: "Arial",
           }),
-        ],
-      }),
-    ];
+        );
+      }
+    });
+
+    return new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 30 },
+      children: children,
+    });
   }
 
   private createSectionHeader(title: string): Paragraph {
@@ -331,12 +416,35 @@ export class DocxService {
         }),
       ];
 
+      // Helper to strip protocol for display
+      const formatUrl = (url: string) =>
+        url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+
       if (proj.link) {
+        const url = proj.link.startsWith("http")
+          ? proj.link
+          : `https://${proj.link}`;
+
         headerParts.push(
           new TextRun({
-            text: `  |  ${proj.link}`,
-            size: 18, // 9pt
+            text: "  |  ",
+            size: 18,
             font: "Arial",
+          }),
+        );
+
+        headerParts.push(
+          new ExternalHyperlink({
+            children: [
+              new TextRun({
+                text: formatUrl(proj.link),
+                size: 18,
+                font: "Arial",
+                color: "0000FF",
+                underline: {},
+              }),
+            ],
+            link: url,
           }),
         );
       }
@@ -410,15 +518,6 @@ export class DocxService {
               size: 18, // 9pt
               font: "Arial",
             }),
-            ...(cert.link
-              ? [
-                  new TextRun({
-                    text: `  |  ${cert.link}`,
-                    size: 18, // 9pt
-                    font: "Arial",
-                  }),
-                ]
-              : []),
             new TextRun({
               text: "\t" + (cert.date || ""),
               size: 18, // 9pt

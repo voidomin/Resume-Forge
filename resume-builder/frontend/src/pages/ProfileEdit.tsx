@@ -896,7 +896,7 @@ function ProfileEdit() {
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     LinkedIn URL
@@ -923,6 +923,20 @@ function ProfileEdit() {
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     placeholder="github.com/johndoe"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Portfolio URL
+                  </label>
+                  <input
+                    type="url"
+                    value={profile.portfolio}
+                    onChange={(e) =>
+                      setProfile({ ...profile, portfolio: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    placeholder="myportfolio.com"
                   />
                 </div>
               </div>
