@@ -436,9 +436,13 @@ async function resumeRoutes(server: FastifyInstance) {
           },
         });
 
+        // Run ATS compatibility check
+        const atsReport = atsCheckerService.checkResume(generatedResume, jd);
+
         return reply.send({
           message: "Resume regenerated successfully",
           content: generatedResume,
+          atsReport,
         });
       } catch (error) {
         request.log.error(error);

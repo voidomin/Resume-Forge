@@ -42,9 +42,13 @@ interface GeneratedResume {
     gpa?: string;
   }[];
   skills: string[];
+  skillsCategories?: {
+    [key: string]: string[];
+  };
   projects?: {
     name: string;
-    description: string;
+    description?: string;
+    bullets?: string[];
     technologies?: string;
     link?: string;
   }[];

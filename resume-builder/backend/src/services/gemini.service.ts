@@ -76,9 +76,20 @@ export interface GeneratedResume {
     gpa?: string;
   }[];
   skills: string[];
+  skillsCategories?: {
+    Languages?: string[];
+    Databases?: string[];
+    Frameworks?: string[];
+    Tools?: string[];
+    Cloud?: string[];
+    "Machine Learning"?: string[];
+    "Data Analytics"?: string[];
+    [key: string]: string[] | undefined;
+  };
   projects?: {
     name: string;
-    description: string;
+    description?: string;
+    bullets?: string[];
     technologies?: string;
     link?: string;
   }[];
@@ -271,23 +282,27 @@ JOB DESCRIPTION:
 ${jobDescription}
 
 INSTRUCTIONS:
-**GOAL: Create a PROFESSIONAL, ONE A4 PAGE RESUME tailored to this job.**
+**GOAL: Create a PROFESSIONAL, ONE A4 PAGE RESUME tailored to this job that FILLS THE ENTIRE PAGE.**
 
 **CRITICAL - CONTENT DENSITY RULES:**
-1. **ONE PAGE LIMIT:** The resume MUST fit on a single A4 page. Condense text if necessary.
-2. **PROFESSIONAL SUMMARY**: Concise 2-3 sentence summary.
+1. **FILL THE PAGE:** The resume MUST utilize the full A4 page. Do NOT leave empty space at the bottom.
+2. **PROFESSIONAL SUMMARY**: 3-4 sentence comprehensive summary highlighting key qualifications.
 3. **WORK EXPERIENCE**: 
-   - Select most relevant experiences (max 3).
-   - Generate 3-5 IMPACTFUL bullet points per experience.
-   - Keep bullets concise (1-2 lines max).
+   - Select most relevant experiences (up to 3).
+   - Generate 4-6 IMPACTFUL bullet points per experience.
+   - Each bullet should be 1-2 lines, using STAR format (Situation, Task, Action, Result).
    - Incorporate these keywords naturally: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
-4. **SKILLS**: Include 8-12 most relevant skills.
-5. **PROJECTS**: Include 1-2 relevant projects (short descriptions).
-6. **CERTIFICATIONS**: Include top 1-2 certifications only.
+4. **SKILLS**: Categorize ALL relevant skills (aim for 15-20 total across categories).
+5. **PROJECTS**: Include 2-3 relevant projects with 2-3 bullet points EACH describing achievements.
+6. **EDUCATION**: Include all education with relevant coursework if space permits.
+7. **CERTIFICATIONS**: Include all relevant certifications.
 
-**BALANCE INSTRUCTION:**
-- If the candidate has LITTLE experience, expand bullets to fill the page.
-- If the candidate has EXTENSIVE experience, condense bullets to fit one page.
+**PAGE FILLING INSTRUCTION:**
+- If there is empty space at the bottom of the page, ADD MORE CONTENT:
+  - Expand project descriptions with more bullet points.
+  - Add more skills to the categories.
+  - Add more detail to work experience bullets.
+  - Include relevant coursework under education.
 
 **CALCULATE ATS SCORE**: 
 - Compare the candidate's original profile against the JD.
@@ -332,11 +347,22 @@ Return ONLY valid JSON with this structure:
     }
   ],
   "skills": ["Skill 1", "Skill 2"],
+  "skillsCategories": {
+    "Languages": ["Java", "Python", "JavaScript", "SQL"],
+    "Databases": ["MySQL", "PostgreSQL", "MongoDB"],
+    "Frameworks": ["React", "Node.js", "Spring MVC"],
+    "Tools": ["Git", "Docker", "VS Code", "Postman"],
+    "Cloud": ["AWS (S3, EC2)", "Google Cloud"]
+  },
   "projects": [
     {
       "name": "Project Name",
-      "description": "Tailored description...",
       "technologies": "Tech 1, Tech 2",
+      "bullets": [
+        "Bullet point 1 describing achievement with metrics",
+        "Bullet point 2 describing impact",
+        "Bullet point 3 describing technical details"
+      ],
       "link": "Link or null"
     }
   ],
@@ -454,6 +480,19 @@ Return ONLY valid JSON with this structure:
         };
       }
 
+      // Ensure atsScoreBreakdown exists (AI sometimes omits it)
+      if (!parsed.atsScoreBreakdown) {
+        console.log("⚠️ atsScoreBreakdown missing, generating from score...");
+        const score = parsed.atsScore || 70;
+        parsed.atsScoreBreakdown = {
+          keywordMatch: Math.round(score * 0.4),
+          skillsMatch: Math.round(score * 0.3),
+          formatting: Math.round(score * 0.3),
+          missingKeywords: parsed.keywordAnalysis?.missingKeywords || [],
+          explanation: `Score based on ${parsed.keywords?.length || 0} matched keywords and ${parsed.skills?.length || 0} skills.`,
+        };
+      }
+
       return parsed;
     } catch (error: any) {
       console.error("=== AI GENERATION FAILED ===");
@@ -508,6 +547,13 @@ Return ONLY valid JSON with this structure:
         date: c.date,
       })),
       atsScore: 70,
+      atsScoreBreakdown: {
+        keywordMatch: 28,
+        skillsMatch: 21,
+        formatting: 21,
+        missingKeywords: [],
+        explanation: "Fallback resume - no AI analysis available.",
+      },
       keywords: [],
       keywordAnalysis: {
         matchedKeywords: [],

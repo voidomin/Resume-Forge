@@ -24,9 +24,13 @@ interface GeneratedResume {
     gpa?: string;
   }[];
   skills: string[];
+  skillsCategories?: {
+    [key: string]: string[];
+  };
   projects?: {
     name: string;
-    description: string;
+    description?: string;
+    bullets?: string[];
     technologies?: string;
     link?: string;
   }[];
@@ -289,21 +293,50 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
                   listStyleType: "disc",
                 }}
               >
-                <li style={{ fontSize: "9pt" }}>{proj.description}</li>
+                {proj.bullets && proj.bullets.length > 0
+                  ? proj.bullets.map((bullet, bIndex) => (
+                      <li key={bIndex} style={{ fontSize: "9pt" }}>
+                        {bullet}
+                      </li>
+                    ))
+                  : proj.description && (
+                      <li style={{ fontSize: "9pt" }}>{proj.description}</li>
+                    )}
               </ul>
             </div>
           ))}
         </section>
       )}
 
-      {/* Technical Skills */}
-      {resume.skills && resume.skills.length > 0 && (
+      {/* Technical Skills - Categorized if available */}
+      {resume.skillsCategories &&
+      Object.keys(resume.skillsCategories).length > 0 ? (
         <section>
           <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-          <p style={{ margin: 0, fontSize: "9pt" }}>
-            {resume.skills.join("  •  ")}
-          </p>
+          {Object.entries(resume.skillsCategories).map(
+            ([category, skills]) =>
+              skills &&
+              skills.length > 0 && (
+                <div
+                  key={category}
+                  style={{ fontSize: "9pt", marginBottom: "2px" }}
+                >
+                  <span style={{ fontWeight: "bold" }}>• {category}:</span>{" "}
+                  {skills.join(", ")}
+                </div>
+              ),
+          )}
         </section>
+      ) : (
+        resume.skills &&
+        resume.skills.length > 0 && (
+          <section>
+            <h2 style={sectionHeaderStyle}>Technical Skills</h2>
+            <p style={{ margin: 0, fontSize: "9pt" }}>
+              {resume.skills.join("  •  ")}
+            </p>
+          </section>
+        )
       )}
 
       {/* Certifications */}
