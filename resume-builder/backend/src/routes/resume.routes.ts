@@ -273,7 +273,43 @@ async function resumeRoutes(server: FastifyInstance) {
     },
   );
 
-  // Export resume as DOCX
+  //   // Export resume as DOCX from HTML (matches preview)
+  //   server.post<{ Params: { id: string }; Body: { html: string } }>(
+  //     "/:id/export/docx-html",
+  //     { preHandler: authenticateToken },
+  //     async (
+  //       request: FastifyRequest<{
+  //         Params: { id: string };
+  //         Body: { html: string };
+  //       }>,
+  //       reply: FastifyReply,
+  //     ) => {
+  //       try {
+  //         const { html } = request.body;
+  // 
+  //         if (!html) {
+  //           return reply.status(400).send({ error: "HTML is required" });
+  //         }
+  // 
+  //         const docxBuffer = await docxService.generateDocxFromHtml(html);
+  // 
+  //         reply.header(
+  //           "Content-Type",
+  //           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  //         );
+  //         reply.header(
+  //           "Content-Disposition",
+  //           'attachment; filename="Resume.docx"',
+  //         );
+  //         return reply.send(docxBuffer);
+  //       } catch (error) {
+  //         request.log.error(error);
+  //         return reply.status(500).send({ error: "Failed to export DOCX" });
+  //       }
+  //     },
+  //   );
+  // 
+  //   // Export resume as DOCX
   server.get<{ Params: { id: string } }>(
     "/:id/export/docx",
     { preHandler: authenticateToken },

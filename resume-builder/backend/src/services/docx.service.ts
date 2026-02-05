@@ -7,10 +7,10 @@ import {
   AlignmentType,
   BorderStyle,
   convertInchesToTwip,
-  TabStopPosition,
   TabStopType,
   ExternalHyperlink,
 } from "docx";
+// import htmlToDocx from "html-to-docx"; // Not used
 import { GeneratedResume } from "./gemini.service";
 
 export class DocxService {
@@ -19,16 +19,31 @@ export class DocxService {
    * Narrow margins (0.5 inch)
    */
   async generateResumeDocx(resume: GeneratedResume): Promise<Buffer> {
+    const pageWidthInches = 8.27;
+    const pageHeightInches = 11.69;
+    const pageMarginInches = 0.5;
+    const rightTabStop = convertInchesToTwip(
+      pageWidthInches - pageMarginInches,
+    );
+
+    // Estimate content lines to determine if scaling needed
+    const estimatedLines = this.estimateContentLines(resume);
+    const linesPerPage = 50; // Approximate lines that fit per page
+
     const doc = new Document({
       sections: [
         {
           properties: {
             page: {
+              size: {
+                width: convertInchesToTwip(pageWidthInches),
+                height: convertInchesToTwip(pageHeightInches),
+              },
               margin: {
-                top: convertInchesToTwip(0.5),
-                right: convertInchesToTwip(0.5),
-                bottom: convertInchesToTwip(0.5),
-                left: convertInchesToTwip(0.5),
+                top: convertInchesToTwip(pageMarginInches),
+                right: convertInchesToTwip(pageMarginInches),
+                bottom: convertInchesToTwip(pageMarginInches),
+                left: convertInchesToTwip(pageMarginInches),
               },
             },
           },
@@ -63,7 +78,7 @@ export class DocxService {
 
             // Work Experience
             ...(resume.experiences.length > 0
-              ? this.createExperienceSection(resume.experiences)
+              ? this.createExperienceSection(resume.experiences, rightTabStop)
               : []),
 
             // Projects
@@ -73,12 +88,15 @@ export class DocxService {
 
             // Education
             ...(resume.education.length > 0
-              ? this.createEducationSection(resume.education)
+              ? this.createEducationSection(resume.education, rightTabStop)
               : []),
 
             // Certifications
             ...(resume.certifications && resume.certifications.length > 0
-              ? this.createCertificationsSection(resume.certifications)
+              ? this.createCertificationsSection(
+                  resume.certifications,
+                  rightTabStop,
+                )
               : []),
 
             // Skills
@@ -94,6 +112,20 @@ export class DocxService {
     return buffer;
   }
 
+//   async generateDocxFromHtml(html: string): Promise<Buffer> {
+//     const buffer = await htmlToDocx(html, null, {
+//       orientation: "portrait",
+//       margins: {
+//         top: 720,
+//         right: 720,
+//         bottom: 720,
+//         left: 720,
+//       },
+//     });
+// 
+//     return Buffer.from(buffer as ArrayBuffer);
+//   }
+// 
   private createContactLine(
     contact: GeneratedResume["contactInfo"],
   ): Paragraph {
@@ -268,6 +300,7 @@ export class DocxService {
 
   private createExperienceSection(
     experiences: GeneratedResume["experiences"],
+    rightTabStop: number,
   ): Paragraph[] {
     const paragraphs: Paragraph[] = [
       this.createSectionHeader("WORK EXPERIENCE"),
@@ -281,7 +314,7 @@ export class DocxService {
           tabStops: [
             {
               type: TabStopType.RIGHT,
-              position: TabStopPosition.MAX,
+              position: rightTabStop,
             },
           ],
           children: [
@@ -322,7 +355,7 @@ export class DocxService {
             indent: { left: convertInchesToTwip(0.15) },
             children: [
               new TextRun({
-                text: `•  ${bullet}`,
+                text: `  ${bullet}`,
                 size: 18, // 9pt
                 font: "Arial",
               }),
@@ -337,6 +370,7 @@ export class DocxService {
 
   private createEducationSection(
     education: GeneratedResume["education"],
+    rightTabStop: number,
   ): Paragraph[] {
     const paragraphs: Paragraph[] = [this.createSectionHeader("EDUCATION")];
 
@@ -347,7 +381,7 @@ export class DocxService {
           tabStops: [
             {
               type: TabStopType.RIGHT,
-              position: 10400, // Near right margin for A4
+              position: rightTabStop,
             },
           ],
           children: [
@@ -477,18 +511,39 @@ export class DocxService {
         );
       }
 
-      paragraphs.push(
-        new Paragraph({
-          spacing: { after: 60 },
-          children: [
-            new TextRun({
-              text: proj.description,
-              size: 18, // 9pt
-              font: "Arial",
+      if (proj.description) {
+        paragraphs.push(
+          new Paragraph({
+            spacing: { after: 30 },
+            children: [
+              new TextRun({
+                text: proj.description,
+                size: 18, // 9pt
+                font: "Arial",
+              }),
+            ],
+          }),
+        );
+      }
+
+      // Bullet points for project
+      if (proj.bullets && proj.bullets.length > 0) {
+        proj.bullets.forEach((bullet) => {
+          paragraphs.push(
+            new Paragraph({
+              spacing: { after: 30 },
+              indent: { left: convertInchesToTwip(0.15) },
+              children: [
+                new TextRun({
+                  text: `  ${bullet}`,
+                  size: 18, // 9pt
+                  font: "Arial",
+                }),
+              ],
             }),
-          ],
-        }),
-      );
+          );
+        });
+      }
     });
 
     return paragraphs;
@@ -496,6 +551,7 @@ export class DocxService {
 
   private createCertificationsSection(
     certifications: NonNullable<GeneratedResume["certifications"]>,
+    rightTabStop: number,
   ): Paragraph[] {
     const paragraphs: Paragraph[] = [
       this.createSectionHeader("CERTIFICATIONS"),
@@ -508,7 +564,7 @@ export class DocxService {
           tabStops: [
             {
               type: TabStopType.RIGHT,
-              position: 10400, // Near right margin for A4
+              position: rightTabStop,
             },
           ],
           children: [
@@ -535,6 +591,51 @@ export class DocxService {
 
     return paragraphs;
   }
+
+  private estimateContentLines(resume: GeneratedResume): number {
+    let lineCount = 0;
+
+    // Name + contact (3 lines)
+    lineCount += 3;
+
+    // Summary (estimate 3 lines)
+    if (resume.summary) lineCount += 3;
+
+    // Experience (1 header + (2 + bullets) per exp)
+    if (resume.experiences?.length) {
+      lineCount += 1;
+      resume.experiences.forEach((exp) => {
+        lineCount += 2 + (exp.bullets?.length || 0);
+      });
+    }
+
+    // Projects (1 header + 2 per project)
+    if (resume.projects?.length) {
+      lineCount += 1 + resume.projects.length * 2;
+    }
+
+    // Education (1 header + 2 per edu)
+    if (resume.education?.length) {
+      lineCount += 1 + resume.education.length * 2;
+    }
+
+    // Certifications (1 header + 1 per cert)
+    if (resume.certifications?.length) {
+      lineCount += 1 + resume.certifications.length;
+    }
+
+    // Skills (1 header + 1 line)
+    if (resume.skills?.length) lineCount += 2;
+
+    return Math.max(lineCount, 1);
+  }
 }
 
 export const docxService = new DocxService();
+
+
+
+
+
+
+

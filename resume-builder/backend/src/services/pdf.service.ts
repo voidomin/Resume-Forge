@@ -13,21 +13,109 @@ export class PDFService {
   ): Promise<Buffer> {
     const chunks: Buffer[] = [];
 
-    // Create PDF with A4 size and default margins
+    const pageMargins = {
+      top: 36,
+      bottom: 36,
+      left: 36,
+      right: 36,
+    };
+
+    // Measure content height to determine if scaling is needed
+    const scale = this.calculateScaleForContent(resume, template, pageMargins);
+
+    // Create PDF with A4 size
     const doc = new PDFDocument({
       size: "A4",
-      margins: {
-        top: 36, // 0.5 inch
-        bottom: 36,
-        left: 36,
-        right: 36,
-      },
+      margins: pageMargins,
     });
 
     // Collect PDF chunks
     doc.on("data", (chunk) => chunks.push(chunk));
 
+    // Store scale on document for access in render functions
+    // This will scale all fonts/spacing BEFORE rendering to prevent page overflow
+    (doc as any).__fontScale = scale;
+
     // Route to appropriate renderer
+    this.renderTemplate(doc, resume, template);
+
+    // Finalize PDF and return buffer via Promise
+    return new Promise<Buffer>((resolve, reject) => {
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", reject);
+      doc.end();
+    });
+  }
+
+  private calculateScaleForContent(
+    resume: GeneratedResume,
+    template: TemplateType,
+    margins: { top: number; bottom: number; left: number; right: number },
+  ): number {
+    const pageHeight = 842 - margins.top - margins.bottom;
+    const minScale = 0.65;
+    let scale = 1;
+
+    for (let i = 0; i < 6; i += 1) {
+      const { totalHeight, pages } = this.measureContentHeight(
+        resume,
+        template,
+        margins,
+        scale,
+      );
+
+      if (pages <= 1 && totalHeight <= pageHeight) return scale;
+
+      const heightScale = Math.min(1, (scale * pageHeight) / totalHeight);
+      const pageScale = pages > 1 ? scale * 0.9 : scale;
+      const nextScale = Math.max(minScale, Math.min(heightScale, pageScale));
+
+      if (Math.abs(nextScale - scale) < 0.005) {
+        return nextScale;
+      }
+
+      scale = nextScale;
+    }
+
+    return scale;
+  }
+
+  private measureContentHeight(
+    resume: GeneratedResume,
+    template: TemplateType,
+    margins: { top: number; bottom: number; left: number; right: number },
+    scale: number,
+  ): { totalHeight: number; pages: number } {
+    let pageCount = 1;
+
+    const measureDoc = new PDFDocument({
+      size: "A4",
+      margins,
+    });
+
+    measureDoc.on("pageAdded", () => {
+      pageCount += 1;
+    });
+
+    measureDoc.on("data", () => null);
+
+    (measureDoc as any).__fontScale = scale;
+    this.renderTemplate(measureDoc, resume, template);
+
+    const lastPageY = Math.max(0, measureDoc.y - margins.top);
+    const pageHeight = 842 - margins.top - margins.bottom;
+    const totalHeight = (pageCount - 1) * pageHeight + lastPageY;
+
+    measureDoc.end();
+
+    return { totalHeight, pages: pageCount };
+  }
+
+  private renderTemplate(
+    doc: PDFKit.PDFDocument,
+    resume: GeneratedResume,
+    template: TemplateType,
+  ): void {
     switch (template) {
       case "executive":
         this.renderExecutive(doc, resume);
@@ -40,15 +128,6 @@ export class PDFService {
         this.renderModern(doc, resume);
         break;
     }
-
-    // Finalize PDF and return buffer via Promise
-    return new Promise<Buffer>((resolve, reject) => {
-      doc.on("end", () => {
-        resolve(Buffer.concat(chunks));
-      });
-      doc.on("error", reject);
-      doc.end();
-    });
   }
 
   // =================================================================
@@ -56,67 +135,64 @@ export class PDFService {
   // Clean, Sans-Serif, Standard Layout
   // =================================================================
   private renderModern(doc: PDFKit.PDFDocument, resume: GeneratedResume): void {
-    const pageWidth = 523; // 595 - 72
     const fontRegular = "Helvetica";
     const fontBold = "Helvetica-Bold";
+    const scale = (doc as any).__fontScale || 1;
 
     // Header
     doc
       .font(fontBold)
-      .fontSize(14)
+      .fontSize(14 * scale)
       .fillColor("#2563eb") // Blue
       .text(resume.contactInfo.name.toUpperCase(), { align: "center" });
 
-    doc.moveDown(0.5);
+    doc.moveDown(0.5 * scale);
 
     // Contact
-    this.renderContactLine(doc, resume, fontRegular, 9, false);
+    this.renderContactLine(doc, resume, fontRegular, 9 * scale, false);
 
-    doc.moveDown(1.5);
+    doc.moveDown(1.5 * scale);
 
     // Sections
     if (resume.summary) {
-      this.drawModernHeader(doc, "PROFESSIONAL SUMMARY");
+      this.drawModernHeader(doc, "PROFESSIONAL SUMMARY", scale);
       doc
         .font(fontRegular)
-        .fontSize(9)
-        .text(resume.summary, { align: "justify", lineGap: 0.5 });
-      doc.moveDown();
+        .fontSize(9 * scale)
+        .text(resume.summary, { align: "justify", lineGap: 0.5 * scale });
+      doc.moveDown(scale);
     }
 
     if (resume.experiences?.length) {
-      this.drawModernHeader(doc, "WORK EXPERIENCE");
+      this.drawModernHeader(doc, "WORK EXPERIENCE", scale);
       resume.experiences.forEach((exp) => {
-        if (doc.y > 750) return;
-        this.renderExperienceModern(doc, exp, fontBold, fontRegular);
-        doc.moveDown(0.5);
+        this.renderExperienceModern(doc, exp, fontBold, fontRegular, scale);
+        doc.moveDown(0.5 * scale);
       });
     }
 
-    if (resume.projects?.length && doc.y < 780) {
-      this.drawModernHeader(doc, "PROJECTS");
+    if (resume.projects?.length) {
+      this.drawModernHeader(doc, "PROJECTS", scale);
       resume.projects.forEach((proj) => {
-        if (doc.y > 800) return;
-        this.renderProjectModern(doc, proj, fontBold, fontRegular);
-        doc.moveDown(0.5);
+        this.renderProjectModern(doc, proj, fontBold, fontRegular, scale);
+        doc.moveDown(0.5 * scale);
       });
     }
 
-    if (resume.education?.length && doc.y < 780) {
-      this.drawModernHeader(doc, "EDUCATION");
+    if (resume.education?.length) {
+      this.drawModernHeader(doc, "EDUCATION", scale);
       resume.education.forEach((edu) => {
-        if (doc.y > 800) return;
-        this.renderEducationModern(doc, edu, fontBold, fontRegular);
-        doc.moveDown(0.5);
+        this.renderEducationModern(doc, edu, fontBold, fontRegular, scale);
+        doc.moveDown(0.5 * scale);
       });
     }
 
-    if (resume.skills?.length && doc.y < 820) {
-      this.drawModernHeader(doc, "SKILLS");
+    if (resume.skills?.length) {
+      this.drawModernHeader(doc, "SKILLS", scale);
       doc
         .font(fontRegular)
-        .fontSize(9)
-        .text(resume.skills.join("  •  "), { lineGap: 0.5 });
+        .fontSize(9 * scale)
+        .text(resume.skills.join("  •  "), { lineGap: 0.5 * scale });
     }
   }
 
@@ -130,16 +206,17 @@ export class PDFService {
   ): void {
     const fontRegular = "Times-Roman";
     const fontBold = "Times-Bold";
+    const scale = (doc as any).__fontScale || 1;
 
     // Header - Centered & Capitalized
     doc
       .font(fontBold)
-      .fontSize(16)
+      .fontSize(16 * scale)
       .text(resume.contactInfo.name.toUpperCase(), { align: "center" });
 
-    doc.moveDown(0.5);
-    this.renderContactLine(doc, resume, fontRegular, 10, true);
-    doc.moveDown(1);
+    doc.moveDown(0.5 * scale);
+    this.renderContactLine(doc, resume, fontRegular, 10 * scale, true);
+    doc.moveDown(1 * scale);
 
     // Draw a horizontal line across the page
     doc
@@ -173,7 +250,6 @@ export class PDFService {
     if (resume.experiences?.length) {
       renderSection("Work Experience", () => {
         resume.experiences.forEach((exp) => {
-          if (doc.y > 750) return;
           doc.font(fontBold).fontSize(10).text(exp.role, { continued: true });
           doc.font(fontRegular).text(` | ${exp.company}`, { continued: true });
           doc.text(exp.location ? ` | ${exp.location}` : "", {
@@ -225,29 +301,30 @@ export class PDFService {
   ): void {
     const fontRegular = "Helvetica";
     const fontBold = "Helvetica-Bold";
+    const scale = (doc as any).__fontScale || 1;
 
     // Left Aligned Header - Large Name
     doc
       .font(fontBold)
-      .fontSize(22)
+      .fontSize(22 * scale)
       .fillColor("#000000")
       .text(resume.contactInfo.name, { align: "left" });
 
-    doc.moveDown(0.2);
+    doc.moveDown(0.2 * scale);
     // Contact Info - Gray
     doc.fillColor("#666666");
-    this.renderContactLine(doc, resume, fontRegular, 9, false, "left");
+    this.renderContactLine(doc, resume, fontRegular, 9 * scale, false, "left");
     doc.fillColor("#000000"); // Reset
 
-    doc.moveDown(2);
+    doc.moveDown(2 * scale);
 
     // Helpers - No Lines, just Spacing
     const drawHeader = (title: string) => {
       doc
         .font(fontBold)
-        .fontSize(11)
+        .fontSize(11 * scale)
         .text(title.toUpperCase(), { align: "left", characterSpacing: 2 });
-      doc.moveDown(0.5);
+      doc.moveDown(0.5 * scale);
     };
 
     if (resume.summary) {
@@ -269,8 +346,6 @@ export class PDFService {
     if (resume.experiences?.length) {
       drawHeader("Experience");
       resume.experiences.forEach((exp) => {
-        if (doc.y > 750) return;
-
         // Custom Minimalist Experience Render
         doc.font(fontBold).fontSize(10).text(exp.role, { continued: true });
         doc.font(fontRegular).text(` | ${exp.company}`, { continued: true });
@@ -299,21 +374,29 @@ export class PDFService {
     if (resume.education?.length) {
       drawHeader("Education");
       resume.education.forEach((edu) => {
-        if (doc.y > 800) return;
-
         const currentY = doc.y;
-        doc.font(fontBold).fontSize(10).text(edu.institution);
 
-        // Date on the right
+        // Institution (Left) - Truncate if too long to avoid overlap
+        doc.font(fontBold).fontSize(10).text(edu.institution, {
+          width: 350,
+          lineBreak: false,
+          ellipsis: true,
+        });
+
+        // Date (Right - Absolute Position)
         if (edu.dateRange) {
+          const dateWidth = doc.widthOfString(edu.dateRange);
           doc
             .font(fontRegular)
             .fontSize(9)
-            .text(edu.dateRange, { align: "right" });
-          doc.y = doc.y - doc.currentLineHeight(); // Match baseline if possible or just avoid moveUp
-          // Reset y to handle title line
-          doc.y = currentY + doc.currentLineHeight();
+            .text(edu.dateRange, 550 - dateWidth, currentY, {
+              width: dateWidth,
+              align: "right",
+            });
         }
+
+        // Reset to next line below institution (approx 1 line height)
+        doc.y = currentY + 12;
 
         doc.font(fontRegular).fontSize(9).text(`${edu.degree} in ${edu.field}`);
         if (edu.gpa) {
@@ -447,8 +530,16 @@ export class PDFService {
     doc.text("", { continued: false }); // End line
   }
 
-  private drawModernHeader(doc: PDFKit.PDFDocument, title: string) {
-    doc.font("Helvetica-Bold").fontSize(10).fillColor("#2563eb").text(title); // Blue
+  private drawModernHeader(
+    doc: PDFKit.PDFDocument,
+    title: string,
+    scale: number = 1,
+  ) {
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(10 * scale)
+      .fillColor("#2563eb")
+      .text(title); // Blue
     const y = doc.y + 2;
     doc
       .strokeColor("#2563eb") // Blue
@@ -458,7 +549,7 @@ export class PDFService {
       .stroke();
     doc.fillColor("#000000"); // Reset to black
     doc.strokeColor("#000000"); // Reset
-    doc.y += 5;
+    doc.y += 5 * scale;
   }
 
   private renderExperienceModern(
@@ -466,10 +557,11 @@ export class PDFService {
     exp: any,
     fontBold: string,
     fontRegular: string,
+    scale: number = 1,
   ) {
     doc
       .font(fontBold)
-      .fontSize(9)
+      .fontSize(9 * scale)
       .text(exp.role, 36, doc.y, { continued: true });
     doc
       .font(fontRegular)
@@ -479,15 +571,15 @@ export class PDFService {
 
     // Date on right
     const dateWidth = doc.widthOfString(exp.dateRange);
-    doc.y -= 11;
+    doc.y -= 11 * scale;
     doc.text(exp.dateRange, 595 - 36 - dateWidth, doc.y);
-    doc.y += 11;
+    doc.y += 11 * scale;
 
     exp.bullets.forEach((b: string) => {
       doc
         .font(fontRegular)
-        .fontSize(9)
-        .text(`•  ${b}`, 42, doc.y, { width: 510, lineGap: 0.5 });
+        .fontSize(9 * scale)
+        .text(`•  ${b}`, 42, doc.y, { width: 510, lineGap: 0.5 * scale });
     });
   }
 
@@ -496,8 +588,12 @@ export class PDFService {
     proj: any,
     fontBold: string,
     fontRegular: string,
+    scale: number = 1,
   ) {
-    doc.font(fontBold).fontSize(9).text(proj.name, { continued: true });
+    doc
+      .font(fontBold)
+      .fontSize(9 * scale)
+      .text(proj.name, { continued: true });
     if (proj.link) {
       doc.font(fontRegular).text(`  |  ${proj.link}`, {
         link: proj.link.startsWith("http") ? proj.link : `https://${proj.link}`,
@@ -508,9 +604,15 @@ export class PDFService {
     }
 
     if (proj.technologies)
-      doc.font(fontRegular).fontSize(8).text(proj.technologies);
+      doc
+        .font(fontRegular)
+        .fontSize(8 * scale)
+        .text(proj.technologies);
 
-    doc.font(fontRegular).fontSize(9).text(proj.description);
+    doc
+      .font(fontRegular)
+      .fontSize(9 * scale)
+      .text(proj.description);
   }
 
   private renderEducationModern(
@@ -518,18 +620,19 @@ export class PDFService {
     edu: any,
     fontBold: string,
     fontRegular: string,
+    scale: number = 1,
   ) {
     doc
       .font(fontBold)
-      .fontSize(9)
+      .fontSize(9 * scale)
       .text(`${edu.degree} in ${edu.field}`, { continued: true });
     doc.font(fontRegular).text(`  |  ${edu.institution}`);
 
     if (edu.dateRange) {
       const w = doc.widthOfString(edu.dateRange);
-      doc.y -= 11;
+      doc.y -= 11 * scale;
       doc.text(edu.dateRange, 559 - w, doc.y);
-      doc.y += 11;
+      doc.y += 11 * scale;
     }
   }
 }

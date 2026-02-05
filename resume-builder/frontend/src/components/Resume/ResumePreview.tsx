@@ -125,13 +125,13 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
 
   // Section header style (reusable)
   const sectionHeaderStyle = {
-    fontSize: "9.5pt",
+    fontSize: "9pt", // Smaller header
     fontWeight: "bold" as const,
     textTransform: "uppercase" as const,
     borderBottom: borderStyle,
-    paddingBottom: "1px",
-    marginTop: "3px",
-    marginBottom: "3px",
+    paddingBottom: "3px",
+    marginTop: "4px", // Reduced margin top
+    marginBottom: "12px", // Increased margin bottom for spacing after blue line
     textAlign: sectionHeaderAlignment as any,
     color: accentColor,
   };
@@ -139,16 +139,17 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
   return (
     <div
       className="resume-preview bg-white"
+      id="resume-preview-export"
       style={{
         width: "8.27in", // A4 width
-        minHeight: "11.69in", // A4 height
-        maxHeight: "11.69in",
-        padding: "0.35in 0.4in", // Slightly Tighter vertical margins
+        height: "11.69in", // A4 height
+        padding: "0.5in", // Match PDF/DOCX margins
         fontFamily: getFontFamily(),
-        fontSize: "8.8pt", // Slightly smaller base font
-        lineHeight: "1.25", // Tighter line height
+        fontSize: "9pt", // Align with PDF/DOCX density
+        lineHeight: "1.2",
         color: "#000",
         overflow: "hidden",
+        boxSizing: "border-box",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
         border: "1px solid #e0e0e0",
       }}
@@ -157,7 +158,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
       <div style={{ textAlign: headerAlignment, marginBottom: "6px" }}>
         <h1
           style={{
-            fontSize: isMinimalist ? "17pt" : "15pt", // Slightly smaller
+            fontSize: isMinimalist ? "16pt" : "14pt",
             fontWeight: "bold",
             textTransform: "uppercase",
             margin: 0,
@@ -171,7 +172,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
         {/* Contact Line */}
         <div
           style={{
-            fontSize: "8.8pt",
+            fontSize: "9pt",
             display: "flex",
             flexWrap: "wrap",
             justifyContent:
@@ -203,16 +204,26 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
         <section>
           <h2 style={sectionHeaderStyle}>Education</h2>
           {resume.education.map((edu, index) => (
-            <div key={index} style={{ marginBottom: "2px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div key={index} style={{ marginBottom: "3px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                }}
+              >
                 <div>
                   <span style={{ fontWeight: "bold" }}>{edu.institution}</span>
-                  {edu.gpa && <span>, {edu.gpa} CGPA</span>}
                 </div>
+                <span style={{ fontSize: "9pt", flexShrink: 0 }}>
+                  {edu.dateRange}
+                </span>
               </div>
               <div style={{ fontSize: "9pt" }}>
-                {edu.degree} ({edu.field})
-                {edu.dateRange && ` - ${edu.dateRange}`}
+                <span>
+                  {edu.degree} in {edu.field}
+                </span>
+                {edu.gpa && <span> | CGPA: {edu.gpa}</span>}
               </div>
             </div>
           ))}
@@ -224,13 +235,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
         <section>
           <h2 style={sectionHeaderStyle}>Work Experience</h2>
           {resume.experiences.map((exp, index) => (
-            <div
-              key={index}
-              style={{
-                marginBottom:
-                  index < resume.experiences.length - 1 ? "6px" : "0",
-              }}
-            >
+            <div key={index} style={{ marginBottom: "3px" }}>
               <div
                 style={{
                   display: "flex",
@@ -243,21 +248,28 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
                   <span>, {exp.company}</span>
                   {exp.location && <span> | {exp.location}</span>}
                 </div>
-                <span style={{ fontSize: "8.5pt", flexShrink: 0 }}>
+                <span style={{ fontSize: "9pt", flexShrink: 0 }}>
                   {exp.dateRange}
                 </span>
               </div>
               <ul
                 style={{
-                  margin: "2px 0 0 0",
-                  paddingLeft: "14px",
+                  margin: "8px 0 0 0",
+                  paddingLeft: "18px",
                   listStyleType: "disc",
+                  listStylePosition: "outside",
                 }}
               >
                 {exp.bullets.map((bullet, bIndex) => (
                   <li
                     key={bIndex}
-                    style={{ marginBottom: "1px", fontSize: "9pt" }}
+                    style={{
+                      marginBottom: "1px",
+                      fontSize: "9pt",
+                      lineHeight: "1.2",
+                      paddingLeft: "2px",
+                      textIndent: "0",
+                    }}
                   >
                     {bullet}
                   </li>
@@ -285,19 +297,37 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
               </div>
               <ul
                 style={{
-                  margin: "1px 0 0 0",
-                  paddingLeft: "14px",
+                  margin: "8px 0 0 0",
+                  paddingLeft: "18px",
                   listStyleType: "disc",
+                  listStylePosition: "outside",
                 }}
               >
                 {proj.bullets && proj.bullets.length > 0
                   ? proj.bullets.map((bullet, bIndex) => (
-                      <li key={bIndex} style={{ fontSize: "9pt" }}>
+                      <li
+                        key={bIndex}
+                        style={{
+                          fontSize: "9pt",
+                          marginBottom: "1px",
+                          paddingLeft: "2px",
+                          textIndent: "0",
+                        }}
+                      >
                         {bullet}
                       </li>
                     ))
                   : proj.description && (
-                      <li style={{ fontSize: "9pt" }}>{proj.description}</li>
+                      <li
+                        style={{
+                          fontSize: "9pt",
+                          marginBottom: "1px",
+                          paddingLeft: "2px",
+                          textIndent: "0",
+                        }}
+                      >
+                        {proj.description}
+                      </li>
                     )}
               </ul>
             </div>

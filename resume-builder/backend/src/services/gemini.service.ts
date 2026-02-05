@@ -402,10 +402,32 @@ Return ONLY valid JSON with this structure:
     // Helper to try generation with fallback (Same strategy as ResumeParser)
     const generateWithFallback = async () => {
       // Models available per user's rate limits dashboard
+      // User suggested 3.0 preview
       const modelsToTry = [
-        "models/gemini-2.5-flash", // Available in rate limits
-        "models/gemini-1.5-flash", // Standard model
-        "models/gemini-1.5-pro", // Pro model
+        "gemini-3-flash-preview",
+        "models/gemini-3-flash-preview",
+
+        // Flash Lite (Primary preference from user)
+        "gemini-2.5-flash-lite",
+        "models/gemini-2.5-flash-lite",
+
+        // 3.0 Flash
+        "gemini-3.0-flash",
+        "models/gemini-3.0-flash",
+
+        // 2.5 Flash
+        "gemini-2.5-flash",
+        "models/gemini-2.5-flash",
+
+        // 2.0 Flash (Next-gen standard)
+        "gemini-2.0-flash",
+        "models/gemini-2.0-flash",
+
+        // Fallbacks (1.5 Family)
+        "gemini-1.5-flash",
+        "models/gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "models/gemini-1.5-pro",
       ];
 
       for (const modelName of modelsToTry) {
@@ -421,10 +443,32 @@ Return ONLY valid JSON with this structure:
           );
 
           // Run out of quota?
+          // Run out of quota?
           if (error.message?.includes("429")) {
-            console.log(`Rate limit (429) hit for ${modelName}. Waiting 2s...`);
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            continue;
+            // Try to extract wait time from error message "Please retry in 48.71s"
+            const match = error.message.match(/retry in\s+([\d.]+)\s*s/);
+            const waitSeconds = match ? parseFloat(match[1]) + 2 : 60; // Add 2s buffer or default to 60s
+
+            console.log(
+              `Rate limit (429) hit for ${modelName}. Waiting ${waitSeconds.toFixed(1)}s (dynamic)...`,
+            );
+
+            await new Promise((resolve) =>
+              setTimeout(resolve, waitSeconds * 1000),
+            );
+
+            // Retry the same model once after waiting
+            try {
+              console.log(`Retrying ${modelName} after wait...`);
+              const currentModel = genAI.getGenerativeModel({
+                model: modelName,
+              });
+              const result = await currentModel.generateContent(prompt);
+              return result.response.text();
+            } catch (retryError) {
+              console.log(`Retry failed for ${modelName}: ${retryError}`);
+              continue; // Move to next model
+            }
           }
 
           // Model not found?
