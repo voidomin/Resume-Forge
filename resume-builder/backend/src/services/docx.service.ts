@@ -57,7 +57,7 @@ export class DocxService {
                   text: resume.contactInfo.name.toUpperCase(),
                   bold: true,
                   size: 28, // 14pt
-                  font: "Arial",
+                  font: "Times New Roman",
                 }),
               ],
             }),
@@ -112,20 +112,20 @@ export class DocxService {
     return buffer;
   }
 
-//   async generateDocxFromHtml(html: string): Promise<Buffer> {
-//     const buffer = await htmlToDocx(html, null, {
-//       orientation: "portrait",
-//       margins: {
-//         top: 720,
-//         right: 720,
-//         bottom: 720,
-//         left: 720,
-//       },
-//     });
-// 
-//     return Buffer.from(buffer as ArrayBuffer);
-//   }
-// 
+  //   async generateDocxFromHtml(html: string): Promise<Buffer> {
+  //     const buffer = await htmlToDocx(html, null, {
+  //       orientation: "portrait",
+  //       margins: {
+  //         top: 720,
+  //         right: 720,
+  //         bottom: 720,
+  //         left: 720,
+  //       },
+  //     });
+  //
+  //     return Buffer.from(buffer as ArrayBuffer);
+  //   }
+  //
   private createContactLine(
     contact: GeneratedResume["contactInfo"],
   ): Paragraph {
@@ -139,7 +139,7 @@ export class DocxService {
             new TextRun({
               text: contact.email,
               size: 16,
-              font: "Arial",
+              font: "Times New Roman",
               color: "0000FF", // Standard link color
               underline: {},
             }),
@@ -154,7 +154,7 @@ export class DocxService {
         new TextRun({
           text: contact.phone,
           size: 16,
-          font: "Arial",
+          font: "Times New Roman",
         }),
       );
     }
@@ -164,7 +164,7 @@ export class DocxService {
         new TextRun({
           text: contact.location,
           size: 16,
-          font: "Arial",
+          font: "Times New Roman",
         }),
       );
     }
@@ -177,7 +177,7 @@ export class DocxService {
           new TextRun({
             text: "  |  ",
             size: 16,
-            font: "Arial",
+            font: "Times New Roman",
           }),
         );
       }
@@ -233,7 +233,7 @@ export class DocxService {
             new TextRun({
               text: item.text,
               size: 16,
-              font: "Arial",
+              font: "Times New Roman",
               color: "0000FF",
               underline: {},
             }),
@@ -247,7 +247,7 @@ export class DocxService {
           new TextRun({
             text: "  |  ",
             size: 16,
-            font: "Arial",
+            font: "Times New Roman",
           }),
         );
       }
@@ -276,7 +276,7 @@ export class DocxService {
           text: title,
           bold: true,
           size: 20, // 10pt
-          font: "Arial",
+          font: "Times New Roman",
         }),
       ],
     });
@@ -291,7 +291,7 @@ export class DocxService {
           new TextRun({
             text: summary,
             size: 18, // 9pt
-            font: "Arial",
+            font: "Times New Roman",
           }),
         ],
       }),
@@ -322,26 +322,26 @@ export class DocxService {
               text: exp.role,
               bold: true,
               size: 18, // 9pt
-              font: "Arial",
+              font: "Times New Roman",
             }),
             new TextRun({
               text: `  |  ${exp.company}`,
               size: 18, // 9pt
-              font: "Arial",
+              font: "Times New Roman",
             }),
             ...(exp.location
               ? [
                   new TextRun({
                     text: `  |  ${exp.location}`,
                     size: 18, // 9pt
-                    font: "Arial",
+                    font: "Times New Roman",
                   }),
                 ]
               : []),
             new TextRun({
               text: "\t" + exp.dateRange,
               size: 18, // 9pt
-              font: "Arial",
+              font: "Times New Roman",
             }),
           ],
         }),
@@ -357,7 +357,7 @@ export class DocxService {
               new TextRun({
                 text: `  ${bullet}`,
                 size: 18, // 9pt
-                font: "Arial",
+                font: "Times New Roman",
               }),
             ],
           }),
@@ -389,17 +389,17 @@ export class DocxService {
               text: `${edu.degree} in ${edu.field}`,
               bold: true,
               size: 18, // 9pt
-              font: "Arial",
+              font: "Times New Roman",
             }),
             new TextRun({
               text: `  |  ${edu.institution}`,
               size: 18, // 9pt
-              font: "Arial",
+              font: "Times New Roman",
             }),
             new TextRun({
               text: "\t" + (edu.dateRange || ""),
               size: 18, // 9pt
-              font: "Arial",
+              font: "Times New Roman",
             }),
           ],
         }),
@@ -413,7 +413,7 @@ export class DocxService {
               new TextRun({
                 text: `GPA: ${edu.gpa}`,
                 size: 16, // 8pt
-                font: "Arial",
+                font: "Times New Roman",
               }),
             ],
           }),
@@ -433,7 +433,7 @@ export class DocxService {
           new TextRun({
             text: skills.join("  •  "),
             size: 18, // 9pt
-            font: "Arial",
+            font: "Times New Roman",
           }),
         ],
       }),
@@ -451,7 +451,7 @@ export class DocxService {
           text: proj.name,
           bold: true,
           size: 18, // 9pt
-          font: "Arial",
+          font: "Times New Roman",
         }),
       ];
 
@@ -468,7 +468,7 @@ export class DocxService {
           new TextRun({
             text: "  |  ",
             size: 18,
-            font: "Arial",
+            font: "Times New Roman",
           }),
         );
 
@@ -478,7 +478,7 @@ export class DocxService {
               new TextRun({
                 text: formatUrl(proj.link),
                 size: 18,
-                font: "Arial",
+                font: "Times New Roman",
                 color: "0000FF",
                 underline: {},
               }),
@@ -504,7 +504,7 @@ export class DocxService {
                 text: proj.technologies,
                 italics: true,
                 size: 16, // 8pt
-                font: "Arial",
+                font: "Times New Roman",
               }),
             ],
           }),
@@ -519,7 +519,7 @@ export class DocxService {
               new TextRun({
                 text: proj.description,
                 size: 18, // 9pt
-                font: "Arial",
+                font: "Times New Roman",
               }),
             ],
           }),
@@ -537,7 +537,7 @@ export class DocxService {
                 new TextRun({
                   text: `  ${bullet}`,
                   size: 18, // 9pt
-                  font: "Arial",
+                  font: "Times New Roman",
                 }),
               ],
             }),
@@ -572,17 +572,17 @@ export class DocxService {
               text: cert.name,
               bold: true,
               size: 18, // 9pt
-              font: "Arial",
+              font: "Times New Roman",
             }),
             new TextRun({
               text: `  |  ${cert.issuer}`,
               size: 18, // 9pt
-              font: "Arial",
+              font: "Times New Roman",
             }),
             new TextRun({
               text: "\t" + (cert.date || ""),
               size: 18, // 9pt
-              font: "Arial",
+              font: "Times New Roman",
             }),
           ],
         }),
@@ -632,10 +632,3 @@ export class DocxService {
 }
 
 export const docxService = new DocxService();
-
-
-
-
-
-
-

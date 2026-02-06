@@ -1,7 +1,7 @@
 import React from "react";
 import { Check } from "lucide-react";
 
-export type TemplateType = "modern" | "executive" | "minimalist";
+export type TemplateType = "modern" | "executive" | "minimalist" | "standard";
 
 interface TemplateOption {
   id: TemplateType;
@@ -18,6 +18,13 @@ const templates: TemplateOption[] = [
     description: "Clean, sans-serif, blue accents. Best for Tech & Startups.",
     color: "bg-blue-500",
     preview: "font-sans",
+  },
+  {
+    id: "standard",
+    name: "Standard",
+    description: "Classic serif, highly readable. Top Employer favorite.",
+    color: "bg-white border text-black",
+    preview: "font-serif",
   },
   {
     id: "executive",

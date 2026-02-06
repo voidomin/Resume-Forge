@@ -1,7 +1,7 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "./gemini.service";
 
-export type TemplateType = "modern" | "executive" | "minimalist";
+export type TemplateType = "modern" | "executive" | "minimalist" | "standard";
 
 export class PDFService {
   /**
@@ -53,31 +53,59 @@ export class PDFService {
     margins: { top: number; bottom: number; left: number; right: number },
   ): number {
     const pageHeight = 842 - margins.top - margins.bottom;
-    const minScale = 0.65;
-    let scale = 1;
+    const minScale = 0.75; // Don't shrink too much (readability)
+    const maxScale = 1.15; // Don't expand too much (looks comedic)
 
-    for (let i = 0; i < 6; i += 1) {
-      const { totalHeight, pages } = this.measureContentHeight(
+    // Initial measure with scale 1
+    let { totalHeight, pages } = this.measureContentHeight(
+      resume,
+      template,
+      margins,
+      1,
+    );
+
+    // Case 1: Overflow (Need compression)
+    if (pages > 1 || totalHeight > pageHeight) {
+      let scale = 1;
+      // Attempt mitigation loop
+      for (let i = 0; i < 5; i++) {
+        const ratio = pageHeight / totalHeight;
+        scale = Math.max(minScale, scale * ratio * 0.98); // 0.98 buffer
+
+        const check = this.measureContentHeight(
+          resume,
+          template,
+          margins,
+          scale,
+        );
+        if (check.pages === 1 && check.totalHeight <= pageHeight) return scale;
+
+        totalHeight = check.totalHeight; // Update for next iteration
+      }
+      return minScale; // Fallback
+    }
+
+    // Case 2: Underflow (Need expansion)
+    // If usage is less than 85% of page, try to expand
+    const usageRatio = totalHeight / pageHeight;
+    if (usageRatio < 0.85) {
+      // Target ~92% fill
+      const targetScale = Math.min(maxScale, 1 + (0.92 - usageRatio));
+
+      // Verify expansion doesn't cause overflow
+      const check = this.measureContentHeight(
         resume,
         template,
         margins,
-        scale,
+        targetScale,
       );
+      if (check.pages === 1) return targetScale;
 
-      if (pages <= 1 && totalHeight <= pageHeight) return scale;
-
-      const heightScale = Math.min(1, (scale * pageHeight) / totalHeight);
-      const pageScale = pages > 1 ? scale * 0.9 : scale;
-      const nextScale = Math.max(minScale, Math.min(heightScale, pageScale));
-
-      if (Math.abs(nextScale - scale) < 0.005) {
-        return nextScale;
-      }
-
-      scale = nextScale;
+      // If overflowed, back off halfway
+      return (1 + targetScale) / 2;
     }
 
-    return scale;
+    return 1; // Perfect fit already
   }
 
   private measureContentHeight(
@@ -99,8 +127,25 @@ export class PDFService {
 
     measureDoc.on("data", () => null);
 
-    (measureDoc as any).__fontScale = scale;
-    this.renderTemplate(measureDoc, resume, template);
+    // Apply smart logic for standard template
+    if (template === "standard") {
+      // Heuristic: If scale is < 1, assume we want to compress spacing MORE than fonts
+      // If scale is 0.9, fontScale = 0.95, spacingScale = 0.85
+      let fontScale = scale;
+      let spacingScale = scale;
+
+      if (scale < 1) {
+        spacingScale = scale * 0.9; // Compress spacing faster
+        fontScale = Math.max(0.9, scale * 1.05); // Protect font size
+      }
+
+      (measureDoc as any).__fontScale = fontScale;
+      (measureDoc as any).__spacingScale = spacingScale;
+      this.renderStandard(measureDoc, resume, fontScale, spacingScale);
+    } else {
+      (measureDoc as any).__fontScale = scale;
+      this.renderTemplate(measureDoc, resume, template);
+    }
 
     const lastPageY = Math.max(0, measureDoc.y - margins.top);
     const pageHeight = 842 - margins.top - margins.bottom;
@@ -120,6 +165,12 @@ export class PDFService {
       case "executive":
         this.renderExecutive(doc, resume);
         break;
+      case "standard":
+        // Pass the calculated scales if available, otherwise default
+        const fontScale = (doc as any).__fontScale || 1;
+        const spacingScale = (doc as any).__spacingScale || 1;
+        this.renderStandard(doc, resume, fontScale, spacingScale);
+        break;
       case "minimalist":
         this.renderMinimalist(doc, resume);
         break;
@@ -127,6 +178,214 @@ export class PDFService {
       default:
         this.renderModern(doc, resume);
         break;
+    }
+  }
+
+  // =================================================================
+  // 1. MODERN TEMPLATE (Default)
+  // Clean, Sans-Serif, Standard Layout
+  // =================================================================
+  private renderStandard(
+    doc: PDFKit.PDFDocument,
+    resume: GeneratedResume,
+    fontScale: number = 1,
+    spacingScale: number = 1,
+  ): void {
+    const fontRegular = "Times-Roman";
+    const fontBold = "Times-Bold";
+
+    // Adaptive sizes based on fontScale
+    // We clamp the minimum font size to 9pt to ensure readability
+    const baseFontSize = 10 * fontScale < 9 ? 9 : 10 * fontScale;
+    const headerFontSize = 16 * fontScale;
+    const sectionTitleSize = 11 * fontScale;
+
+    // Spacing multipliers
+    const lineGap = 1 * spacingScale; // Space between lines of text
+    const sectionGap = 12 * spacingScale; // Space between major sections
+    const itemGap = 8 * spacingScale; // Space between job items/projects
+    const headerGap = 5 * spacingScale; // Space after section headers
+
+    // Section Header - Left Aligned with Line
+    const drawHeader = (title: string) => {
+      doc.moveDown(0.2); // Tiny clear space
+      doc.font(fontBold).fontSize(sectionTitleSize).text(title.toUpperCase());
+
+      const y = doc.y + 2 * spacingScale;
+      doc
+        .strokeColor("#000000")
+        .lineWidth(0.5)
+        .moveTo(36, y)
+        .lineTo(559, y)
+        .stroke();
+
+      doc.y = y + headerGap; // Apply dynamic gap
+    };
+
+    // Header - Name
+    doc
+      .font(fontBold)
+      .fontSize(headerFontSize)
+      .fillColor("#000000")
+      .text(resume.contactInfo.name.toUpperCase(), { align: "left" });
+
+    doc.moveDown(0.2 * spacingScale);
+
+    // Contact Line
+    this.renderContactLine(
+      doc,
+      resume,
+      fontRegular,
+      baseFontSize,
+      false,
+      "left",
+    );
+
+    doc.moveDown(0.5 * spacingScale);
+
+    if (resume.summary) {
+      drawHeader("PROFESSIONAL SUMMARY");
+      doc
+        .font(fontRegular)
+        .fontSize(baseFontSize)
+        .text(resume.summary, { align: "justify", lineGap: lineGap });
+      doc.y += sectionGap;
+    }
+
+    if (resume.experiences?.length) {
+      drawHeader("WORK EXPERIENCE");
+      resume.experiences.forEach((exp) => {
+        // Role & Company Line
+        const startY = doc.y;
+
+        // Role (Left)
+        doc
+          .font(fontBold)
+          .fontSize(baseFontSize)
+          .text(exp.role, { continued: true, align: "left" });
+
+        doc
+          .font(fontRegular)
+          .text(`  |  ${exp.company}  |  ${exp.location || ""}`, {
+            continued: false,
+            align: "left",
+          });
+
+        // Date (Right Aligned)
+        const dateWidth = doc.widthOfString(exp.dateRange);
+        // Reset Y to start of line to draw date
+        doc.text(exp.dateRange, 595 - 36 - dateWidth, startY, {
+          align: "left",
+        });
+
+        // Move back to below the line
+        doc.y = startY + doc.currentLineHeight(false) + 2 * spacingScale;
+
+        exp.bullets.forEach((b: string) => {
+          doc
+            .font(fontRegular)
+            .fontSize(baseFontSize)
+            .text(`•  ${b}`, 42, doc.y, {
+              width: 510,
+              lineGap: lineGap,
+              align: "left",
+            });
+        });
+        doc.y += itemGap;
+      });
+      // Adjust last item gap to section gap
+      doc.y = doc.y - itemGap + sectionGap;
+    }
+
+    if (resume.projects?.length) {
+      drawHeader("PROJECTS");
+      resume.projects.forEach((proj) => {
+        const startY = doc.y;
+
+        doc
+          .font(fontBold)
+          .fontSize(baseFontSize)
+          .text(proj.name, { continued: true, align: "left" });
+
+        if (proj.link) {
+          doc.font(fontRegular).text(`  |  ${proj.link}`, {
+            link: proj.link.startsWith("http")
+              ? proj.link
+              : `https://${proj.link}`,
+            underline: true,
+            align: "left",
+            continued: false,
+          });
+        } else {
+          doc.text(""); // Clear continued state
+        }
+
+        if (proj.technologies) {
+          doc
+            .font(fontRegular)
+            .fontSize(baseFontSize - 1) // Slightly smaller
+            .text(proj.technologies, { align: "left", oblique: true }); // Italic for techs
+        }
+
+        doc
+          .font(fontRegular)
+          .fontSize(baseFontSize)
+          .text(proj.bullets ? "" : proj.description || "", {
+            align: "left",
+            lineGap: lineGap,
+          });
+
+        if (proj.bullets) {
+          proj.bullets.forEach((b: string) => {
+            doc
+              .font(fontRegular)
+              .fontSize(baseFontSize)
+              .text(`•  ${b}`, 42, doc.y, {
+                width: 510,
+                lineGap: lineGap,
+                align: "left",
+              });
+          });
+        }
+        doc.y += itemGap;
+      });
+      doc.y = doc.y - itemGap + sectionGap;
+    }
+
+    if (resume.education?.length) {
+      drawHeader("EDUCATION");
+      resume.education.forEach((edu) => {
+        const startY = doc.y;
+
+        doc
+          .font(fontBold)
+          .fontSize(baseFontSize)
+          .text(`${edu.degree} in ${edu.field}`, { continued: true });
+        doc.font(fontRegular).text(`  |  ${edu.institution}`);
+
+        if (edu.dateRange) {
+          const w = doc.widthOfString(edu.dateRange);
+          doc.text(edu.dateRange, 595 - 36 - w, startY, { align: "left" });
+          doc.y = startY + doc.currentLineHeight(false) + 2 * spacingScale;
+        }
+
+        if (edu.gpa) {
+          doc.text(`CGPA: ${edu.gpa}`);
+        }
+        doc.y += itemGap;
+      });
+      doc.y = doc.y - itemGap + sectionGap;
+    }
+
+    if (resume.skills?.length) {
+      drawHeader("SKILLS");
+      doc
+        .font(fontRegular)
+        .fontSize(baseFontSize)
+        .text(resume.skills.join("  •  "), {
+          align: "left",
+          lineGap: lineGap * 1.5, // slightly more breathing room for skills
+        });
     }
   }
 
@@ -146,28 +405,28 @@ export class PDFService {
       .fillColor("#2563eb") // Blue
       .text(resume.contactInfo.name.toUpperCase(), { align: "center" });
 
-    doc.moveDown(0.5 * scale);
+    doc.moveDown(0.2 * scale);
 
     // Contact
-    this.renderContactLine(doc, resume, fontRegular, 9 * scale, false);
+    this.renderContactLine(doc, resume, fontRegular, 8.5 * scale, false);
 
-    doc.moveDown(1.5 * scale);
+    doc.moveDown(0.5 * scale);
 
     // Sections
     if (resume.summary) {
       this.drawModernHeader(doc, "PROFESSIONAL SUMMARY", scale);
       doc
         .font(fontRegular)
-        .fontSize(9 * scale)
-        .text(resume.summary, { align: "justify", lineGap: 0.5 * scale });
-      doc.moveDown(scale);
+        .fontSize(8.5 * scale)
+        .text(resume.summary, { align: "justify", lineGap: 0.2 * scale });
+      doc.moveDown(0.5 * scale);
     }
 
     if (resume.experiences?.length) {
       this.drawModernHeader(doc, "WORK EXPERIENCE", scale);
       resume.experiences.forEach((exp) => {
         this.renderExperienceModern(doc, exp, fontBold, fontRegular, scale);
-        doc.moveDown(0.5 * scale);
+        doc.moveDown(0.25 * scale);
       });
     }
 
@@ -175,7 +434,7 @@ export class PDFService {
       this.drawModernHeader(doc, "PROJECTS", scale);
       resume.projects.forEach((proj) => {
         this.renderProjectModern(doc, proj, fontBold, fontRegular, scale);
-        doc.moveDown(0.5 * scale);
+        doc.moveDown(0.25 * scale);
       });
     }
 
@@ -183,7 +442,7 @@ export class PDFService {
       this.drawModernHeader(doc, "EDUCATION", scale);
       resume.education.forEach((edu) => {
         this.renderEducationModern(doc, edu, fontBold, fontRegular, scale);
-        doc.moveDown(0.5 * scale);
+        doc.moveDown(0.25 * scale);
       });
     }
 
@@ -191,8 +450,11 @@ export class PDFService {
       this.drawModernHeader(doc, "SKILLS", scale);
       doc
         .font(fontRegular)
-        .fontSize(9 * scale)
-        .text(resume.skills.join("  •  "), { lineGap: 0.5 * scale });
+        .fontSize(8.5 * scale)
+        .text(resume.skills.join("  •  "), {
+          align: "left",
+          lineGap: 0.2 * scale,
+        });
     }
   }
 
@@ -347,8 +609,13 @@ export class PDFService {
       drawHeader("Experience");
       resume.experiences.forEach((exp) => {
         // Custom Minimalist Experience Render
-        doc.font(fontBold).fontSize(10).text(exp.role, { continued: true });
-        doc.font(fontRegular).text(` | ${exp.company}`, { continued: true });
+        doc
+          .font(fontBold)
+          .fontSize(10)
+          .text(exp.role, { continued: true, align: "left" });
+        doc
+          .font(fontRegular)
+          .text(` | ${exp.company}`, { continued: true, align: "left" });
 
         const dateWidth = doc.widthOfString(exp.dateRange);
         doc.text("", { continued: false }); // Break line
@@ -365,7 +632,7 @@ export class PDFService {
         doc.fillColor("#000000"); // Reset
 
         exp.bullets.forEach((b) => {
-          doc.text(`• ${b}`, { indent: 10, lineGap: 1 });
+          doc.text(`• ${b}`, { indent: 10, align: "left", lineGap: 1 });
         });
         doc.moveDown(1);
       });
@@ -398,7 +665,10 @@ export class PDFService {
         // Reset to next line below institution (approx 1 line height)
         doc.y = currentY + 12;
 
-        doc.font(fontRegular).fontSize(9).text(`${edu.degree} in ${edu.field}`);
+        doc
+          .font(fontRegular)
+          .fontSize(9)
+          .text(`${edu.degree} in ${edu.field}`, { align: "left" });
         if (edu.gpa) {
           doc.fillColor("#666666").text(`CGPA: ${edu.gpa}`, { align: "left" });
           doc.fillColor("#000000");
@@ -410,7 +680,10 @@ export class PDFService {
 
     if (resume.skills?.length) {
       drawHeader("Skills");
-      doc.font(fontRegular).fontSize(9).text(resume.skills.join("  |  "));
+      doc
+        .font(fontRegular)
+        .fontSize(9)
+        .text(resume.skills.join("  |  "), { align: "left" });
     }
   }
 
@@ -562,11 +835,12 @@ export class PDFService {
     doc
       .font(fontBold)
       .fontSize(9 * scale)
-      .text(exp.role, 36, doc.y, { continued: true });
+      .text(exp.role, 36, doc.y, { continued: true, align: "left" });
     doc
       .font(fontRegular)
       .text(`  |  ${exp.company}  |  ${exp.location || ""}`, {
         continued: false,
+        align: "left",
       });
 
     // Date on right
@@ -578,8 +852,12 @@ export class PDFService {
     exp.bullets.forEach((b: string) => {
       doc
         .font(fontRegular)
-        .fontSize(9 * scale)
-        .text(`•  ${b}`, 42, doc.y, { width: 510, lineGap: 0.5 * scale });
+        .fontSize(8.5 * scale)
+        .text(`•  ${b}`, 42, doc.y, {
+          width: 510,
+          lineGap: 0.2 * scale,
+          align: "left",
+        });
     });
   }
 
@@ -593,11 +871,12 @@ export class PDFService {
     doc
       .font(fontBold)
       .fontSize(9 * scale)
-      .text(proj.name, { continued: true });
+      .text(proj.name, { continued: true, align: "left" });
     if (proj.link) {
       doc.font(fontRegular).text(`  |  ${proj.link}`, {
         link: proj.link.startsWith("http") ? proj.link : `https://${proj.link}`,
         underline: true,
+        align: "left",
       });
     } else {
       doc.text("");
@@ -607,12 +886,12 @@ export class PDFService {
       doc
         .font(fontRegular)
         .fontSize(8 * scale)
-        .text(proj.technologies);
+        .text(proj.technologies, { align: "left" });
 
     doc
       .font(fontRegular)
-      .fontSize(9 * scale)
-      .text(proj.description);
+      .fontSize(8.5 * scale)
+      .text(proj.description, { align: "left", lineGap: 0.2 * scale });
   }
 
   private renderEducationModern(

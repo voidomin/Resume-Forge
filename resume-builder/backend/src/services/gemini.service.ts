@@ -290,7 +290,8 @@ INSTRUCTIONS:
 3. **WORK EXPERIENCE**: 
    - Select most relevant experiences (up to 3).
    - Generate 4-6 IMPACTFUL bullet points per experience.
-   - Each bullet should be 1-2 lines, using STAR format (Situation, Task, Action, Result).
+   - Each bullet should be 1-2 lines, using the **XYZ Formula**: "Accomplished [X] as measured by [Y] by doing [Z]".
+   - Example: "Reduced page load time by 40% (Y) for the dashboard (X) by implementing lazy loading and optimizing database queries (Z)."
    - Incorporate these keywords naturally: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
 4. **SKILLS**: Categorize ALL relevant skills (aim for 15-20 total across categories).
 5. **PROJECTS**: Include 2-3 relevant projects with 2-3 bullet points EACH describing achievements.
@@ -298,11 +299,15 @@ INSTRUCTIONS:
 7. **CERTIFICATIONS**: Include all relevant certifications.
 
 **PAGE FILLING INSTRUCTION:**
-- If there is empty space at the bottom of the page, ADD MORE CONTENT:
-  - Expand project descriptions with more bullet points.
-  - Add more skills to the categories.
-  - Add more detail to work experience bullets.
-  - Include relevant coursework under education.
+- **CRITICAL:** The user wants a SINGLE FULL PAGE. Do not leave it half empty.
+- **IF THE CANDIDATE HAS LIMITED EXPERIENCE:**
+  - **EXPAND** on every bullet point. Add detail, context, and impact.
+  - Generate **4-6 bullets** for each project instead of 2-3.
+  - Include relevant coursework or academic projects to fill space.
+- **IF THE CANDIDATE HAS EXTENSIVE EXPERIENCE:**
+  - Prioritize the most relevant 3 roles.
+  - Use concise 3-4 bullets per role.
+  - Ensure it fits on one page.
 
 **CALCULATE ATS SCORE**: 
 - Compare the candidate's original profile against the JD.

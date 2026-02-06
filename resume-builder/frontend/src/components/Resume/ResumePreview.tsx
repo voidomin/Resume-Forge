@@ -46,12 +46,14 @@ interface GeneratedResume {
 
 interface ResumePreviewProps {
   resume: GeneratedResume;
-  template?: "modern" | "executive" | "minimalist";
+  template?: "modern" | "executive" | "minimalist" | "standard";
 }
 
 function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
   const getFontFamily = () => {
     switch (template) {
+      case "standard":
+        return '"Times New Roman", Times, serif';
       case "executive":
         return '"Times New Roman", Times, serif';
       case "minimalist":
@@ -70,8 +72,17 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
 
   // Colors - blue accent for modern template
   const accentColor = template === "modern" ? "#2563eb" : "#000";
-  const borderStyle = isMinimalist ? "none" : `1px solid ${accentColor}`;
-  const linkColor = template === "modern" ? "#2563eb" : "#000";
+  const borderStyle = isMinimalist
+    ? "none"
+    : template === "standard"
+      ? "1px solid #000"
+      : `1px solid ${accentColor}`;
+  const linkColor =
+    template === "modern"
+      ? "#2563eb"
+      : template === "standard"
+        ? "#0000EE"
+        : "#000";
 
   const isValid = (val: string | undefined) =>
     val &&
@@ -125,16 +136,23 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
 
   // Section header style (reusable)
   const sectionHeaderStyle = {
-    fontSize: "9pt", // Smaller header
+    fontSize: template === "standard" ? "10pt" : "9pt", // Larger header for standard
     fontWeight: "bold" as const,
     textTransform: "uppercase" as const,
     borderBottom: borderStyle,
-    paddingBottom: "3px",
-    marginTop: "4px", // Reduced margin top
-    marginBottom: "12px", // Increased margin bottom for spacing after blue line
-    textAlign: sectionHeaderAlignment as any,
+    paddingBottom: "2px",
+    marginTop: template === "standard" ? "10px" : "4px", // More spacing for standard
+    marginBottom: template === "standard" ? "6px" : "12px", // Tighter standard spacing
+    textAlign:
+      template === "standard" ? "left" : (sectionHeaderAlignment as any),
     color: accentColor,
   };
+
+  // Measure overflow (simple heuristic)
+  const isStandard = template === "standard";
+  // Standard template uses tighter basic spacing
+  const standardLineHeight = isStandard ? "1.15" : "1.2";
+  const standardFontSize = isStandard ? "10pt" : "9pt";
 
   return (
     <div
@@ -145,10 +163,11 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
         height: "11.69in", // A4 height
         padding: "0.5in", // Match PDF/DOCX margins
         fontFamily: getFontFamily(),
-        fontSize: "9pt", // Align with PDF/DOCX density
-        lineHeight: "1.2",
+        fontSize: standardFontSize, // Align with PDF/DOCX density
+        lineHeight: standardLineHeight,
         color: "#000",
-        overflow: "hidden",
+        overflow: "hidden", // Still hidden, but we should show a warning overlay if needed
+        position: "relative", // For overlay
         boxSizing: "border-box",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
         border: "1px solid #e0e0e0",
@@ -193,7 +212,13 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
       {resume.summary && (
         <section>
           <h2 style={sectionHeaderStyle}>Professional Summary</h2>
-          <p style={{ margin: 0, textAlign: "justify", fontSize: "9pt" }}>
+          <p
+            style={{
+              margin: 0,
+              textAlign: "justify",
+              fontSize: standardFontSize,
+            }}
+          >
             {resume.summary}
           </p>
         </section>
@@ -219,7 +244,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
                   {edu.dateRange}
                 </span>
               </div>
-              <div style={{ fontSize: "9pt" }}>
+              <div style={{ fontSize: standardFontSize }}>
                 <span>
                   {edu.degree} in {edu.field}
                 </span>
@@ -265,8 +290,8 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
                     key={bIndex}
                     style={{
                       marginBottom: "1px",
-                      fontSize: "9pt",
-                      lineHeight: "1.2",
+                      fontSize: standardFontSize,
+                      lineHeight: standardLineHeight,
                       paddingLeft: "2px",
                       textIndent: "0",
                     }}
@@ -308,7 +333,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
                       <li
                         key={bIndex}
                         style={{
-                          fontSize: "9pt",
+                          fontSize: standardFontSize,
                           marginBottom: "1px",
                           paddingLeft: "2px",
                           textIndent: "0",
@@ -320,7 +345,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
                   : proj.description && (
                       <li
                         style={{
-                          fontSize: "9pt",
+                          fontSize: standardFontSize,
                           marginBottom: "1px",
                           paddingLeft: "2px",
                           textIndent: "0",
@@ -346,7 +371,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
               skills.length > 0 && (
                 <div
                   key={category}
-                  style={{ fontSize: "9pt", marginBottom: "2px" }}
+                  style={{ fontSize: standardFontSize, marginBottom: "2px" }}
                 >
                   <span style={{ fontWeight: "bold" }}>• {category}:</span>{" "}
                   {skills.join(", ")}
@@ -359,7 +384,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
         resume.skills.length > 0 && (
           <section>
             <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-            <p style={{ margin: 0, fontSize: "9pt" }}>
+            <p style={{ margin: 0, fontSize: standardFontSize }}>
               {resume.skills.join("  •  ")}
             </p>
           </section>
@@ -371,7 +396,10 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
         <section>
           <h2 style={sectionHeaderStyle}>Certifications</h2>
           {resume.certifications.map((cert, index) => (
-            <div key={index} style={{ fontSize: "9pt", marginBottom: "1px" }}>
+            <div
+              key={index}
+              style={{ fontSize: standardFontSize, marginBottom: "1px" }}
+            >
               <span style={{ fontWeight: "bold" }}>{cert.name}</span>
               <span> – {cert.issuer}</span>
               {cert.date && <span> ({cert.date})</span>}
