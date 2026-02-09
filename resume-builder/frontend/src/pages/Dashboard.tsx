@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { api } from "../api/client";
 import { useState, useEffect } from "react";
@@ -12,8 +12,10 @@ import {
   ChevronRight,
   Loader2,
   Trash2,
+  Upload,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import ImportResumeModal from "../components/Resume/ImportResumeModal";
 
 interface Resume {
   id: string;
@@ -31,9 +33,11 @@ interface Profile {
 
 function Dashboard() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -74,6 +78,11 @@ function Dashboard() {
     });
   };
 
+  const handleImportSuccess = () => {
+    fetchData(); // Refresh profile data
+    navigate("/profile"); // Redirect to profile to review imported data
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -84,6 +93,12 @@ function Dashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <ImportResumeModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={handleImportSuccess}
+      />
+
       {/* Welcome Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -116,13 +131,15 @@ function Dashboard() {
               ? "Your profile is ready. Add more details for better resumes."
               : "Create your profile to start generating resumes."}
           </p>
-          <Link
-            to="/profile"
-            className="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-colors"
-          >
-            {profile ? "Edit Profile" : "Create Profile"}
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Link>
+          <div className="flex space-x-3">
+            <Link
+              to="/profile"
+              className="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+            >
+              {profile ? "Edit Profile" : "Create Profile"}
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
         </div>
 
         {/* Generate Resume Card */}
@@ -136,13 +153,22 @@ function Dashboard() {
           <p className="text-blue-100 text-sm mb-4">
             Paste a job description and let AI create a tailored resume.
           </p>
-          <Link
-            to="/resume/new"
-            className="inline-flex items-center bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Resume
-          </Link>
+          <div className="flex space-x-2">
+            <Link
+              to="/resume/new"
+              className="inline-flex items-center bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors text-sm"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Resume
+            </Link>
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="inline-flex items-center bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-400 transition-colors text-sm border border-blue-400"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Import
+            </button>
+          </div>
         </div>
 
         {/* Stats Card */}
@@ -171,13 +197,22 @@ function Dashboard() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">Recent Resumes</h2>
           {resumes.length > 0 && (
-            <Link
-              to="/resume/new"
-              className="text-blue-600 font-medium text-sm hover:text-blue-700 flex items-center"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              New Resume
-            </Link>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="text-gray-600 font-medium text-sm hover:text-blue-600 flex items-center px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
+              >
+                <Upload className="w-4 h-4 mr-1" />
+                Import
+              </button>
+              <Link
+                to="/resume/new"
+                className="text-blue-600 font-medium text-sm hover:text-blue-700 flex items-center px-3 py-1.5 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                New Resume
+              </Link>
+            </div>
           )}
         </div>
 
@@ -192,13 +227,22 @@ function Dashboard() {
             <p className="text-gray-600 mb-6">
               Generate your first resume by pasting a job description.
             </p>
-            <Link
-              to="/resume/new"
-              className="inline-flex items-center bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Generate First Resume
-            </Link>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="inline-flex items-center bg-white text-gray-700 border border-gray-300 font-semibold px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Upload className="w-5 h-5 mr-2" />
+                Import Resume
+              </button>
+              <Link
+                to="/resume/new"
+                className="inline-flex items-center bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Generate First Resume
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -264,7 +308,7 @@ function Dashboard() {
               <div>
                 <h3 className="font-semibold text-gray-900">Create Profile</h3>
                 <p className="text-sm text-gray-600">
-                  Add your experiences, skills, and education
+                  Import your existing resume or fill in details manually
                 </p>
               </div>
             </div>
