@@ -10,8 +10,8 @@ import {
   TabStopType,
   ExternalHyperlink,
 } from "docx";
-// import htmlToDocx from "html-to-docx"; // Not used
 import { GeneratedResume } from "./gemini.service";
+import { DesignTokens } from "./templates/design-tokens";
 
 export class DocxService {
   /**
@@ -26,9 +26,15 @@ export class DocxService {
       pageWidthInches - pageMarginInches,
     );
 
-    // Estimate content lines to determine if scaling needed
-    const estimatedLines = this.estimateContentLines(resume);
-    const linesPerPage = 50; // Approximate lines that fit per page
+    // Helpers for Design Tokens
+    const cleanColor = (hex: string) => hex.replace("#", "");
+    const { primary, text, textLight, secondary } = DesignTokens.colors;
+
+    // Map PDF fonts to Word fonts
+    // Times-Roman -> Times New Roman
+    // Helvetica -> Arial
+    const bodyFont = "Times New Roman";
+    const headerFont = "Times New Roman";
 
     const doc = new Document({
       sections: [
@@ -57,38 +63,47 @@ export class DocxService {
                   text: resume.contactInfo.name.toUpperCase(),
                   bold: true,
                   size: 28, // 14pt
-                  font: "Times New Roman",
+                  font: headerFont,
+                  color: cleanColor(primary), // Pro Max Primary
                 }),
               ],
             }),
 
             // Contact Info Line (Email, Phone, Location)
-            this.createContactLine(resume.contactInfo),
+            this.createContactLine(resume.contactInfo, bodyFont),
 
             // Links Line (LinkedIn, GitHub, Portfolio)
-            this.createLinksLine(resume.contactInfo),
+            this.createLinksLine(resume.contactInfo, bodyFont),
 
             // Spacing
             new Paragraph({ spacing: { after: 200 } }),
 
             // Professional Summary
             ...(resume.summary
-              ? this.createSummarySection(resume.summary)
+              ? this.createSummarySection(resume.summary, bodyFont)
               : []),
 
             // Work Experience
             ...(resume.experiences.length > 0
-              ? this.createExperienceSection(resume.experiences, rightTabStop)
+              ? this.createExperienceSection(
+                  resume.experiences,
+                  rightTabStop,
+                  bodyFont,
+                )
               : []),
 
             // Projects
             ...(resume.projects && resume.projects.length > 0
-              ? this.createProjectsSection(resume.projects)
+              ? this.createProjectsSection(resume.projects, bodyFont)
               : []),
 
             // Education
             ...(resume.education.length > 0
-              ? this.createEducationSection(resume.education, rightTabStop)
+              ? this.createEducationSection(
+                  resume.education,
+                  rightTabStop,
+                  bodyFont,
+                )
               : []),
 
             // Certifications
@@ -96,12 +111,13 @@ export class DocxService {
               ? this.createCertificationsSection(
                   resume.certifications,
                   rightTabStop,
+                  bodyFont,
                 )
               : []),
 
             // Skills
             ...(resume.skills.length > 0
-              ? this.createSkillsSection(resume.skills)
+              ? this.createSkillsSection(resume.skills, bodyFont)
               : []),
           ],
         },
@@ -112,25 +128,14 @@ export class DocxService {
     return buffer;
   }
 
-  //   async generateDocxFromHtml(html: string): Promise<Buffer> {
-  //     const buffer = await htmlToDocx(html, null, {
-  //       orientation: "portrait",
-  //       margins: {
-  //         top: 720,
-  //         right: 720,
-  //         bottom: 720,
-  //         left: 720,
-  //       },
-  //     });
-  //
-  //     return Buffer.from(buffer as ArrayBuffer);
-  //   }
-  //
   private createContactLine(
     contact: GeneratedResume["contactInfo"],
+    font: string,
   ): Paragraph {
     const children: (TextRun | ExternalHyperlink)[] = [];
     const parts: any[] = [];
+    const { text, textLight } = DesignTokens.colors;
+    const cleanColor = (hex: string) => hex.replace("#", "");
 
     if (contact.email) {
       parts.push(
@@ -138,9 +143,9 @@ export class DocxService {
           children: [
             new TextRun({
               text: contact.email,
-              size: 16,
-              font: "Times New Roman",
-              color: "0000FF", // Standard link color
+              size: 19, // 9.5pt
+              font: font,
+              color: cleanColor(text),
               underline: {},
             }),
           ],
@@ -153,8 +158,9 @@ export class DocxService {
       parts.push(
         new TextRun({
           text: contact.phone,
-          size: 16,
-          font: "Times New Roman",
+          size: 19,
+          font: font,
+          color: cleanColor(text),
         }),
       );
     }
@@ -163,8 +169,9 @@ export class DocxService {
       parts.push(
         new TextRun({
           text: contact.location,
-          size: 16,
-          font: "Times New Roman",
+          size: 19,
+          font: font,
+          color: cleanColor(text),
         }),
       );
     }
@@ -176,8 +183,9 @@ export class DocxService {
         children.push(
           new TextRun({
             text: "  |  ",
-            size: 16,
-            font: "Times New Roman",
+            size: 19,
+            font: font,
+            color: cleanColor(textLight),
           }),
         );
       }
@@ -190,9 +198,14 @@ export class DocxService {
     });
   }
 
-  private createLinksLine(contact: GeneratedResume["contactInfo"]): Paragraph {
+  private createLinksLine(
+    contact: GeneratedResume["contactInfo"],
+    font: string,
+  ): Paragraph {
     const children: (TextRun | ExternalHyperlink)[] = [];
     const items: { text: string; url: string }[] = [];
+    const { primary, textLight } = DesignTokens.colors;
+    const cleanColor = (hex: string) => hex.replace("#", "");
 
     // Helper to strip protocol for display
     const formatUrl = (url: string) =>
@@ -232,9 +245,9 @@ export class DocxService {
           children: [
             new TextRun({
               text: item.text,
-              size: 16,
-              font: "Times New Roman",
-              color: "0000FF",
+              size: 19,
+              font: font,
+              color: cleanColor(primary),
               underline: {},
             }),
           ],
@@ -246,8 +259,9 @@ export class DocxService {
         children.push(
           new TextRun({
             text: "  |  ",
-            size: 16,
-            font: "Times New Roman",
+            size: 19,
+            font: font,
+            color: cleanColor(textLight),
           }),
         );
       }
@@ -260,12 +274,15 @@ export class DocxService {
     });
   }
 
-  private createSectionHeader(title: string): Paragraph {
+  private createSectionHeader(title: string, font: string): Paragraph {
+    const { text, primary } = DesignTokens.colors;
+    const cleanColor = (hex: string) => hex.replace("#", "");
+
     return new Paragraph({
       spacing: { before: 120, after: 60 },
       border: {
         bottom: {
-          color: "000000",
+          color: cleanColor(primary),
           space: 1,
           style: BorderStyle.SINGLE,
           size: 6,
@@ -275,23 +292,30 @@ export class DocxService {
         new TextRun({
           text: title,
           bold: true,
-          size: 20, // 10pt
-          font: "Times New Roman",
+          size: 22, // 11pt
+          font: font,
+          color: cleanColor(text),
+          allCaps: true,
+          characterSpacing: 10, // Slight letter spacing
         }),
       ],
     });
   }
 
-  private createSummarySection(summary: string): Paragraph[] {
+  private createSummarySection(summary: string, font: string): Paragraph[] {
+    const { text } = DesignTokens.colors;
+    const cleanColor = (hex: string) => hex.replace("#", "");
+
     return [
-      this.createSectionHeader("PROFESSIONAL SUMMARY"),
+      this.createSectionHeader("PROFESSIONAL SUMMARY", font),
       new Paragraph({
         spacing: { after: 60 },
         children: [
           new TextRun({
             text: summary,
-            size: 18, // 9pt
-            font: "Times New Roman",
+            size: 20, // 10pt
+            font: font,
+            color: cleanColor(text),
           }),
         ],
       }),
@@ -301,10 +325,13 @@ export class DocxService {
   private createExperienceSection(
     experiences: GeneratedResume["experiences"],
     rightTabStop: number,
+    font: string,
   ): Paragraph[] {
     const paragraphs: Paragraph[] = [
-      this.createSectionHeader("WORK EXPERIENCE"),
+      this.createSectionHeader("WORK EXPERIENCE", font),
     ];
+    const { text, primary, secondary, textLight } = DesignTokens.colors;
+    const cleanColor = (hex: string) => hex.replace("#", "");
 
     experiences.forEach((exp, index) => {
       // Role | Company | Location  (Date right-aligned)
@@ -321,27 +348,39 @@ export class DocxService {
             new TextRun({
               text: exp.role,
               bold: true,
-              size: 18, // 9pt
-              font: "Times New Roman",
+              size: 20, // 10pt
+              font: font,
+              color: cleanColor(text),
             }),
             new TextRun({
-              text: `  |  ${exp.company}`,
-              size: 18, // 9pt
-              font: "Times New Roman",
+              text: "  |  ",
+              size: 20,
+              font: font,
+              color: cleanColor(secondary),
+            }),
+            new TextRun({
+              text: exp.company,
+              size: 20,
+              bold: true,
+              font: font,
+              color: cleanColor(primary),
             }),
             ...(exp.location
               ? [
                   new TextRun({
                     text: `  |  ${exp.location}`,
-                    size: 18, // 9pt
-                    font: "Times New Roman",
+                    size: 20,
+                    font: font,
+                    color: cleanColor(textLight),
                   }),
                 ]
               : []),
             new TextRun({
               text: "\t" + exp.dateRange,
-              size: 18, // 9pt
-              font: "Times New Roman",
+              size: 19, // 9.5pt
+              font: font,
+              color: cleanColor(textLight),
+              bold: true,
             }),
           ],
         }),
@@ -355,9 +394,10 @@ export class DocxService {
             indent: { left: convertInchesToTwip(0.15) },
             children: [
               new TextRun({
-                text: `  ${bullet}`,
-                size: 18, // 9pt
-                font: "Times New Roman",
+                text: `•  ${bullet}`,
+                size: 20, // 10pt
+                font: font,
+                color: cleanColor(text),
               }),
             ],
           }),
@@ -371,8 +411,13 @@ export class DocxService {
   private createEducationSection(
     education: GeneratedResume["education"],
     rightTabStop: number,
+    font: string,
   ): Paragraph[] {
-    const paragraphs: Paragraph[] = [this.createSectionHeader("EDUCATION")];
+    const paragraphs: Paragraph[] = [
+      this.createSectionHeader("EDUCATION", font),
+    ];
+    const { text, textLight, secondary } = DesignTokens.colors;
+    const cleanColor = (hex: string) => hex.replace("#", "");
 
     education.forEach((edu) => {
       paragraphs.push(
@@ -388,18 +433,27 @@ export class DocxService {
             new TextRun({
               text: `${edu.degree} in ${edu.field}`,
               bold: true,
-              size: 18, // 9pt
-              font: "Times New Roman",
+              size: 20, // 10pt
+              font: font,
+              color: cleanColor(text),
             }),
             new TextRun({
-              text: `  |  ${edu.institution}`,
-              size: 18, // 9pt
-              font: "Times New Roman",
+              text: "  |  ",
+              size: 20,
+              font: font,
+              color: cleanColor(secondary),
+            }),
+            new TextRun({
+              text: edu.institution,
+              size: 20,
+              font: font,
+              color: cleanColor(text),
             }),
             new TextRun({
               text: "\t" + (edu.dateRange || ""),
-              size: 18, // 9pt
-              font: "Times New Roman",
+              size: 19,
+              font: font,
+              color: cleanColor(textLight),
             }),
           ],
         }),
@@ -412,8 +466,9 @@ export class DocxService {
             children: [
               new TextRun({
                 text: `GPA: ${edu.gpa}`,
-                size: 16, // 8pt
-                font: "Times New Roman",
+                size: 18, // 9pt
+                font: font,
+                color: cleanColor(textLight),
               }),
             ],
           }),
@@ -424,16 +479,20 @@ export class DocxService {
     return paragraphs;
   }
 
-  private createSkillsSection(skills: string[]): Paragraph[] {
+  private createSkillsSection(skills: string[], font: string): Paragraph[] {
+    const { text } = DesignTokens.colors;
+    const cleanColor = (hex: string) => hex.replace("#", "");
+
     return [
-      this.createSectionHeader("SKILLS"),
+      this.createSectionHeader("SKILLS", font),
       new Paragraph({
         spacing: { after: 60 },
         children: [
           new TextRun({
             text: skills.join("  •  "),
-            size: 18, // 9pt
-            font: "Times New Roman",
+            size: 20, // 10pt
+            font: font,
+            color: cleanColor(text),
           }),
         ],
       }),
@@ -442,16 +501,22 @@ export class DocxService {
 
   private createProjectsSection(
     projects: NonNullable<GeneratedResume["projects"]>,
+    font: string,
   ): Paragraph[] {
-    const paragraphs: Paragraph[] = [this.createSectionHeader("PROJECTS")];
+    const paragraphs: Paragraph[] = [
+      this.createSectionHeader("PROJECTS", font),
+    ];
+    const { text, primary, secondary, textLight } = DesignTokens.colors;
+    const cleanColor = (hex: string) => hex.replace("#", "");
 
     projects.forEach((proj) => {
       const headerParts: any[] = [
         new TextRun({
           text: proj.name,
           bold: true,
-          size: 18, // 9pt
-          font: "Times New Roman",
+          size: 20, // 10pt
+          font: font,
+          color: cleanColor(text),
         }),
       ];
 
@@ -467,8 +532,9 @@ export class DocxService {
         headerParts.push(
           new TextRun({
             text: "  |  ",
-            size: 18,
-            font: "Times New Roman",
+            size: 20,
+            font: font,
+            color: cleanColor(secondary),
           }),
         );
 
@@ -477,9 +543,9 @@ export class DocxService {
             children: [
               new TextRun({
                 text: formatUrl(proj.link),
-                size: 18,
-                font: "Times New Roman",
-                color: "0000FF",
+                size: 20,
+                font: font,
+                color: cleanColor(primary),
                 underline: {},
               }),
             ],
@@ -503,8 +569,9 @@ export class DocxService {
               new TextRun({
                 text: proj.technologies,
                 italics: true,
-                size: 16, // 8pt
-                font: "Times New Roman",
+                size: 18, // 9pt
+                font: font,
+                color: cleanColor(textLight),
               }),
             ],
           }),
@@ -518,8 +585,9 @@ export class DocxService {
             children: [
               new TextRun({
                 text: proj.description,
-                size: 18, // 9pt
-                font: "Times New Roman",
+                size: 20, // 10pt
+                font: font,
+                color: cleanColor(text),
               }),
             ],
           }),
@@ -535,9 +603,10 @@ export class DocxService {
               indent: { left: convertInchesToTwip(0.15) },
               children: [
                 new TextRun({
-                  text: `  ${bullet}`,
-                  size: 18, // 9pt
-                  font: "Times New Roman",
+                  text: `•  ${bullet}`,
+                  size: 20, // 10pt
+                  font: font,
+                  color: cleanColor(text),
                 }),
               ],
             }),
@@ -552,10 +621,13 @@ export class DocxService {
   private createCertificationsSection(
     certifications: NonNullable<GeneratedResume["certifications"]>,
     rightTabStop: number,
+    font: string,
   ): Paragraph[] {
     const paragraphs: Paragraph[] = [
-      this.createSectionHeader("CERTIFICATIONS"),
+      this.createSectionHeader("CERTIFICATIONS", font),
     ];
+    const { text, textLight } = DesignTokens.colors;
+    const cleanColor = (hex: string) => hex.replace("#", "");
 
     certifications.forEach((cert) => {
       paragraphs.push(
@@ -571,18 +643,21 @@ export class DocxService {
             new TextRun({
               text: cert.name,
               bold: true,
-              size: 18, // 9pt
-              font: "Times New Roman",
+              size: 20, // 10pt
+              font: font,
+              color: cleanColor(text),
             }),
             new TextRun({
               text: `  |  ${cert.issuer}`,
-              size: 18, // 9pt
-              font: "Times New Roman",
+              size: 20, // 10pt
+              font: font,
+              color: cleanColor(textLight),
             }),
             new TextRun({
               text: "\t" + (cert.date || ""),
-              size: 18, // 9pt
-              font: "Times New Roman",
+              size: 20, // 10pt
+              font: font,
+              color: cleanColor(textLight),
             }),
           ],
         }),

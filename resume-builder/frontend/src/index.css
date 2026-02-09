@@ -18,39 +18,52 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar */
+/* Pro Max Design System Tokens */
+:root {
+  --color-primary: #1e3a8a; /* Deep Blue */
+  --color-secondary: #64748b; /* Slate */
+  --color-accent: #10b981; /* Emerald */
+  --color-text: #1e293b; /* Slate 800 */
+  --color-text-light: #64748b; /* Slate 500 */
+  --color-bg: #ffffff;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-serif: "Merriweather", "Times New Roman", serif;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f8fafc;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  background: #94a3b8;
 }
 
 /* Resume Preview Styles */
 .resume-preview {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 9pt;
-  line-height: 1.2;
-  color: #000;
+  line-height: 1.25; /* Improved readability */
+  color: var(--color-text);
   background: white;
   padding: 0.5in;
   width: 8.27in;
   height: 11.69in;
   overflow: hidden;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.05); /* Slight border ring */
 }
 
 .resume-preview h1 {

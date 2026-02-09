@@ -76,7 +76,7 @@ export class PDFService {
     margins: { top: number; bottom: number; left: number; right: number },
   ): number {
     const pageHeight = 842 - margins.top - margins.bottom;
-    const minScale = 0.75; // Don't shrink too much (readability)
+    const minScale = 0.65; // Allow more shrinkage to force fit
     const maxScale = 1.15; // Don't expand too much (looks comedic)
 
     // Initial measure with scale 1

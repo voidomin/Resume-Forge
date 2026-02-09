@@ -285,7 +285,7 @@ INSTRUCTIONS:
 **GOAL: Create a PROFESSIONAL, ONE A4 PAGE RESUME tailored to this job that FILLS THE ENTIRE PAGE.**
 
 **CRITICAL - CONTENT DENSITY RULES:**
-1. **FILL THE PAGE:** The resume MUST utilize the full A4 page. Do NOT leave empty space at the bottom.
+1. **SINGLE PAGE OPTIMIZATION:** The resume MUST fit exactly on one A4 page. Content should be substantial but MUST NOT exceed the page boundary.
 2. **PROFESSIONAL SUMMARY**: 3-4 sentence comprehensive summary highlighting key qualifications.
 3. **WORK EXPERIENCE**: 
    - Select most relevant experiences (up to 3).
@@ -299,7 +299,7 @@ INSTRUCTIONS:
 7. **CERTIFICATIONS**: Include all relevant certifications.
 
 **PAGE FILLING INSTRUCTION:**
-- **CRITICAL:** The user wants a SINGLE FULL PAGE. Do not leave it half empty.
+- **CRITICAL:** The resume MUST NOT exceed one page. Prioritize conciseness.
 - **IF THE CANDIDATE HAS LIMITED EXPERIENCE:**
   - **EXPAND** on every bullet point. Add detail, context, and impact.
   - Generate **4-6 bullets** for each project instead of 2-3.

@@ -2,9 +2,8 @@ import { Fragment } from "react";
 import { TemplateProps } from "../../../types/resume";
 
 export function MinimalistTemplate({ resume }: TemplateProps) {
-  const accentColor = "#000";
-  const borderStyle = "none"; // Minimalist has no borders
-  const linkColor = "#000";
+  const borderStyle = "none";
+  const linkColor = "var(--color-primary)";
 
   const formatUrl = (url: string) => {
     return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
@@ -31,7 +30,7 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
             rel="noopener noreferrer"
             style={{
               color: linkColor,
-              textDecoration: label === "Email" ? "none" : "underline",
+              textDecoration: "none",
             }}
           >
             {label === "Email" || label === "Phone" ? value : formatUrl(value!)}
@@ -58,19 +57,20 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
 
   const sectionHeaderStyle = {
     fontSize: "9pt",
-    fontWeight: "bold" as const,
+    fontWeight: "700" as const,
     textTransform: "uppercase" as const,
     borderBottom: borderStyle,
     paddingBottom: "2px",
-    marginTop: "4px",
+    marginTop: "16px",
     marginBottom: "12px",
-    textAlign: "left" as const, // Minimalist is Left aligned
-    color: accentColor,
+    textAlign: "left" as const,
+    color: "var(--color-text-light)",
+    letterSpacing: "1px", // Modern minimalist
   };
 
-  const fontFamily = "Arial, Helvetica, sans-serif";
+  const fontFamily = "var(--font-sans)";
   const fontSize = "9pt";
-  const lineHeight = "1.2";
+  const lineHeight = "1.4"; // Airy
 
   return (
     <div
@@ -78,19 +78,20 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
         fontFamily,
         fontSize,
         lineHeight,
-        color: "#000",
+        color: "var(--color-text)",
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: "left", marginBottom: "6px" }}>
+      <div style={{ textAlign: "left", marginBottom: "20px" }}>
         <h1
           style={{
-            fontSize: "16pt", // Larger for minimalist
-            fontWeight: "bold",
-            textTransform: "uppercase",
+            fontSize: "24pt",
+            fontWeight: "700",
+            letterSpacing: "-1px",
+            textTransform: "none", // Minimalist often is lowercase or normal case
             margin: 0,
-            marginBottom: "1px",
-            color: accentColor,
+            marginBottom: "8px",
+            color: "var(--color-text)",
           }}
         >
           {resume.contactInfo.name}
@@ -103,27 +104,38 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "flex-start",
-            gap: "5px",
+            gap: "12px",
+            color: "var(--color-text-light)",
           }}
         >
           {contactParts.map((part, index) => (
-            <Fragment key={index}>
-              {part}
-              {index < contactParts.length - 1 && <span>|</span>}
-            </Fragment>
+            <Fragment key={index}>{part}</Fragment>
           ))}
         </div>
       </div>
 
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "150px 1fr",
+          gap: "20px",
+        }}
+      >
+        {/* Left Column ?? No, single column but cleaner. Or maybe sidebar? 
+             Minimalist usually implies single column structure. Keeping single column for PDF compatibility.
+          */}
+      </div>
+
       {/* Professional Summary */}
       {resume.summary && (
-        <section>
-          <h2 style={sectionHeaderStyle}>Professional Summary</h2>
+        <section style={{ marginBottom: "16px" }}>
+          <h2 style={sectionHeaderStyle}>About</h2>
           <p
             style={{
               margin: 0,
-              textAlign: "justify",
-              fontSize,
+              textAlign: "left",
+              fontSize: "9.5pt",
+              maxWidth: "600px", // Reading width
             }}
           >
             {resume.summary}
@@ -131,78 +143,68 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
         </section>
       )}
 
-      {/* Education */}
-      {resume.education && resume.education.length > 0 && (
-        <section>
-          <h2 style={sectionHeaderStyle}>Education</h2>
-          {resume.education.map((edu, index) => (
-            <div key={index} style={{ marginBottom: "3px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                }}
-              >
-                <div>
-                  <span style={{ fontWeight: "bold" }}>{edu.institution}</span>
-                </div>
-                <span style={{ fontSize: "9pt", flexShrink: 0 }}>
-                  {edu.dateRange}
-                </span>
-              </div>
-              <div style={{ fontSize }}>
-                <span>
-                  {edu.degree} in {edu.field}
-                </span>
-                {edu.gpa && <span> | CGPA: {edu.gpa}</span>}
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
-
-      {/* Work Experience */}
+      {/* Experience */}
       {resume.experiences && resume.experiences.length > 0 && (
-        <section>
-          <h2 style={sectionHeaderStyle}>Work Experience</h2>
+        <section style={{ marginBottom: "16px" }}>
+          <h2 style={sectionHeaderStyle}>Experience</h2>
           {resume.experiences.map((exp, index) => (
-            <div key={index} style={{ marginBottom: "3px" }}>
+            <div key={index} style={{ marginBottom: "16px" }}>
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
+                  marginBottom: "4px",
                 }}
               >
-                <div>
-                  <span style={{ fontWeight: "bold" }}>{exp.role}</span>
-                  <span>, {exp.company}</span>
-                  {exp.location && <span> | {exp.location}</span>}
-                </div>
-                <span style={{ fontSize: "9pt", flexShrink: 0 }}>
-                  {exp.dateRange}
+                <span
+                  style={{
+                    fontWeight: "700",
+                    fontSize: "10pt",
+                    color: "var(--color-text)",
+                    display: "block",
+                  }}
+                >
+                  {exp.role}
                 </span>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "9pt",
+                    color: "var(--color-text-light)",
+                  }}
+                >
+                  <span>
+                    {exp.company}
+                    {exp.location ? `, ${exp.location}` : ""}
+                  </span>
+                  <span>{exp.dateRange}</span>
+                </div>
               </div>
               <ul
                 style={{
-                  margin: "8px 0 0 0",
-                  paddingLeft: "18px",
-                  listStyleType: "disc",
-                  listStylePosition: "outside",
+                  margin: "6px 0 0 0",
+                  paddingLeft: "14px",
+                  listStyleType: "none", // Minimalist often removes bullets
                 }}
               >
                 {exp.bullets.map((bullet, bIndex) => (
                   <li
                     key={bIndex}
                     style={{
-                      marginBottom: "1px",
-                      fontSize,
-                      lineHeight,
-                      paddingLeft: "2px",
-                      textIndent: "0",
+                      marginBottom: "4px",
+                      fontSize: "9.5pt",
+                      paddingLeft: "0",
+                      position: "relative",
                     }}
                   >
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: "-12px",
+                        color: "var(--color-accent)",
+                      }}
+                    >
+                      •
+                    </span>
                     {bullet}
                   </li>
                 ))}
@@ -214,96 +216,135 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
 
       {/* Projects */}
       {resume.projects && resume.projects.length > 0 && (
-        <section>
+        <section style={{ marginBottom: "16px" }}>
           <h2 style={sectionHeaderStyle}>Projects</h2>
           {resume.projects.map((proj, index) => (
-            <div key={index} style={{ marginBottom: "4px" }}>
-              <div>
-                <span style={{ fontWeight: "bold" }}>{proj.name}</span>
+            <div key={index} style={{ marginBottom: "12px" }}>
+              <div style={{ marginBottom: "2px" }}>
+                <span style={{ fontWeight: "700", fontSize: "10pt" }}>
+                  {proj.name}
+                </span>
                 {proj.technologies && (
-                  <span style={{ fontWeight: "bold" }}>
-                    {" "}
-                    | {proj.technologies}
+                  <span
+                    style={{
+                      fontSize: "9pt",
+                      color: "var(--color-text-light)",
+                      marginLeft: "8px",
+                    }}
+                  >
+                    {proj.technologies}
                   </span>
                 )}
               </div>
-              <ul
+              <p
                 style={{
-                  margin: "8px 0 0 0",
-                  paddingLeft: "18px",
-                  listStyleType: "disc",
-                  listStylePosition: "outside",
+                  fontSize: "9.5pt",
+                  margin: "4px 0",
+                  color: "var(--color-text)",
                 }}
               >
-                {proj.bullets && proj.bullets.length > 0
-                  ? proj.bullets.map((bullet, bIndex) => (
-                      <li
-                        key={bIndex}
+                {proj.description}
+              </p>
+              {/* Bullets for projects if any */}
+              {proj.bullets && (
+                <ul
+                  style={{
+                    margin: "4px 0 0 0",
+                    paddingLeft: "14px",
+                    listStyle: "none",
+                  }}
+                >
+                  {proj.bullets.map((b, i) => (
+                    <li
+                      key={i}
+                      style={{
+                        fontSize: "9pt",
+                        marginBottom: "2px",
+                        position: "relative",
+                      }}
+                    >
+                      <span
                         style={{
-                          fontSize,
-                          marginBottom: "1px",
-                          paddingLeft: "2px",
-                          textIndent: "0",
+                          position: "absolute",
+                          left: "-12px",
+                          color: "var(--color-accent)",
                         }}
                       >
-                        {bullet}
-                      </li>
-                    ))
-                  : proj.description && (
-                      <li
-                        style={{
-                          fontSize,
-                          marginBottom: "1px",
-                          paddingLeft: "2px",
-                          textIndent: "0",
-                        }}
-                      >
-                        {proj.description}
-                      </li>
-                    )}
-              </ul>
+                        •
+                      </span>
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </section>
       )}
 
-      {/* Technical Skills */}
+      {/* Education */}
+      {resume.education && resume.education.length > 0 && (
+        <section style={{ marginBottom: "16px" }}>
+          <h2 style={sectionHeaderStyle}>Education</h2>
+          {resume.education.map((edu, index) => (
+            <div key={index} style={{ marginBottom: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontWeight: "700" }}>{edu.institution}</span>
+                <span
+                  style={{ color: "var(--color-text-light)", fontSize: "9pt" }}
+                >
+                  {edu.dateRange}
+                </span>
+              </div>
+              <div style={{ fontSize: "9.5pt" }}>
+                {edu.degree} in {edu.field}
+                {edu.gpa && (
+                  <span style={{ color: "var(--color-text-light)" }}>
+                    {" "}
+                    (GPA: {edu.gpa})
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Skills */}
       {resume.skillsCategories &&
-      Object.keys(resume.skillsCategories).length > 0 ? (
-        <section>
-          <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-          {Object.entries(resume.skillsCategories).map(
-            ([category, skills]) =>
-              skills &&
-              skills.length > 0 && (
-                <div key={category} style={{ fontSize, marginBottom: "2px" }}>
-                  <span style={{ fontWeight: "bold" }}>• {category}:</span>{" "}
-                  {skills.join(", ")}
-                </div>
-              ),
-          )}
-        </section>
-      ) : (
-        resume.skills &&
-        resume.skills.length > 0 && (
+        Object.keys(resume.skillsCategories).length > 0 && (
           <section>
-            <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-            <p style={{ margin: 0, fontSize }}>{resume.skills.join("  •  ")}</p>
-          </section>
-        )
-      )}
-
-      {/* Certifications */}
-      {resume.certifications && resume.certifications.length > 0 && (
-        <section>
-          <h2 style={sectionHeaderStyle}>Certifications</h2>
-          {resume.certifications.map((cert, index) => (
-            <div key={index} style={{ fontSize, marginBottom: "1px" }}>
-              <span style={{ fontWeight: "bold" }}>{cert.name}</span>
-              <span> – {cert.issuer}</span>
-              {cert.date && <span> ({cert.date})</span>}
+            <h2 style={sectionHeaderStyle}>Skills</h2>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "24px" }}>
+              {Object.entries(resume.skillsCategories).map(
+                ([cat, items]) =>
+                  items &&
+                  items.length > 0 && (
+                    <div key={cat} style={{ minWidth: "120px" }}>
+                      <div
+                        style={{
+                          fontSize: "8.5pt",
+                          fontWeight: "700",
+                          textTransform: "uppercase",
+                          color: "var(--color-text-light)",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        {cat}
+                      </div>
+                      <div style={{ fontSize: "9.5pt" }}>
+                        {items.join(", ")}
+                      </div>
+                    </div>
+                  ),
+              )}
             </div>
-          ))}
+          </section>
+        )}
+      {!resume.skillsCategories && resume.skills && (
+        <section>
+          <h2 style={sectionHeaderStyle}>Skills</h2>
+          <p style={{ fontSize: "9.5pt" }}>{resume.skills.join(", ")}</p>
         </section>
       )}
     </div>

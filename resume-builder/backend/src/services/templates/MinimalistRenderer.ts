@@ -1,128 +1,216 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
+import { DesignTokens } from "./design-tokens";
 
 export class MinimalistRenderer extends BaseTemplateRenderer {
   render(
     doc: PDFKit.PDFDocument,
     resume: GeneratedResume,
     fontScale: number = 1,
+    spacingScale: number = 1,
   ): void {
-    const fontRegular = "Helvetica";
-    const fontBold = "Helvetica-Bold";
-    const scale = fontScale;
+    const fontRegular = DesignTokens.fonts.sans;
+    const fontBold = DesignTokens.fonts.sansBold;
+    const { primary, secondary, text, textLight } = DesignTokens.colors;
 
-    // Left Aligned Header - Large Name
-    doc
-      .font(fontBold)
-      .fontSize(22 * scale)
-      .fillColor("#000000")
-      .text(resume.contactInfo.name, { align: "left" });
+    // Airy Minimalist Design
+    const baseFontSize = 10 * fontScale < 9 ? 9 : 10 * fontScale;
+    const headerFontSize = 20 * fontScale; // Smaller than Executive, larger than body
+    const sectionTitleSize = 10 * fontScale;
 
-    doc.moveDown(0.2 * scale);
-    // Contact Info - Gray
-    doc.fillColor("#666666");
-    this.renderContactLine(doc, resume, fontRegular, 9 * scale, false, "left");
-    doc.fillColor("#000000"); // Reset
+    const lineGap = 1.6 * spacingScale; // More leading for clean look
+    const sectionGap = 18 * spacingScale; // Large gaps between sections
+    const itemGap = 12 * spacingScale;
 
-    doc.moveDown(2 * scale);
-
-    // Helpers - No Lines, just Spacing
+    // Helper: Section Headers (Uppercase, Tracking, TextLight Color)
     const drawHeader = (title: string) => {
+      doc.moveDown(0.2);
       doc
         .font(fontBold)
-        .fontSize(11 * scale)
-        .text(title.toUpperCase(), { align: "left", characterSpacing: 2 });
-      doc.moveDown(0.5 * scale);
+        .fontSize(sectionTitleSize)
+        .fillColor(textLight) // Distinctive feature of Minimalist: muted headers
+        .text(title.toUpperCase(), { characterSpacing: 2 });
+
+      const y = doc.y + 2 * spacingScale;
+      // No border for Minimalist in Pro Max, or very subtle short line.
+      doc
+        .strokeColor(secondary)
+        .opacity(0.3)
+        .lineWidth(0.5)
+        .moveTo(36, y)
+        .lineTo(100, y) // Short underline
+        .stroke()
+        .opacity(1); // Reset opacity
+
+      doc.y = y + 8 * spacingScale;
     };
 
+    // 1. Header (Left Aligned, Clean)
+    doc
+      .font(fontBold)
+      .fontSize(headerFontSize)
+      .fillColor(text)
+      .text(resume.contactInfo.name, { align: "left", characterSpacing: -0.5 }); // Tight styling
+
+    doc.moveDown(0.4 * spacingScale);
+
+    // 2. Contact (Left aligned, wrapped)
+    this.renderContactLine(
+      doc,
+      resume,
+      fontRegular,
+      baseFontSize,
+      false,
+      "left",
+    );
+
+    doc.moveDown(1.5 * spacingScale);
+
+    // 3. Summary
     if (resume.summary) {
-      drawHeader("Profile");
+      drawHeader("ABOUT");
       doc
         .font(fontRegular)
-        .fontSize(9)
-        .text(resume.summary, { align: "left", lineGap: 0.5 });
-      doc.moveDown(1.5);
+        .fontSize(baseFontSize)
+        .fillColor(text)
+        .text(resume.summary, { align: "left", lineGap: lineGap });
+      doc.y += sectionGap;
     }
 
+    // 4. Experience
     if (resume.experiences?.length) {
-      drawHeader("Experience");
+      drawHeader("EXPERIENCE");
       resume.experiences.forEach((exp) => {
-        // Custom Minimalist Experience Render
+        // Role
         doc
           .font(fontBold)
-          .fontSize(10)
-          .text(exp.role, { continued: true, align: "left" });
+          .fontSize(baseFontSize + 1)
+          .fillColor(text)
+          .text(exp.role);
+
+        doc.moveDown(0.2);
+
+        // Company | Location | Date (Single line secondary)
         doc
           .font(fontRegular)
-          .text(` | ${exp.company}`, { continued: true, align: "left" });
+          .fontSize(baseFontSize - 1)
+          .fillColor(textLight)
+          .text(
+            `${exp.company} ${exp.location ? " | " + exp.location : ""} | ${exp.dateRange}`,
+          );
 
-        doc.text("", { continued: false }); // Break line
+        doc.moveDown(0.5);
 
-        // Date aligned right
-        doc.moveUp(1);
-        doc.text(exp.dateRange, { align: "right" });
-
-        doc
-          .fillColor("#666666")
-          .font(fontRegular)
-          .fontSize(9)
-          .text(exp.location || "", { align: "left" });
-        doc.fillColor("#000000"); // Reset
-
+        // Bullets (Clean indentation)
         exp.bullets.forEach((b: string) => {
-          doc.text(`• ${b}`, { indent: 10, align: "left", lineGap: 1 });
+          doc.font(fontRegular).fontSize(baseFontSize).fillColor(text).text(b, {
+            indent: 10,
+            lineGap: lineGap,
+          });
         });
-        doc.moveDown(1);
+        doc.y += itemGap;
       });
+      doc.y += sectionGap;
     }
 
-    if (resume.education?.length) {
-      drawHeader("Education");
-      resume.education.forEach((edu) => {
-        const currentY = doc.y;
+    // 5. Projects
+    if (resume.projects?.length) {
+      drawHeader("PROJECTS");
+      resume.projects.forEach((proj) => {
+        doc
+          .font(fontBold)
+          .fontSize(baseFontSize + 1)
+          .fillColor(text)
+          .text(proj.name, { continued: true });
 
-        // Institution (Left) - Truncate if too long to avoid overlap
-        doc.font(fontBold).fontSize(10).text(edu.institution, {
-          width: 350,
-          lineBreak: false,
-          ellipsis: true,
-        });
-
-        // Date (Right - Absolute Position)
-        if (edu.dateRange) {
-          const dateWidth = doc.widthOfString(edu.dateRange);
+        if (proj.technologies) {
           doc
             .font(fontRegular)
-            .fontSize(9)
-            .text(edu.dateRange, 550 - dateWidth, currentY, {
-              width: dateWidth,
-              align: "right",
-            });
+            .fontSize(baseFontSize - 1)
+            .fillColor(textLight)
+            .text(`  ${proj.technologies}`, { continued: false });
+        } else {
+          doc.text("");
         }
 
-        // Reset to next line below institution (approx 1 line height)
-        doc.y = currentY + 12;
+        doc.moveDown(0.2);
 
-        doc
-          .font(fontRegular)
-          .fontSize(9)
-          .text(`${edu.degree} in ${edu.field}`, { align: "left" });
-        if (edu.gpa) {
-          doc.fillColor("#666666").text(`CGPA: ${edu.gpa}`, { align: "left" });
-          doc.fillColor("#000000");
+        if (proj.link) {
+          doc
+            .font(fontRegular)
+            .fontSize(baseFontSize - 1)
+            .fillColor(primary)
+            .text(proj.link, { link: proj.link });
+          doc.moveDown(0.2);
         }
-        doc.moveDown(0.5);
+
+        if (proj.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(baseFontSize)
+            .fillColor(text)
+            .text(proj.description, { lineGap: lineGap });
+        }
+
+        if (proj.bullets) {
+          proj.bullets.forEach((b: string) => {
+            doc
+              .font(fontRegular)
+              .fontSize(baseFontSize)
+              .fillColor(text)
+              .text(b, {
+                indent: 10,
+                lineGap: lineGap,
+              });
+          });
+        }
+        doc.y += itemGap;
       });
-      doc.moveDown(1);
+      doc.y += sectionGap;
     }
 
+    // 6. Education
+    if (resume.education?.length) {
+      drawHeader("EDUCATION");
+      resume.education.forEach((edu) => {
+        // Institution
+        doc
+          .font(fontBold)
+          .fontSize(baseFontSize)
+          .fillColor(text)
+          .text(edu.institution, { continued: true });
+
+        // Date right? Or inline for minimalist? Inline is cleaner.
+        doc
+          .font(fontRegular)
+          .fillColor(textLight)
+          .text(`  |  ${edu.dateRange}`, { continued: false });
+
+        // Degree
+        doc
+          .font(fontRegular)
+          .fillColor(text)
+          .text(`${edu.degree} in ${edu.field}`);
+
+        if (edu.gpa) {
+          doc.fillColor(textLight).text(`GPA: ${edu.gpa}`);
+        }
+        doc.y += itemGap;
+      });
+      doc.y += sectionGap;
+    }
+
+    // 7. Skills
     if (resume.skills?.length) {
-      drawHeader("Skills");
+      drawHeader("SKILLS");
       doc
         .font(fontRegular)
-        .fontSize(9)
-        .text(resume.skills.join("  |  "), { align: "left" });
+        .fontSize(baseFontSize)
+        .fillColor(text)
+        .text(resume.skills.join(", "), {
+          lineGap: lineGap,
+        });
     }
   }
 }

@@ -2,8 +2,8 @@ import { Fragment } from "react";
 import { TemplateProps } from "../../../types/resume";
 
 export function StandardTemplate({ resume }: TemplateProps) {
-  const borderStyle = "1px solid #000";
-  const linkColor = "#0000EE";
+  const borderStyle = "1px solid var(--color-secondary)";
+  const linkColor = "var(--color-primary)";
 
   const formatUrl = (url: string) => {
     return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
@@ -30,7 +30,8 @@ export function StandardTemplate({ resume }: TemplateProps) {
             rel="noopener noreferrer"
             style={{
               color: linkColor,
-              textDecoration: label === "Email" ? "none" : "underline",
+              textDecoration: "none",
+              borderBottom: "1px dotted currentColor",
             }}
           >
             {label === "Email" || label === "Phone" ? value : formatUrl(value!)}
@@ -56,41 +57,40 @@ export function StandardTemplate({ resume }: TemplateProps) {
   ].filter(Boolean);
 
   const sectionHeaderStyle = {
-    fontSize: "10pt",
-    fontWeight: "bold" as const,
+    fontSize: "11pt",
+    fontWeight: "700" as const,
     textTransform: "uppercase" as const,
     borderBottom: borderStyle,
-    paddingBottom: "2px",
-    marginTop: "10px",
-    marginBottom: "6px",
-    initialTextAlign: "left" as const, // React Native style shim not needed here but preserving logic structure
+    paddingBottom: "3px",
+    marginTop: "14px",
+    marginBottom: "8px",
     textAlign: "left" as const,
-    color: "#000",
+    color: "var(--color-text)",
+    letterSpacing: "0.5px",
   };
-
-  const standardLineHeight = "1.15";
-  const standardFontSize = "10pt";
-  const fontFamily = '"Times New Roman", Times, serif';
 
   return (
     <div
       style={{
-        fontFamily: fontFamily,
-        fontSize: standardFontSize,
-        lineHeight: standardLineHeight,
-        color: "#000",
+        fontFamily: "var(--font-serif)",
+        fontSize: "10pt",
+        lineHeight: "1.3",
+        color: "var(--color-text)",
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: "center", marginBottom: "6px" }}>
+      <div style={{ textAlign: "center", marginBottom: "12px" }}>
         <h1
           style={{
-            fontSize: "14pt",
-            fontWeight: "bold",
+            fontSize: "22pt",
+            fontWeight: "700",
             textTransform: "uppercase",
             margin: 0,
-            marginBottom: "1px",
-            color: "#000",
+            marginBottom: "4px",
+            color: "var(--color-text)",
+            borderBottom: "2px solid var(--color-primary)",
+            display: "inline-block",
+            paddingBottom: "2px",
           }}
         >
           {resume.contactInfo.name}
@@ -99,71 +99,37 @@ export function StandardTemplate({ resume }: TemplateProps) {
         {/* Contact Line */}
         <div
           style={{
-            fontSize: "9pt",
+            fontSize: "9.5pt",
             display: "flex",
             flexWrap: "wrap",
-            justifyContent: "flex-start", // Specific to Standard? ResumePreview had 'headerAlignment' logic.
-            // Standard in ResumePreview: headerAlignment depends on Minimalist check.
-            // ResumePreview.tsx:134 const headerAlignment = isMinimalist ? "left" : "center";
-            // Is Standard minimalist? No. So Center.
-            // Wait, standard uses Left for section headers but Center for Name?
-            // "headerAlignment" applied to the Contact Line container.
-            // Let's assume Center for consistency with Standard PDF which is Left aligned for Name?
-            // Checking StandardRenderer.ts: doc.text(name, { align: "left" });
-            // The PDF renderer uses LEFT for Standard.
-            // The Frontend ResumePreview uses CENTER if not minimalist.
-            // So there IS a discrepancy or I misread.
-            // ResumePreview.tsx: isMinimalist = template === "minimalist".
-            // So for standard, headerAlignment is "center".
-            // BUT PDF Renderer for Standard uses LEFT.
-            // I should FIX THE DISCREPANCY -> "Standards" usually imply Center or Left.
-            // StandardRenderer.ts line 47: text(name, { align: "left" }).
-            // So Frontend should be LEFT for Standard too?
-            // ResumePreview:
-            //   headerAlignment = isMinimalist ? "left" : "center";
-            //   isMinimalist is false for standard. So it was CENTER in frontend.
-            //   sectionHeaderAlignment = isExecutive ? "center" : "left". Standard is LEFT.
-            //
-            // I'll stick to LEFT to match Backend PDF "StandardRenderer".
-            // Update: StandardRenderer.ts uses "left" for name and contact.
-            // So I will make this template LEFT aligned.
+            justifyContent: "center",
+            gap: "8px",
+            marginTop: "6px",
+            color: "var(--color-text-light)",
           }}
         >
-          {/* Correction: Standard PDF uses Left. The ResumePreview used Center for non-minimalist. 
-             This refactor fixes that inconsistency. 
-             Wait, looking at my extracted StandardRenderer.ts:
-             doc.text(name, { align: "left" });
-             this.renderContactLine(..., "left");
-             
-             So Frontend WAS deviating. I will make frontend LEFT too.
-          */}
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "5px",
-              justifyContent: "flex-start",
-            }}
-          >
-            {contactParts.map((part, index) => (
-              <Fragment key={index}>
-                {part}
-                {index < contactParts.length - 1 && <span>|</span>}
-              </Fragment>
-            ))}
-          </div>
+          {contactParts.map((part, index) => (
+            <Fragment key={index}>
+              {part}
+              {index < contactParts.length - 1 && (
+                <span style={{ color: "var(--color-secondary)", opacity: 0.5 }}>
+                  •
+                </span>
+              )}
+            </Fragment>
+          ))}
         </div>
       </div>
 
       {/* Professional Summary */}
       {resume.summary && (
-        <section>
+        <section style={{ marginBottom: "12px" }}>
           <h2 style={sectionHeaderStyle}>Professional Summary</h2>
           <p
             style={{
               margin: 0,
               textAlign: "justify",
-              fontSize: standardFontSize,
+              fontSize: "10pt",
             }}
           >
             {resume.summary}
@@ -171,76 +137,65 @@ export function StandardTemplate({ resume }: TemplateProps) {
         </section>
       )}
 
-      {/* Education */}
-      {resume.education && resume.education.length > 0 && (
-        <section>
-          <h2 style={sectionHeaderStyle}>Education</h2>
-          {resume.education.map((edu, index) => (
-            <div key={index} style={{ marginBottom: "3px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                }}
-              >
-                <div>
-                  <span style={{ fontWeight: "bold" }}>{edu.institution}</span>
-                </div>
-                <span style={{ fontSize: "9pt", flexShrink: 0 }}>
-                  {edu.dateRange}
-                </span>
-              </div>
-              <div style={{ fontSize: standardFontSize }}>
-                <span>
-                  {edu.degree} in {edu.field}
-                </span>
-                {edu.gpa && <span> | CGPA: {edu.gpa}</span>}
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
-
       {/* Work Experience */}
       {resume.experiences && resume.experiences.length > 0 && (
-        <section>
+        <section style={{ marginBottom: "12px" }}>
           <h2 style={sectionHeaderStyle}>Work Experience</h2>
           {resume.experiences.map((exp, index) => (
-            <div key={index} style={{ marginBottom: "3px" }}>
+            <div key={index} style={{ marginBottom: "10px" }}>
               <div
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "baseline",
+                  marginBottom: "2px",
                 }}
               >
                 <div>
-                  <span style={{ fontWeight: "bold" }}>{exp.role}</span>
-                  <span>, {exp.company}</span>
-                  {exp.location && <span> | {exp.location}</span>}
+                  <span style={{ fontWeight: "700", fontSize: "11pt" }}>
+                    {exp.role}
+                  </span>
+                  <span style={{ color: "var(--color-secondary)" }}> at </span>
+                  <span
+                    style={{ fontWeight: "600", color: "var(--color-primary)" }}
+                  >
+                    {exp.company}
+                  </span>
+                  {exp.location && (
+                    <span
+                      style={{
+                        color: "var(--color-text-light)",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      , {exp.location}
+                    </span>
+                  )}
                 </div>
-                <span style={{ fontSize: "9pt", flexShrink: 0 }}>
+                <span
+                  style={{
+                    fontSize: "9.5pt",
+                    fontWeight: "600",
+                    color: "var(--color-text-light)",
+                  }}
+                >
                   {exp.dateRange}
                 </span>
               </div>
               <ul
                 style={{
-                  margin: "8px 0 0 0",
-                  paddingLeft: "18px",
-                  listStyleType: "disc",
-                  listStylePosition: "outside",
+                  margin: "4px 0 0 0",
+                  paddingLeft: "16px",
+                  listStyleType: "circle",
                 }}
               >
                 {exp.bullets.map((bullet, bIndex) => (
                   <li
                     key={bIndex}
                     style={{
-                      marginBottom: "1px",
-                      fontSize: standardFontSize,
-                      lineHeight: standardLineHeight,
-                      paddingLeft: "2px",
-                      textIndent: "0",
+                      marginBottom: "2px",
+                      fontSize: "10pt",
+                      paddingLeft: "4px",
                     }}
                   >
                     {bullet}
@@ -254,25 +209,31 @@ export function StandardTemplate({ resume }: TemplateProps) {
 
       {/* Projects */}
       {resume.projects && resume.projects.length > 0 && (
-        <section>
+        <section style={{ marginBottom: "12px" }}>
           <h2 style={sectionHeaderStyle}>Projects</h2>
           {resume.projects.map((proj, index) => (
-            <div key={index} style={{ marginBottom: "4px" }}>
-              <div>
-                <span style={{ fontWeight: "bold" }}>{proj.name}</span>
+            <div key={index} style={{ marginBottom: "8px" }}>
+              <div style={{ marginBottom: "2px" }}>
+                <span style={{ fontWeight: "700", fontSize: "11pt" }}>
+                  {proj.name}
+                </span>
                 {proj.technologies && (
-                  <span style={{ fontWeight: "bold" }}>
-                    {" "}
-                    | {proj.technologies}
+                  <span
+                    style={{
+                      fontSize: "9.5pt",
+                      color: "var(--color-text-light)",
+                      marginLeft: "6px",
+                    }}
+                  >
+                    [{proj.technologies}]
                   </span>
                 )}
               </div>
               <ul
                 style={{
-                  margin: "8px 0 0 0",
-                  paddingLeft: "18px",
-                  listStyleType: "disc",
-                  listStylePosition: "outside",
+                  margin: "4px 0 0 0",
+                  paddingLeft: "16px",
+                  listStyleType: "circle",
                 }}
               >
                 {proj.bullets && proj.bullets.length > 0
@@ -280,10 +241,9 @@ export function StandardTemplate({ resume }: TemplateProps) {
                       <li
                         key={bIndex}
                         style={{
-                          fontSize: standardFontSize,
-                          marginBottom: "1px",
-                          paddingLeft: "2px",
-                          textIndent: "0",
+                          fontSize: "10pt",
+                          marginBottom: "2px",
+                          paddingLeft: "4px",
                         }}
                       >
                         {bullet}
@@ -292,10 +252,9 @@ export function StandardTemplate({ resume }: TemplateProps) {
                   : proj.description && (
                       <li
                         style={{
-                          fontSize: standardFontSize,
-                          marginBottom: "1px",
-                          paddingLeft: "2px",
-                          textIndent: "0",
+                          fontSize: "10pt",
+                          marginBottom: "2px",
+                          paddingLeft: "4px",
                         }}
                       >
                         {proj.description}
@@ -307,31 +266,76 @@ export function StandardTemplate({ resume }: TemplateProps) {
         </section>
       )}
 
+      {/* Education */}
+      {resume.education && resume.education.length > 0 && (
+        <section style={{ marginBottom: "12px" }}>
+          <h2 style={sectionHeaderStyle}>Education</h2>
+          {resume.education.map((edu, index) => (
+            <div key={index} style={{ marginBottom: "6px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                }}
+              >
+                <div>
+                  <span style={{ fontWeight: "700", fontSize: "11pt" }}>
+                    {edu.institution}
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontSize: "9.5pt",
+                    color: "var(--color-text-light)",
+                  }}
+                >
+                  {edu.dateRange}
+                </span>
+              </div>
+              <div style={{ fontSize: "10pt" }}>
+                <span style={{ fontWeight: "500" }}>
+                  {edu.degree} in {edu.field}
+                </span>
+                {edu.gpa && (
+                  <span style={{ color: "var(--color-text-light)" }}>
+                    {" "}
+                    | GPA: {edu.gpa}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
       {/* Technical Skills */}
       {resume.skillsCategories &&
       Object.keys(resume.skillsCategories).length > 0 ? (
-        <section>
+        <section style={{ marginBottom: "0" }}>
           <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-          {Object.entries(resume.skillsCategories).map(
-            ([category, skills]) =>
-              skills &&
-              skills.length > 0 && (
-                <div
-                  key={category}
-                  style={{ fontSize: standardFontSize, marginBottom: "2px" }}
-                >
-                  <span style={{ fontWeight: "bold" }}>• {category}:</span>{" "}
-                  {skills.join(", ")}
-                </div>
-              ),
-          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            {Object.entries(resume.skillsCategories).map(
+              ([category, skills]) =>
+                skills &&
+                skills.length > 0 && (
+                  <div
+                    key={category}
+                    style={{ fontSize: "10pt", marginBottom: "2px" }}
+                  >
+                    <span style={{ fontWeight: "700" }}>{category}:</span>{" "}
+                    {skills.join(", ")}
+                  </div>
+                ),
+            )}
+          </div>
         </section>
       ) : (
         resume.skills &&
         resume.skills.length > 0 && (
-          <section>
+          <section style={{ marginBottom: "0" }}>
             <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-            <p style={{ margin: 0, fontSize: standardFontSize }}>
+            <p style={{ margin: 0, fontSize: "10pt" }}>
               {resume.skills.join("  •  ")}
             </p>
           </section>
@@ -340,16 +344,21 @@ export function StandardTemplate({ resume }: TemplateProps) {
 
       {/* Certifications */}
       {resume.certifications && resume.certifications.length > 0 && (
-        <section>
+        <section style={{ marginTop: "12px", marginBottom: "0" }}>
           <h2 style={sectionHeaderStyle}>Certifications</h2>
           {resume.certifications.map((cert, index) => (
-            <div
-              key={index}
-              style={{ fontSize: standardFontSize, marginBottom: "1px" }}
-            >
-              <span style={{ fontWeight: "bold" }}>{cert.name}</span>
-              <span> – {cert.issuer}</span>
-              {cert.date && <span> ({cert.date})</span>}
+            <div key={index} style={{ fontSize: "10pt", marginBottom: "1px" }}>
+              <span style={{ fontWeight: "700" }}>{cert.name}</span>
+              <span style={{ color: "var(--color-text-light)" }}>
+                {" "}
+                – {cert.issuer}
+              </span>
+              {cert.date && (
+                <span style={{ color: "var(--color-text-light)" }}>
+                  {" "}
+                  ({cert.date})
+                </span>
+              )}
             </div>
           ))}
         </section>
