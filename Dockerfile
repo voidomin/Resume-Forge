@@ -18,13 +18,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install only production dependencies
+# Install all dependencies (including dev deps for prisma-cli)
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+
+# Generate Prisma client
+RUN npx prisma generate
 
 # Expose port
 EXPOSE 3000
