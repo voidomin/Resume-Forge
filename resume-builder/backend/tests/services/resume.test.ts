@@ -1,4 +1,10 @@
-import { mockJobDescription, mockProfile, mockExperience, mockEducation, mockSkill } from "../fixtures";
+import {
+  mockJobDescription,
+  mockProfile,
+  mockExperience,
+  mockEducation,
+  mockSkill,
+} from "../fixtures";
 
 /**
  * Resume Generation Service Tests
@@ -14,7 +20,13 @@ describe("Resume Generation Service", () => {
     });
 
     it("should identify required skills from job description", () => {
-      const requiredSkills = ["Node.js", "React", "PostgreSQL", "AWS", "Docker"];
+      const requiredSkills = [
+        "Node.js",
+        "React",
+        "PostgreSQL",
+        "AWS",
+        "Docker",
+      ];
       const jobDesc = mockJobDescription.toLowerCase();
 
       const foundSkills = requiredSkills.filter((skill) =>
@@ -97,7 +109,10 @@ describe("Resume Generation Service", () => {
     });
 
     it("should award higher score for keyword matches", () => {
-      const withKeywords = calculateATSScore(mockJobDescription, mockExperience);
+      const withKeywords = calculateATSScore(
+        mockJobDescription,
+        mockExperience,
+      );
       const withoutKeywords = calculateATSScore("Generic job", mockExperience);
 
       expect(withKeywords).toBeGreaterThan(withoutKeywords);
@@ -110,7 +125,11 @@ describe("Resume Generation Service", () => {
         formatting: 90,
       };
 
-      const total = (breakdown.keywordMatch + breakdown.skillsMatch + breakdown.formatting) / 3;
+      const total =
+        (breakdown.keywordMatch +
+          breakdown.skillsMatch +
+          breakdown.formatting) /
+        3;
 
       expect(total).toBeGreaterThan(80);
       expect(breakdown.formatting).toBeLessThanOrEqual(100);

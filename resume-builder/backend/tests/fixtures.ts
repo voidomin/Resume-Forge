@@ -86,8 +86,7 @@ export const mockSkill = {
 /**
  * Mock job description for resume generation
  */
-export const mockJobDescription =
-  `Senior Full-Stack Engineer needed for a growing startup.
+export const mockJobDescription = `Senior Full-Stack Engineer needed for a growing startup.
 
 Requirements:
 - 5+ years of experience with Node.js and React

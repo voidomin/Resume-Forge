@@ -76,7 +76,11 @@ describe("Utility Functions", () => {
     });
 
     it("should flatten nested arrays", () => {
-      const nested = [[1, 2], [3, 4], [5, 6]];
+      const nested = [
+        [1, 2],
+        [3, 4],
+        [5, 6],
+      ];
       const flattened = flattenArray(nested);
 
       expect(flattened).toHaveLength(6);

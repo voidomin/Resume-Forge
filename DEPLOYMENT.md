@@ -138,6 +138,7 @@ git push heroku main
 Before going live, ensure:
 
 ### Security
+
 - [ ] JWT_SECRET is strong (32+ characters)
 - [ ] Database password is strong
 - [ ] CORS is restricted to your frontend domain
@@ -148,6 +149,7 @@ Before going live, ensure:
 - [ ] XSS protection (React handles this)
 
 ### Performance
+
 - [ ] Frontend is minified and bundled
 - [ ] Assets have appropriate cache headers
 - [ ] Database indexes are created
@@ -155,6 +157,7 @@ Before going live, ensure:
 - [ ] CDN is set up (optional but recommended)
 
 ### Monitoring
+
 - [ ] Error tracking configured (Sentry recommended)
 - [ ] Application logs are centralized
 - [ ] Database backups are automated
@@ -162,6 +165,7 @@ Before going live, ensure:
 - [ ] Uptime monitoring is active
 
 ### Testing
+
 - [ ] E2E tests pass
 - [ ] Manual smoke testing completed
 - [ ] Different user flows tested
@@ -169,6 +173,7 @@ Before going live, ensure:
 - [ ] Fallback AI model tested
 
 ### Documentation
+
 - [ ] API documentation updated
 - [ ] Runbooks created for common issues
 - [ ] Incident response plan drafted
@@ -183,6 +188,7 @@ curl http://localhost:3000/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "ok",
@@ -195,6 +201,7 @@ Expected response:
 ### Frontend Health Check
 
 Visit: `https://your-domain.com/`
+
 - Page loads without errors
 - API connectivity is established
 - Resume generation works
@@ -214,6 +221,7 @@ psql $DATABASE_URL -c "SELECT 1"
 ### Gemini API Rate Limiting
 
 The system automatically falls back to basic template if Gemini fails. To increase quotas:
+
 1. Visit [Google Cloud Console](https://console.cloud.google.com)
 2. Check API usage and quota limits
 3. Request quota increase if hitting limits
@@ -257,6 +265,7 @@ npm restart resume-builder-api
 ### Set Up Alerts
 
 Use your hosting provider's monitoring:
+
 - Vercel for frontend
 - Railway/Render dashboard for backend
 - Database metrics from PostgreSQL
@@ -264,6 +273,7 @@ Use your hosting provider's monitoring:
 ## Support & Help
 
 For issues:
+
 1. Check logs: `docker-compose logs -f`
 2. Review GitHub Issues
 3. Check DEPLOYMENT.md troubleshooting section
