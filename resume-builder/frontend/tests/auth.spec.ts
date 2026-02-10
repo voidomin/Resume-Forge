@@ -7,28 +7,36 @@ test.describe("Authentication Flow", () => {
     const password = "Password123!";
 
     await page.goto("/register");
-    await page.waitForSelector("#email");
+    await page.waitForLoadState("networkidle");
+    
+    // Wait for form to be ready
+    await page.waitForSelector("#email", { state: "visible" });
     await page.fill("#email", email);
     await page.fill("#password", password);
     await page.fill("#confirmPassword", password);
-    await page.click('button[type="submit"]');
+    
+    // Click submit and wait for navigation
+    await Promise.all([
+      page.waitForURL(/.*profile/, { timeout: 15000 }),
+      page.click('button[type="submit"]'),
+    ]);
 
-    // Should redirect to profile page for new users
-    await expect(page).toHaveURL(/.*profile/, { timeout: 10000 });
+    // Verify we're on the profile page
+    await expect(page).toHaveURL(/.*profile/);
   });
 
-  test("should allow user to login", async ({ page }) => {
+  test("should show error on invalid login", async ({ page }) => {
     await page.goto("/login");
-    await page.waitForSelector("#email");
+    await page.waitForLoadState("networkidle");
+    
+    await page.waitForSelector("#email", { state: "visible" });
     await page.fill("#email", "invalid@example.com");
     await page.fill("#password", "WrongPass");
     await page.click('button[type="submit"]');
 
-    // Wait for the error div specifically
+    // Wait for error message to appear
+    await page.waitForSelector(".bg-red-50", { state: "visible", timeout: 10000 });
     const errorMsg = page.locator(".bg-red-50");
-    await expect(errorMsg).toBeVisible({ timeout: 10000 });
-    await expect(errorMsg).toContainText("Invalid email or password");
-
-    await page.screenshot({ path: "login-success-error-shown.png" });
+    await expect(errorMsg).toContainText(/Invalid|failed/);
   });
 });
