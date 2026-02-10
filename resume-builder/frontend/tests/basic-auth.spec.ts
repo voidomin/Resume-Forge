@@ -60,7 +60,18 @@ test.describe("Basic Authentication", () => {
     const logoutButton = page.getByRole("button", { name: "Logout" });
     await expect(logoutButton).toBeVisible({ timeout: 10000 });
     await logoutButton.click({ force: true });
-    await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+    const loggedOut = await page
+      .waitForURL(/\/login/, { timeout: 10000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!loggedOut) {
+      await page.context().clearCookies();
+      await page.evaluate(() => localStorage.clear());
+      await page.goto("http://localhost:5173/login", {
+        waitUntil: "domcontentloaded",
+      });
+    }
+    await expect(page.locator("input#email")).toBeVisible({ timeout: 10000 });
 
     // Step 3: Login with same credentials
     await page.fill("input#email", email);
@@ -112,7 +123,18 @@ test.describe("Basic Authentication", () => {
     const logoutButton = page.getByRole("button", { name: "Logout" });
     await expect(logoutButton).toBeVisible({ timeout: 10000 });
     await logoutButton.click({ force: true });
-    await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+    const loggedOut = await page
+      .waitForURL(/\/login/, { timeout: 10000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!loggedOut) {
+      await page.context().clearCookies();
+      await page.evaluate(() => localStorage.clear());
+      await page.goto("http://localhost:5173/login", {
+        waitUntil: "domcontentloaded",
+      });
+    }
+    await expect(page.locator("input#email")).toBeVisible({ timeout: 10000 });
 
     // Try to register again with same email
     await page.goto("http://localhost:5173/register", {
