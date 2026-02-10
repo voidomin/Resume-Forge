@@ -228,7 +228,7 @@ function ResumeView() {
                 AI Optimization Unavailable
               </p>
               <p className="text-xs text-amber-700 mt-0.5">
-                {resume.content.failureReason === "quota_exceeded" 
+                {resume.content.failureReason === "quota_exceeded"
                   ? "Daily AI quota reached. This version was generated using a basic template. Service resets at midnight PT. Try regenerating tomorrow for AI optimization."
                   : "This version was generated using a basic template without AI tailoring due to high service demand at the time of creation."}
               </p>

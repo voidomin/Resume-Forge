@@ -474,8 +474,8 @@ Return ONLY valid JSON with this structure:
       console.error("=== AI GENERATION FAILED ===", error.message);
       const fallbackResume = this.createBasicResume(profile);
       fallbackResume.generationMethod = "fallback";
-      fallbackResume.failureReason = error.message?.includes("429") 
-        ? "quota_exceeded" 
+      fallbackResume.failureReason = error.message?.includes("429")
+        ? "quota_exceeded"
         : "all_models_failed";
       return fallbackResume;
     }

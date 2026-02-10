@@ -1,0 +1,112 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - link "SmartResume" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e9]
+        - generic [ref=e12]: SmartResume
+      - navigation [ref=e13]:
+        - link "Dashboard" [ref=e14] [cursor=pointer]:
+          - /url: /dashboard
+        - link "Profile" [ref=e15] [cursor=pointer]:
+          - /url: /profile
+        - link "New Resume" [ref=e16] [cursor=pointer]:
+          - /url: /resume/new
+        - generic [ref=e17]:
+          - generic [ref=e18]: test-sbmf53ci-mlgsb4un@example.com
+          - button "Logout" [ref=e19] [cursor=pointer]:
+            - img [ref=e20]
+  - main [ref=e23]:
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - heading "Edit Profile" [level=1] [ref=e27]
+          - paragraph [ref=e28]: Add your experiences, education, and skills
+        - generic [ref=e29]:
+          - button "Upload Resume" [ref=e30] [cursor=pointer]:
+            - img [ref=e31]
+            - text: Upload Resume
+          - button "Import JSON" [ref=e34] [cursor=pointer]:
+            - img [ref=e35]
+            - text: Import JSON
+          - button "Export" [ref=e38] [cursor=pointer]:
+            - img [ref=e39]
+            - text: Export
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - button "Personal Info" [ref=e44] [cursor=pointer]:
+            - img [ref=e45]
+            - generic [ref=e48]: Personal Info
+          - button "Experience" [ref=e49] [cursor=pointer]:
+            - img [ref=e50]
+            - generic [ref=e53]: Experience
+          - button "Education" [ref=e54] [cursor=pointer]:
+            - img [ref=e55]
+            - generic [ref=e58]: Education
+          - button "Projects" [ref=e59] [cursor=pointer]:
+            - img [ref=e60]
+            - generic [ref=e62]: Projects
+          - button "Certifications" [ref=e63] [cursor=pointer]:
+            - img [ref=e64]
+            - generic [ref=e67]: Certifications
+          - button "Skills" [active] [ref=e68] [cursor=pointer]:
+            - img [ref=e69]
+            - generic [ref=e72]: Skills
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - generic [ref=e76]: Add Skills
+            - generic [ref=e77]:
+              - textbox "Enter a skill (e.g., JavaScript, Python, React)" [ref=e78]
+              - button [ref=e79] [cursor=pointer]:
+                - img [ref=e80]
+            - paragraph [ref=e81]: Press Enter or click + to add
+          - generic [ref=e82]:
+            - img [ref=e83]
+            - heading "No skills yet" [level=3] [ref=e86]
+            - paragraph [ref=e87]: Add your technical and soft skills
+          - button "Save Skills" [ref=e88] [cursor=pointer]:
+            - img [ref=e89]
+            - text: Save Skills
+  - contentinfo [ref=e93]:
+    - generic [ref=e94]:
+      - generic [ref=e95]:
+        - generic [ref=e96]:
+          - generic [ref=e97]:
+            - img [ref=e99]
+            - generic [ref=e102]: SmartResume
+          - paragraph [ref=e103]: Create ATS-optimized, one-page resumes tailored to any job description using AI.
+        - generic [ref=e104]:
+          - heading "Quick Links" [level=3] [ref=e105]
+          - list [ref=e106]:
+            - listitem [ref=e107]:
+              - link "Dashboard" [ref=e108] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e109]:
+              - link "Edit Profile" [ref=e110] [cursor=pointer]:
+                - /url: /profile
+            - listitem [ref=e111]:
+              - link "Generate Resume" [ref=e112] [cursor=pointer]:
+                - /url: /resume/new
+        - generic [ref=e113]:
+          - heading "Features" [level=3] [ref=e114]
+          - list [ref=e115]:
+            - listitem [ref=e116]: ✓ AI-Powered Resume Generation
+            - listitem [ref=e117]: ✓ ATS Optimization
+            - listitem [ref=e118]: ✓ One-Page Format
+            - listitem [ref=e119]: ✓ PDF & DOCX Export
+      - generic [ref=e120]:
+        - paragraph [ref=e121]: © 2026 SmartResume Builder. All rights reserved.
+        - generic [ref=e122]:
+          - link "GitHub" [ref=e123] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e124]
+          - link "LinkedIn" [ref=e127] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e128]
+          - link "Twitter" [ref=e132] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e133]
+```
