@@ -1,4 +1,5 @@
 # Design Document
+
 ## ATS-Optimized Role-Based Resume Builder
 
 ### 1. System Architecture
@@ -39,11 +40,13 @@
 #### 1.2 Component Descriptions
 
 **Frontend Components:**
+
 - **Profile Management:** UI for creating/editing master profile
 - **Resume Generator:** Job description input and resume preview
 - **Export & Preview:** Resume rendering and download functionality
 
 **Backend Services:**
+
 - **Profile Service:** CRUD operations for user profiles
 - **Matching Engine:** Analyzes job descriptions and matches with profile content
 - **Document Generator:** Creates formatted resume documents
@@ -277,70 +280,24 @@ GET    /api/auth/me
 
 ### 4. Matching Engine Algorithm
 
-#### 4.1 Job Description Analysis
+#### 4.1 AI-Driven Analysis & Selection (Gemini)
 
-```
-1. Extract Keywords:
-   - Use NLP to identify nouns, verbs, technical terms
-   - Identify required vs. preferred qualifications
-   - Extract experience level indicators
-   - Identify industry/domain terms
+The system utilizes Google Gemini (starting with Gemini 3 Flash) to perform deep semantic analysis of both the candidate profile and job description.
 
-2. Skill Extraction:
-   - Match against common skill databases
-   - Identify tools, technologies, frameworks
-   - Extract soft skills
+**Selection logic:**
 
-3. Priority Scoring:
-   - Required skills: weight 10
-   - Preferred skills: weight 5
-   - Keywords in job title: weight 8
-   - Keywords in responsibilities: weight 6
-```
+1. **JD Analysis**: The AI extracts required/preferred skills, keywords, and role seniority.
+2. **Multi-Tier Generation**:
+   - Primary: Gemini 3 Flash
+   - Fallbacks: Gemini 2.5 Flash, 2.5 Flash Lite, 1.5 Flash, Gemma 3
+3. **Optimized Ranking**: Instead of simple keyword counts, the model understands the _impact_ and _relevance_ of experiences to the target role.
 
-#### 4.2 Content Matching Algorithm
+#### 4.2 Content Volume Control
 
-```python
-def match_experiences(job_analysis, profile_experiences):
-    scored_experiences = []
-    
-    for experience in profile_experiences:
-        score = 0
-        
-        # Keyword matching
-        for keyword in job_analysis.keywords:
-            if keyword in experience.responsibilities or 
-               keyword in experience.achievements:
-                score += keyword.weight
-        
-        # Domain matching
-        if experience.domains intersects job_analysis.domains:
-            score += 15
-        
-        # Recency bonus (last 5 years)
-        years_ago = (current_date - experience.endDate) / 365
-        if years_ago <= 5:
-            score += (5 - years_ago) * 2
-        
-        # Always include override
-        if experience.alwaysInclude:
-            score = 9999
-        
-        # Exclude override
-        if experience.exclude:
-            continue
-        
-        scored_experiences.append({
-            'experience': experience,
-            'score': score
-        })
-    
-    # Sort by score and select top experiences
-    sorted_experiences = sort(scored_experiences, by='score', desc=True)
-    
-    # Select top 4-6 most relevant experiences
-    return select_top(sorted_experiences, count=5)
-```
+To satisfy the One-Page A4 constraint:
+
+1. **AI Density Control**: Proactive instructions limit experiences to the top 3-4 and bullet points to 3 per role.
+2. **Dynamic Scaling**: If content still exceeds A4 height, the "Scale-to-Fit" logic (Section 7.4) is triggered.
 
 #### 4.3 Skill Selection
 
@@ -349,15 +306,15 @@ def select_skills(job_analysis, profile_skills):
     # Prioritize skills mentioned in job description
     required_skills = match_skills(profile_skills, job_analysis.requiredSkills)
     preferred_skills = match_skills(profile_skills, job_analysis.preferredSkills)
-    
+
     # Add high-proficiency skills even if not mentioned
     expert_skills = filter(profile_skills, proficiency="expert")
-    
+
     # Combine and deduplicate
     selected_skills = deduplicate(
         required_skills + preferred_skills + expert_skills[:3]
     )
-    
+
     # Limit to 15-20 skills
     return selected_skills[:20]
 ```
@@ -374,11 +331,11 @@ atsRules = {
   fontSize: {
     name: [16, 20],
     sectionHeaders: [12, 14],
-    body: [10, 12]
+    body: [10, 12],
   },
   margins: {
     min: 0.5, // inches
-    max: 1.0
+    max: 1.0,
   },
   avoid: [
     "images",
@@ -387,7 +344,7 @@ atsRules = {
     "text boxes",
     "headers/footers",
     "columns",
-    "special characters"
+    "special characters",
   ],
   sectionHeaders: [
     "Professional Summary",
@@ -395,13 +352,13 @@ atsRules = {
     "Education",
     "Skills",
     "Certifications",
-    "Projects"
+    "Projects",
   ],
   bulletPoints: {
     style: "simple", // • or - only
-    startWithActionVerb: true
-  }
-}
+    startWithActionVerb: true,
+  },
+};
 ```
 
 #### 5.2 Validation Checks
@@ -450,6 +407,7 @@ atsValidation = {
 #### 6.1 Page Structure
 
 **Layout:**
+
 - Top Navigation: Logo, Profile, Resumes, Logout
 - Sidebar (contextual): Quick actions, tips
 - Main Content Area: Primary workspace
@@ -458,6 +416,7 @@ atsValidation = {
 #### 6.2 Key Screens
 
 **1. Dashboard**
+
 ```
 ┌────────────────────────────────────────────────┐
 │  SmartResume Builder              [Profile] ▼  │
@@ -482,6 +441,7 @@ atsValidation = {
 ```
 
 **2. Profile Management**
+
 ```
 ┌────────────────────────────────────────────────┐
 │  Master Profile                    [Save]       │
@@ -508,6 +468,7 @@ atsValidation = {
 ```
 
 **3. Resume Generator**
+
 ```
 ┌────────────────────────────────────────────────┐
 │  Generate Resume                   Step 1 of 3 │
@@ -533,16 +494,17 @@ atsValidation = {
 ```
 
 **4. Resume Preview & Edit**
+
 ```
 ┌────────────────────────────────────────────────┐
 │  Resume Preview              ATS Score: 92/100 │
 ├─────────────────────┬──────────────────────────┤
 │ Sidebar:            │  JOHN DOE                │
 │                     │  john@email.com          │
-│ Sections:           │                          │
-│ ☑ Summary           │  PROFESSIONAL SUMMARY    │
-│ ☑ Experience (3)    │  [Editable text...]      │
-│ ☑ Education         │                          │
+│ Sections:           │  [⚡ AI: GEMINI 3 FLASH] │
+│ ☑ Summary           │                          │
+│ ☑ Experience (3)    │  PROFESSIONAL SUMMARY    │
+│ ☑ Education         │  [Editable text...]      │
 │ ☑ Skills (12)       │  WORK EXPERIENCE         │
 │ ☐ Certifications    │  Software Engineer       │
 │ ☐ Projects          │  TechCorp | 2020-Present │
@@ -593,6 +555,7 @@ atsValidation = {
 #### 7.1 Resume Templates
 
 **Template Structure:**
+
 ```
 CONTACT INFORMATION
 NAME (Large, Bold)
@@ -622,39 +585,34 @@ Project Name | Technologies Used
 • Description and impact
 ```
 
-#### 7.2 PDF Generation
+#### 7.4 One-Page A4 Compliance (Unified Scaling)
 
-**Library:** jsPDF or PDFKit
+The system maintains a single-page limit through a coordinated scaling architecture:
 
-**Process:**
-1. Convert resume data to structured format
-2. Apply ATS-friendly formatting rules
-3. Generate PDF with selectable text
-4. Ensure no compression or image conversion
-5. Validate PDF readability
+**1. Frontend Preview (Scale-to-Fit):**
 
-#### 7.3 DOCX Generation
+- Uses `useLayoutEffect` to measure content scrollHeight vs. A4 targetHeight (1122px at 96 DPI).
+- Calculates `scale = Math.min(targetHeight / contentHeight, 1)`.
+- Applies CSS `transform: scale(scale)` with `transform-origin: top left`.
 
-**Library:** docx.js
+**2. Backend PDF Generation (Standardized Scaling):**
 
-**Process:**
-1. Create document with standard styles
-2. Add sections with proper formatting
-3. Use standard bullet points
-4. Ensure compatibility with Word 2010+
-5. No macros or embedded objects
+- PDF renderers accept `spacingScale` and `fontScale` parameters.
+- Spacing values (`moveDown`, `lineGap`) are multiplied by the scaling factor to match the frontend visual density exactly.
 
 ---
 
 ### 8. Security Considerations
 
 #### 8.1 Authentication
+
 - JWT-based authentication
 - Secure password hashing (bcrypt, 10+ rounds)
 - Session timeout after 24 hours
 - Refresh token rotation
 
 #### 8.2 Data Protection
+
 - Encrypt sensitive data at rest (AES-256)
 - HTTPS for all communications (TLS 1.3)
 - Input validation and sanitization
@@ -662,6 +620,7 @@ Project Name | Technologies Used
 - XSS protection (content security policy)
 
 #### 8.3 Privacy
+
 - No third-party data sharing
 - User data deletion on account closure
 - Regular data backups
@@ -672,6 +631,7 @@ Project Name | Technologies Used
 ### 9. Performance Optimization
 
 #### 9.1 Frontend
+
 - Code splitting and lazy loading
 - Image optimization
 - Caching strategy (service workers)
@@ -679,6 +639,7 @@ Project Name | Technologies Used
 - Debounced search and input
 
 #### 9.2 Backend
+
 - Database indexing (user_id, email)
 - Query optimization
 - Response caching (Redis)
@@ -686,6 +647,7 @@ Project Name | Technologies Used
 - Rate limiting (100 requests/hour per user)
 
 #### 9.3 Database
+
 - Connection pooling
 - Pagination for large result sets
 - Denormalization where appropriate
@@ -696,24 +658,28 @@ Project Name | Technologies Used
 ### 10. Testing Strategy
 
 #### 10.1 Unit Tests
+
 - Profile CRUD operations
 - Matching algorithm accuracy
 - ATS validation logic
 - Document generation
 
 #### 10.2 Integration Tests
+
 - End-to-end resume generation flow
 - API endpoint testing
 - Database operations
 - Authentication flow
 
 #### 10.3 User Acceptance Testing
+
 - Test with real job descriptions
 - Verify ATS compatibility with online checkers
 - User feedback on generated resumes
 - Performance benchmarking
 
 #### 10.4 Test Data
+
 - Sample profiles with diverse experiences
 - 20+ real job descriptions across industries
 - Edge cases (minimal experience, career changes)
@@ -755,27 +721,34 @@ errors = {
   VALIDATION_ERROR: {
     code: 400,
     message: "Invalid input data",
-    userMessage: "Please check your input and try again"
+    userMessage: "Please check your input and try again",
   },
   NOT_FOUND: {
     code: 404,
     message: "Resource not found",
-    userMessage: "The requested item could not be found"
+    userMessage: "The requested item could not be found",
   },
   GENERATION_FAILED: {
     code: 500,
     message: "Resume generation failed",
-    userMessage: "We couldn't generate your resume. Please try again"
+    userMessage: "We couldn't generate your resume. Please try again",
+  },
+  AI_OPTIMIZATION_UNAVAILABLE: {
+    code: 200,
+    message: "Primary AI models failed, using basic fallback",
+    userMessage:
+      "AI customization is currently unavailable. Using a professional basic template.",
   },
   ATS_CHECK_FAILED: {
     code: 500,
     message: "ATS validation failed",
-    userMessage: "We couldn't validate ATS compatibility"
-  }
-}
+    userMessage: "We couldn't validate ATS compatibility",
+  },
+};
 ```
 
 #### 12.2 User-Facing Error Messages
+
 - Clear, actionable messages
 - Suggest next steps
 - Provide support contact for persistent errors
@@ -786,6 +759,7 @@ errors = {
 ### 13. Monitoring and Analytics
 
 #### 13.1 Metrics to Track
+
 - Resume generation success rate
 - Average ATS score
 - Time to generate resume
@@ -794,6 +768,7 @@ errors = {
 - Feature usage (export format preferences)
 
 #### 13.2 Logging
+
 - Application logs (errors, warnings)
 - Access logs
 - Performance metrics
@@ -804,6 +779,7 @@ errors = {
 ### 14. Documentation Requirements
 
 #### 14.1 User Documentation
+
 - Getting started guide
 - Profile management tutorial
 - Resume generation walkthrough
@@ -811,6 +787,7 @@ errors = {
 - FAQ
 
 #### 14.2 Technical Documentation
+
 - API reference
 - Database schema
 - Deployment guide

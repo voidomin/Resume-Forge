@@ -40,7 +40,21 @@ export interface GeneratedResume {
     date?: string;
   }[];
   atsScore?: number;
+  atsScoreBreakdown?: {
+    keywordMatch: number;
+    skillsMatch: number;
+    formatting: number;
+    missingKeywords: string[];
+    explanation?: string;
+  };
+  keywordAnalysis?: {
+    matchedKeywords: { keyword: string; locations: string[] }[];
+    missingKeywords: string[];
+    totalJobKeywords: number;
+    matchPercentage: number;
+  };
   keywords?: string[];
+  modelUsed?: string;
 }
 
 export interface TemplateProps {

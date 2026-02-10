@@ -27,7 +27,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
 
     // Helper: Section Headers (Centered, Uppercase, Primary Color)
     const drawHeader = (title: string) => {
-      doc.moveDown(0.5);
+      doc.moveDown(0.5 * spacingScale);
       doc
         .font(fontBold)
         .fontSize(sectionTitleSize)
@@ -108,7 +108,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
           .fillColor(primary)
           .text(exp.dateRange, { align: "right" });
 
-        doc.moveDown(0.5);
+        doc.moveDown(0.5 * spacingScale);
 
         // Bullets
         exp.bullets.forEach((b: string) => {

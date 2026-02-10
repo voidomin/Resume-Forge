@@ -10,9 +10,11 @@ An **ATS-optimized, role-based resume builder** that generates tailored resumes 
 ## ✨ Features
 
 - **Master Profile Management** – Store all your experiences, skills, and education in one place
-- **AI-Powered Matching** – Automatically selects relevant content based on job descriptions
-- **ATS Optimization** – Ensures your resume passes Applicant Tracking Systems
-- **Multiple Export Formats** – Download as PDF or DOCX
+- **AI-Powered Matching** – Automatically selects relevant content based on job descriptions using Gemini 3 Flash and fallback models
+- **ATS Optimization** – Ensures your resume passes Applicant Tracking Systems with a dedicated score and keyword analysis
+- **A4 One-Page Constraint** – Real-time "Scale-to-Fit" logic ensures your resume stays on a single professional page
+- **AI Model Transparency** – Displays the exact AI model used for generation with clear fallback indicators
+- **Multiple Export Formats** – Download as professional PDF or editable DOCX
 - **Role-Specific Resumes** – Generate unique resumes for different job applications
 
 ---
@@ -39,15 +41,11 @@ An **ATS-optimized, role-based resume builder** that generates tailored resumes 
 
 ## 📚 Documentation
 
-| Document                                                               | Description                                                |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------- |
-| [START_HERE_README.md](START_HERE_README.md)                           | 📍 **Start here!** Complete overview and quick start guide |
-| [INDEX.md](INDEX.md)                                                   | File index and navigation                                  |
-| [GETTING_STARTED.md](GETTING_STARTED.md)                               | Step-by-step development guide                             |
-| [FILE_PLACEMENT_GUIDE.md](FILE_PLACEMENT_GUIDE.md)                     | Where to place each code file                              |
-| [PRD_Resume_Builder.md](PRD_Resume_Builder.md)                         | Product requirements document                              |
-| [Design_Document_Resume_Builder.md](Design_Document_Resume_Builder.md) | Technical architecture & design                            |
-| [Tech_Stack_Resume_Builder.md](Tech_Stack_Resume_Builder.md)           | Technology decisions & costs                               |
+| Document                                                                    | Description                                            |
+| --------------------------------------------------------------------------- | ------------------------------------------------------ |
+| [PRD_Resume_Builder.md](docs/PRD_Resume_Builder.md)                         | Product requirements, goals, and success metrics       |
+| [Design_Document_Resume_Builder.md](docs/Design_Document_Resume_Builder.md) | Technical architecture, data models, and scaling logic |
+| [Tech_Stack_Resume_Builder.md](docs/Tech_Stack_Resume_Builder.md)           | Technology decisions, costs, and AI service selection  |
 
 ---
 
@@ -69,11 +67,12 @@ An **ATS-optimized, role-based resume builder** that generates tailored resumes 
 - **PostgreSQL** – Database
 - **JWT + bcrypt** – Authentication
 
-### Document Generation
+### Document Generation & AI
 
-- **PDFKit** – PDF generation
-- **docx** – DOCX generation
-- **natural** – NLP for keyword extraction
+- **Gemini 2.5/3.0** – Multi-tier AI generation with resilient fallback
+- **PDFKit** – Professional PDF generation
+- **docx.js** – Structured DOCX generation
+- **Playwright** – Comprehensive E2E testing & A4 validation
 
 ---
 
@@ -127,12 +126,15 @@ cv-maker/
 ## 📋 Development Roadmap
 
 - [x] Project documentation
-- [x] Authentication system (starter code)
+- [x] Authentication system
 - [x] Basic UI components
-- [ ] Profile management
-- [ ] Resume generation engine
-- [ ] Document export (PDF/DOCX)
-- [ ] ATS validation
+- [x] Profile management
+- [x] Resume generation engine (Gemini 3 Flash)
+- [x] Document export (PDF/DOCX)
+- [x] ATS validation & Score reporting
+- [x] One-page A4 scaling architecture
+- [x] AI Fallback & Failure transparency
+- [ ] Multi-template preview (Custom themes)
 - [ ] Deployment
 
 ---

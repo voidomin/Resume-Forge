@@ -1,4 +1,5 @@
 # Tech Stack Recommendation
+
 ## ATS-Optimized Role-Based Resume Builder
 
 ---
@@ -14,6 +15,7 @@ This document outlines the recommended technology stack for building a personal 
 ### 1.1 Core Framework: **React 18+**
 
 **Why React:**
+
 - Large ecosystem and community support
 - Component reusability for profile and resume sections
 - Rich library ecosystem for document generation
@@ -21,6 +23,7 @@ This document outlines the recommended technology stack for building a personal 
 - Excellent performance with Virtual DOM
 
 **Alternatives Considered:**
+
 - Vue.js: Simpler learning curve but smaller ecosystem
 - Svelte: Better performance but fewer libraries
 - Angular: Over-engineered for this use case
@@ -28,6 +31,7 @@ This document outlines the recommended technology stack for building a personal 
 ### 1.2 UI Framework: **Tailwind CSS**
 
 **Why Tailwind:**
+
 - Rapid UI development with utility classes
 - Highly customizable
 - Small bundle size with PurgeCSS
@@ -35,11 +39,13 @@ This document outlines the recommended technology stack for building a personal 
 - No opinionated components (full design control)
 
 **Component Library (Optional):** Shadcn/ui or Headless UI
+
 - Pre-built accessible components
 - Customizable with Tailwind
 - Reduces development time
 
 **Alternatives Considered:**
+
 - Material-UI: Too heavy, opinionated design
 - Bootstrap: Less modern, harder to customize
 - Plain CSS: More time-consuming
@@ -47,16 +53,19 @@ This document outlines the recommended technology stack for building a personal 
 ### 1.3 State Management: **Zustand** or **React Context + useReducer**
 
 **Why Zustand:**
+
 - Lightweight (1KB)
 - Simple API, minimal boilerplate
 - Built-in persistence
 - Perfect for small to medium apps
 
 **When to use Context:**
+
 - If state management needs are minimal
 - Avoiding external dependencies
 
 **Alternatives Considered:**
+
 - Redux: Overkill for this project
 - Recoil: More complex than needed
 - MobX: Smaller ecosystem
@@ -64,6 +73,7 @@ This document outlines the recommended technology stack for building a personal 
 ### 1.4 Form Management: **React Hook Form**
 
 **Why React Hook Form:**
+
 - Excellent performance (uncontrolled components)
 - Built-in validation
 - Minimal re-renders
@@ -71,6 +81,7 @@ This document outlines the recommended technology stack for building a personal 
 - TypeScript support
 
 **Validation:** Zod or Yup
+
 - Type-safe schema validation
 - Reusable validation schemas
 - Great error handling
@@ -78,6 +89,7 @@ This document outlines the recommended technology stack for building a personal 
 ### 1.5 Build Tool: **Vite**
 
 **Why Vite:**
+
 - Lightning-fast development server
 - Optimized production builds
 - Modern ES modules
@@ -85,12 +97,14 @@ This document outlines the recommended technology stack for building a personal 
 - React Fast Refresh out of the box
 
 **Alternatives Considered:**
+
 - Create React App: Slower, less flexible
 - Webpack: More configuration required
 
 ### 1.6 Routing: **React Router v6**
 
 **Why React Router:**
+
 - Industry standard for React
 - Declarative routing
 - Nested routes support
@@ -103,6 +117,7 @@ This document outlines the recommended technology stack for building a personal 
 ### 2.1 Runtime: **Node.js 20+ LTS**
 
 **Why Node.js:**
+
 - JavaScript/TypeScript throughout the stack
 - Large ecosystem (npm)
 - Excellent async I/O for document generation
@@ -113,6 +128,7 @@ This document outlines the recommended technology stack for building a personal 
 **Recommended: Fastify**
 
 **Why Fastify:**
+
 - 2x faster than Express
 - Built-in schema validation
 - First-class TypeScript support
@@ -120,6 +136,7 @@ This document outlines the recommended technology stack for building a personal 
 - Excellent plugin ecosystem
 
 **Why Express (Alternative):**
+
 - More mature, larger community
 - More middleware options
 - Simpler learning curve
@@ -128,6 +145,7 @@ This document outlines the recommended technology stack for building a personal 
 ### 2.3 Language: **TypeScript**
 
 **Why TypeScript:**
+
 - Type safety reduces bugs
 - Better IDE support and autocomplete
 - Easier refactoring
@@ -135,6 +153,7 @@ This document outlines the recommended technology stack for building a personal 
 - Industry standard for modern Node.js
 
 **Configuration:**
+
 - Strict mode enabled
 - Path aliases for cleaner imports
 - Shared types between frontend/backend
@@ -142,6 +161,7 @@ This document outlines the recommended technology stack for building a personal 
 ### 2.4 API Design: **REST API** (for simplicity)
 
 **Endpoints:**
+
 ```
 /api/auth/*          - Authentication
 /api/profile/*       - Profile management
@@ -150,16 +170,19 @@ This document outlines the recommended technology stack for building a personal 
 ```
 
 **Alternative Considered:**
+
 - GraphQL: Overkill for this project's scope
 - tRPC: Great but adds complexity
 
 ### 2.5 Authentication: **JWT + HTTP-only Cookies**
 
 **Libraries:**
+
 - `jsonwebtoken` - JWT creation/verification
 - `bcrypt` - Password hashing
 
 **Strategy:**
+
 - Access token (15 min expiry)
 - Refresh token (7 days expiry)
 - Secure, HTTP-only cookies
@@ -172,6 +195,7 @@ This document outlines the recommended technology stack for building a personal 
 ### 3.1 Primary Database: **PostgreSQL 15+**
 
 **Why PostgreSQL:**
+
 - Robust ACID compliance
 - Excellent JSON support (JSONB for flexible schemas)
 - Full-text search capabilities
@@ -180,6 +204,7 @@ This document outlines the recommended technology stack for building a personal 
 - Great performance for relational data
 
 **Hosting Options:**
+
 - **Supabase (Recommended):** Free tier, managed PostgreSQL, built-in auth
 - **Railway:** Simple deployment, generous free tier
 - **Neon:** Serverless PostgreSQL, great free tier
@@ -188,6 +213,7 @@ This document outlines the recommended technology stack for building a personal 
 ### 3.2 ORM: **Prisma**
 
 **Why Prisma:**
+
 - Type-safe database queries
 - Automatic migrations
 - Excellent TypeScript support
@@ -196,6 +222,7 @@ This document outlines the recommended technology stack for building a personal 
 - Great developer experience
 
 **Schema Example:**
+
 ```prisma
 model User {
   id        String   @id @default(uuid())
@@ -221,6 +248,7 @@ model Profile {
 ```
 
 **Alternatives Considered:**
+
 - TypeORM: More complex, less intuitive
 - Sequelize: Older, less type-safe
 - Drizzle ORM: Newer, less mature ecosystem
@@ -228,16 +256,19 @@ model Profile {
 ### 3.3 Caching (Optional): **Redis**
 
 **Why Redis:**
+
 - Cache frequently accessed profiles
 - Session storage
 - Rate limiting
 - Fast key-value lookups
 
 **When to add:**
+
 - If performance becomes an issue
 - For production deployment
 
 **Hosting:**
+
 - Upstash (free tier, serverless)
 - Redis Cloud (free tier)
 
@@ -250,6 +281,7 @@ model Profile {
 **Recommended: PDFKit**
 
 **Why PDFKit:**
+
 - Server-side generation (more reliable)
 - Fine control over formatting
 - ATS-friendly output
@@ -257,11 +289,13 @@ model Profile {
 - Good documentation
 
 **Installation:**
+
 ```bash
 npm install pdfkit
 ```
 
 **Alternatives:**
+
 - jsPDF: Client-side, less control
 - Puppeteer: Overkill, resource-heavy
 - wkhtmltopdf: Deprecated
@@ -269,6 +303,7 @@ npm install pdfkit
 ### 4.2 DOCX Generation: **docx** (by dolanmiu)
 
 **Why docx:**
+
 - Pure JavaScript/TypeScript
 - No external dependencies
 - Creates .docx files directly
@@ -276,11 +311,13 @@ npm install pdfkit
 - Active maintenance
 
 **Installation:**
+
 ```bash
 npm install docx
 ```
 
 **Alternatives:**
+
 - docxtemplater: Template-based, less flexible
 - officegen: Older, less maintained
 
@@ -293,36 +330,42 @@ npm install docx
 **Recommended: natural**
 
 **Why natural:**
+
 - Comprehensive NLP toolkit
 - Tokenization, stemming, TF-IDF
 - Works well for job description analysis
 - No external API dependencies
 
 **Installation:**
+
 ```bash
 npm install natural
 ```
 
 **Alternative: compromise**
+
 - Faster, lighter weight
 - Good for simpler NLP tasks
 
-### 5.2 OpenAI API (Optional Enhancement)
+### 5.2 Google Gemini AI (Primary Engine)
 
 **Use Cases:**
-- Improve job description analysis
-- Generate bullet points from keywords
-- Suggest resume improvements
+
+- High-fidelity job description analysis
+- Role-specific experience selection & tailoring
+- Multi-tier model fallback for maximum resilience
+- Professional summary and bullet point generation
+
+**Model Selection:**
+
+- **Primary:** Gemini 3 Flash (Highest speed/accuracy ratio)
+- **Secondary Fallbacks:** Gemini 2.5 Flash, 1.5 Flash
+- **Basic Fallback:** Internal template-driven generation (0 cost)
 
 **Cost Consideration:**
-- GPT-3.5-turbo: ~$0.002 per resume generation
-- Can be added as optional feature
-- Consider budget limits for personal use
 
-**When to use:**
-- If budget allows
-- For more intelligent matching
-- V2 enhancement
+- Gemini often provides generous free tiers for developers.
+- Pay-as-you-go pricing is significantly lower than GPT-4 for similar throughput.
 
 ---
 
@@ -333,6 +376,7 @@ npm install natural
 **Recommended: Cloudflare R2**
 
 **Why R2:**
+
 - S3-compatible API
 - No egress fees
 - 10GB free storage
@@ -340,10 +384,12 @@ npm install natural
 - Simple pricing
 
 **What to store:**
+
 - Generated PDF/DOCX files
 - User profile exports (optional)
 
 **Alternatives:**
+
 - Supabase Storage: Integrated with Supabase DB
 - Vercel Blob: Simple, integrated with Vercel
 - Local filesystem: For development only
@@ -357,6 +403,7 @@ npm install natural
 **Recommended: Vercel**
 
 **Why Vercel:**
+
 - Optimized for React/Next.js
 - Automatic HTTPS
 - Global CDN
@@ -365,11 +412,13 @@ npm install natural
 - Preview deployments
 
 **Free Tier Limits:**
+
 - 100GB bandwidth/month
 - Unlimited sites
 - Serverless functions
 
 **Alternatives:**
+
 - Netlify: Similar features, good alternative
 - Cloudflare Pages: Great performance, newer
 
@@ -378,6 +427,7 @@ npm install natural
 **Recommended: Railway**
 
 **Why Railway:**
+
 - Simple deployment from GitHub
 - Built-in PostgreSQL
 - Environment variables management
@@ -386,11 +436,13 @@ npm install natural
 - Great developer experience
 
 **Free Tier:**
+
 - 500 hours/month
 - $5 credit (covers basic usage)
 - Auto-sleep after inactivity
 
 **Alternatives:**
+
 - Render: More generous free tier but slower cold starts
 - Fly.io: Good performance, more complex setup
 - Heroku: More expensive, less generous free tier
@@ -400,6 +452,7 @@ npm install natural
 **Recommended: Supabase**
 
 **Why Supabase:**
+
 - Free PostgreSQL database (500MB)
 - Built-in authentication (bonus!)
 - Real-time subscriptions
@@ -408,11 +461,13 @@ npm install natural
 - File storage included
 
 **Free Tier:**
+
 - 500MB database
 - 1GB file storage
 - 2GB bandwidth
 
 **Alternative: Neon**
+
 - Serverless PostgreSQL
 - Instant branching
 - Great for development
@@ -420,12 +475,14 @@ npm install natural
 ### 7.4 CI/CD: **GitHub Actions**
 
 **Why GitHub Actions:**
+
 - Free for public repos
 - 2000 min/month for private repos
 - Integrated with GitHub
 - Easy configuration
 
 **Pipeline:**
+
 ```yaml
 name: Deploy
 on:
@@ -449,11 +506,13 @@ jobs:
 ### 8.1 Code Quality
 
 **Linting:** ESLint + Prettier
+
 ```bash
 npm install -D eslint prettier eslint-config-prettier
 ```
 
 **Pre-commit Hooks:** Husky + lint-staged
+
 ```bash
 npm install -D husky lint-staged
 ```
@@ -463,16 +522,19 @@ npm install -D husky lint-staged
 ### 8.2 Testing
 
 **Unit Testing:** Vitest
+
 - Fast, Vite-native
 - Jest-compatible API
 - Great TypeScript support
 
 **E2E Testing (Optional):** Playwright
+
 - Cross-browser testing
 - Can test PDF/DOCX downloads
 - Better than Selenium
 
 **Installation:**
+
 ```bash
 npm install -D vitest @testing-library/react
 npm install -D @playwright/test
@@ -483,6 +545,7 @@ npm install -D @playwright/test
 **Development:** Thunder Client (VS Code) or Postman
 
 **Automated:** Supertest
+
 ```bash
 npm install -D supertest
 ```
@@ -490,7 +553,8 @@ npm install -D supertest
 ### 8.4 Version Control
 
 **Platform:** GitHub
-**Branching Strategy:** 
+**Branching Strategy:**
+
 - `main` - production
 - `develop` - development
 - `feature/*` - features
@@ -499,6 +563,7 @@ npm install -D supertest
 
 **Recommended IDE:** VS Code
 **Extensions:**
+
 - ESLint
 - Prettier
 - Prisma
@@ -513,6 +578,7 @@ npm install -D supertest
 ### 9.1 Error Tracking: **Sentry**
 
 **Why Sentry:**
+
 - Free tier (5K errors/month)
 - Excellent error tracking
 - Source maps support
@@ -521,12 +587,14 @@ npm install -D supertest
 ### 9.2 Analytics (Optional): **Plausible** or **Umami**
 
 **Why Plausible:**
+
 - Privacy-friendly
 - Lightweight script
 - GDPR compliant
 - Simple dashboards
 
 **Alternative:** Google Analytics
+
 - More features
 - Privacy concerns
 - Overkill for personal project
@@ -534,6 +602,7 @@ npm install -D supertest
 ### 9.3 Logging: **Pino**
 
 **Why Pino:**
+
 - Fast JSON logger
 - Low overhead
 - Good TypeScript support
@@ -558,6 +627,7 @@ npm install express-rate-limit
 ### 10.3 Input Validation: **Zod** or **Joi**
 
 **Recommended: Zod**
+
 - TypeScript-first
 - Type inference
 - Works on frontend and backend
@@ -624,6 +694,7 @@ resume-builder/
 ## 12. Development Workflow
 
 ### Phase 1: Setup (Week 1)
+
 1. Initialize Git repository
 2. Set up frontend with Vite + React
 3. Set up backend with Node.js + Express/Fastify
@@ -632,24 +703,28 @@ resume-builder/
 6. Configure ESLint, Prettier, Husky
 
 ### Phase 2: Core Features (Weeks 2-4)
+
 1. Implement authentication
 2. Build profile management UI and API
 3. Create database schema and migrations
 4. Implement CRUD operations
 
 ### Phase 3: Resume Generation (Weeks 5-7)
+
 1. Build matching algorithm
 2. Implement ATS validation
 3. Create document generation (PDF/DOCX)
 4. Build resume preview UI
 
 ### Phase 4: Polish (Week 8)
+
 1. Testing (unit + integration)
 2. Bug fixes
 3. Performance optimization
 4. Documentation
 
 ### Phase 5: Deployment (Week 9)
+
 1. Set up CI/CD
 2. Deploy to production
 3. Configure monitoring
@@ -660,6 +735,7 @@ resume-builder/
 ## 13. Cost Estimation (Monthly)
 
 ### Free Tier Options:
+
 - **Frontend (Vercel):** $0
 - **Backend (Railway):** $0 (with $5 credit)
 - **Database (Supabase):** $0
@@ -668,6 +744,7 @@ resume-builder/
 - **Total:** **$0/month** for personal use
 
 ### If Scaling Beyond Free Tier:
+
 - **Railway Pro:** $20/month
 - **Supabase Pro:** $25/month
 - **Vercel Pro:** $20/month
@@ -686,11 +763,13 @@ If you prefer a fully serverless approach:
 **Hosting:** Vercel (everything in one place)
 
 **Pros:**
+
 - Simpler deployment
 - Better integration
 - Auto-scaling
 
 **Cons:**
+
 - Vendor lock-in
 - Less control
 - Cold starts
@@ -700,6 +779,7 @@ If you prefer a fully serverless approach:
 ## 15. Getting Started Commands
 
 ### Initialize Frontend:
+
 ```bash
 npm create vite@latest frontend -- --template react-ts
 cd frontend
@@ -710,6 +790,7 @@ npx tailwindcss init -p
 ```
 
 ### Initialize Backend:
+
 ```bash
 mkdir backend && cd backend
 npm init -y
@@ -721,6 +802,7 @@ npx prisma init
 ```
 
 ### Set up Database:
+
 ```bash
 # Update .env with DATABASE_URL
 npx prisma migrate dev --name init
@@ -732,20 +814,24 @@ npx prisma generate
 ## 16. Recommended Learning Resources
 
 ### React & TypeScript:
+
 - React docs (react.dev)
 - TypeScript Handbook
 - Vite Guide
 
 ### Backend:
+
 - Node.js Best Practices (goldbergyoni/nodebestpractices)
 - Prisma Docs
 - Fastify Documentation
 
 ### Document Generation:
+
 - PDFKit Guide
 - docx Library Documentation
 
 ### Deployment:
+
 - Vercel Documentation
 - Railway Documentation
 - Supabase Documentation
@@ -757,25 +843,31 @@ npx prisma generate
 ### Recommended Stack for Quick Start:
 
 **Frontend:**
+
 - React + TypeScript + Vite
 - Tailwind CSS
 - Zustand
 - React Hook Form + Zod
 
 **Backend:**
+
 - Node.js + TypeScript
 - Fastify
 - Prisma + PostgreSQL
 - JWT Authentication
 
 **Document Generation:**
+
 - PDFKit (PDF)
 - docx (DOCX)
 
-**NLP:**
-- natural (keyword extraction)
+**AI & NLP:**
+
+- Google Gemini 3 Flash (Primary AI)
+- natural (Local keyword supplementary)
 
 **Hosting:**
+
 - Vercel (Frontend)
 - Railway (Backend)
 - Supabase (Database)
@@ -783,6 +875,7 @@ npx prisma generate
 **Total Cost:** $0/month (free tiers)
 
 This stack provides:
+
 - ✅ Fast development
 - ✅ Type safety
 - ✅ Great DX

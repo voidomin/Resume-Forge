@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: resume_builder_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-resume_builder}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: ${DB_NAME:-resume_builder}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-resume_builder}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - resume_builder_network
+
+  # Backend API
+  backend:
+    build:
+      context: ./resume-builder/backend
+      dockerfile: ../../Dockerfile
+    container_name: resume_builder_api
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-resume_builder}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-resume_builder}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - resume_builder_network
+    restart: unless-stopped
+
+  # Frontend (optional - for serving built files)
+  # frontend:
+  #   image: node:20-alpine
+  #   container_name: resume_builder_web
+  #   working_dir: /app
+  #   volumes:
+  #     - ./resume-builder/frontend:/app
+  #   command: npm run build && npm run preview
+  #   ports:
+  #     - "5173:5173"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - resume_builder_network
+
+volumes:
+  postgres_data:
+
+networks:
+  resume_builder_network:
+    driver: bridge

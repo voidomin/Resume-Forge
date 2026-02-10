@@ -1,0 +1,116 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.mockATSReport = exports.mockJobDescription = exports.mockSkill = exports.mockEducation = exports.mockExperience = exports.mockProfile = exports.mockUsers = void 0;
+exports.generateTestToken = generateTestToken;
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+/**
+ * Generate a test JWT token
+ */
+function generateTestToken(userId) {
+    const secret = process.env.JWT_SECRET || "test-secret";
+    return jsonwebtoken_1.default.sign({
+        userId,
+        email: "test@example.com",
+    }, secret, { expiresIn: "1h" });
+}
+/**
+ * Mock user data for tests
+ */
+exports.mockUsers = {
+    testUser: {
+        id: "test-user-1",
+        email: "test@example.com",
+        password: "hashedPassword123",
+    },
+    newUser: {
+        email: "newuser@example.com",
+        password: "Password123!",
+    },
+};
+/**
+ * Mock profile data
+ */
+exports.mockProfile = {
+    firstName: "John",
+    lastName: "Doe",
+    email: "john@example.com",
+    phone: "555-1234",
+    location: "San Francisco, CA",
+    linkedin: "https://linkedin.com/in/johndoe",
+    github: "https://github.com/johndoe",
+    portfolio: "https://johndoe.dev",
+    summary: "Experienced software engineer",
+};
+/**
+ * Mock experience data
+ */
+exports.mockExperience = {
+    company: "Tech Corp",
+    role: "Senior Engineer",
+    location: "San Francisco, CA",
+    startDate: "2020-01-15",
+    endDate: "2023-12-31",
+    current: false,
+    bullets: [
+        "Led team of 5 engineers",
+        "Architected microservices with Node.js",
+        "Improved performance by 40%",
+    ],
+};
+/**
+ * Mock education data
+ */
+exports.mockEducation = {
+    institution: "State University",
+    degree: "Bachelor of Science",
+    field: "Computer Science",
+    startDate: "2015-09-01",
+    endDate: "2019-05-31",
+    gpa: "3.8",
+};
+/**
+ * Mock skill data
+ */
+exports.mockSkill = {
+    name: "TypeScript",
+    category: "Programming Language",
+    proficiency: "expert",
+};
+/**
+ * Mock job description for resume generation
+ */
+exports.mockJobDescription = `Senior Full-Stack Engineer needed for a growing startup.
+
+Requirements:
+- 5+ years of experience with Node.js and React
+- Experience with PostgreSQL and microservices
+- Knowledge of AWS and Docker
+- Strong TypeScript skills
+- Experience with REST APIs
+
+Responsibilities:
+- Design and implement backend services
+- Build responsive frontend components
+- Mentor junior engineers
+- Participate in code reviews
+
+Benefits:
+- Competitive salary
+- Remote work
+- Health insurance
+- Professional development budget`;
+/**
+ * Mock ATS report
+ */
+exports.mockATSReport = {
+    score: 85,
+    breakdown: {
+        keywordMatch: 90,
+        skillsMatch: 80,
+        formatting: 85,
+    },
+    missingKeywords: ["Kubernetes", "Terraform"],
+};

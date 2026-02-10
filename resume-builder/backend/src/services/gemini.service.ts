@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { config } from "dotenv";
+import path from "path";
 
-config();
+config({ path: path.resolve(__dirname, "../../.env") });
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -99,6 +100,7 @@ export interface GeneratedResume {
     date?: string;
     link?: string;
   }[];
+  modelUsed?: string;
   atsScore: number;
   atsScoreBreakdown?: {
     keywordMatch: number;
@@ -120,7 +122,12 @@ export interface GeneratedResume {
 }
 
 export class GeminiService {
-  private model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
+  private primaryModel = "models/gemini-1.5-flash";
+  private fallbackModels = [
+    "models/gemini-2.0-flash-lite",
+    "models/gemini-1.5-flash-8b",
+    "models/gemini-1.0-pro",
+  ];
 
   /**
    * Analyze job description and extract key requirements
@@ -131,6 +138,7 @@ export class GeminiService {
     keywords: string[];
     experienceLevel: string;
     roleTitle: string;
+    modelUsed: string;
   }> {
     const prompt = `Analyze this job description and extract key information. Return ONLY valid JSON, no markdown.
 
@@ -146,12 +154,7 @@ Return this exact JSON structure:
   "roleTitle": "extracted job title"
 }`;
 
-    // Models available per user's rate limits dashboard
-    const modelsToTry = [
-      "models/gemini-2.5-flash", // Available in rate limits
-      "models/gemini-1.5-flash", // Standard model
-      "models/gemini-1.5-pro", // Pro model
-    ];
+    const modelsToTry = [this.primaryModel, ...this.fallbackModels];
 
     for (const modelName of modelsToTry) {
       try {
@@ -159,19 +162,17 @@ Return this exact JSON structure:
         const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent(prompt);
         const response = result.response.text();
-        // Clean up response - remove markdown code blocks if present
         const cleanJson = response
           .replace(/```json\n?/g, "")
           .replace(/```\n?/g, "")
           .trim();
+        const parsed = JSON.parse(cleanJson);
         console.log(`✅ JD analysis successful with ${modelName}`);
-        return JSON.parse(cleanJson);
+        return { ...parsed, modelUsed: modelName };
       } catch (error: any) {
         console.log(
           `JD analysis failed with ${modelName}: ${error.message?.slice(0, 100)}...`,
         );
-
-        // Rate limited
         if (error.message?.includes("429")) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
@@ -187,12 +188,10 @@ Return this exact JSON structure:
       keywords: [],
       experienceLevel: "mid",
       roleTitle: "Software Engineer",
+      modelUsed: "fallback-default",
     };
   }
 
-  /**
-   * Generate an ATS-optimized resume tailored to the job description
-   */
   /**
    * Generate an ATS-optimized resume tailored to the job description
    */
@@ -282,32 +281,21 @@ JOB DESCRIPTION:
 ${jobDescription}
 
 INSTRUCTIONS:
-**GOAL: Create a PROFESSIONAL, ONE A4 PAGE RESUME tailored to this job that FILLS THE ENTIRE PAGE.**
+**GOAL: Create a PROFESSIONAL, ONE A4 PAGE RESUME tailored to this job.**
 
-**CRITICAL - CONTENT DENSITY RULES:**
-1. **SINGLE PAGE OPTIMIZATION:** The resume MUST fit exactly on one A4 page. Content should be substantial but MUST NOT exceed the page boundary.
-2. **PROFESSIONAL SUMMARY**: 3-4 sentence comprehensive summary highlighting key qualifications.
+**CRITICAL - SINGLE PAGE ENFORCEMENT:**
+1. **CONTENT VOLUME**: If the candidate has many experiences, you MUST limit them to the 3 most relevant ones and use NO MORE THAN 3 bullets per role to ensure it fits on one page.
+2. **PROFESSIONAL SUMMARY**: Max 3 sentences.
 3. **WORK EXPERIENCE**: 
-   - Select most relevant experiences (up to 3).
-   - Generate 4-6 IMPACTFUL bullet points per experience.
-   - Each bullet should be 1-2 lines, using the **XYZ Formula**: "Accomplished [X] as measured by [Y] by doing [Z]".
-   - Example: "Reduced page load time by 40% (Y) for the dashboard (X) by implementing lazy loading and optimizing database queries (Z)."
-   - Incorporate these keywords naturally: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
-4. **SKILLS**: Categorize ALL relevant skills (aim for 15-20 total across categories).
-5. **PROJECTS**: Include 2-3 relevant projects with 2-3 bullet points EACH describing achievements.
-6. **EDUCATION**: Include all education with relevant coursework if space permits.
-7. **CERTIFICATIONS**: Include all relevant certifications.
+   - Each bullet must be 1 line if possible. Use the **XYZ Formula**.
+   - Incorporate these keywords: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
+4. **SKILLS**: Group into max 5 categories with 4-5 skills each.
+5. **PROJECTS**: Max 2 projects with 2 bullets each.
+6. **EDUCATION**: Concise 1-line per degree.
 
-**PAGE FILLING INSTRUCTION:**
-- **CRITICAL:** The resume MUST NOT exceed one page. Prioritize conciseness.
-- **IF THE CANDIDATE HAS LIMITED EXPERIENCE:**
-  - **EXPAND** on every bullet point. Add detail, context, and impact.
-  - Generate **4-6 bullets** for each project instead of 2-3.
-  - Include relevant coursework or academic projects to fill space.
-- **IF THE CANDIDATE HAS EXTENSIVE EXPERIENCE:**
-  - Prioritize the most relevant 3 roles.
-  - Use concise 3-4 bullets per role.
-  - Ensure it fits on one page.
+**PAGE FIT HEURISTIC:**
+- Total bullet points across all sections should not exceed 15-18 to guarantee layout stability on a single A4 page.
+- Do NOT hallucinate content to "fill space" unless the candidate has almost no history. Prioritize white space over overflow.
 
 **CALCULATE ATS SCORE**: 
 - Compare the candidate's original profile against the JD.
@@ -404,115 +392,58 @@ Return ONLY valid JSON with this structure:
   }
 }`;
 
-    // Helper to try generation with fallback (Same strategy as ResumeParser)
     const generateWithFallback = async () => {
-      // Models available per user's rate limits dashboard
-      // User suggested 3.0 preview
-      const modelsToTry = [
-        "gemini-3-flash-preview",
-        "models/gemini-3-flash-preview",
-
-        // Flash Lite (Primary preference from user)
-        "gemini-2.5-flash-lite",
-        "models/gemini-2.5-flash-lite",
-
-        // 3.0 Flash
-        "gemini-3.0-flash",
-        "models/gemini-3.0-flash",
-
-        // 2.5 Flash
-        "gemini-2.5-flash",
-        "models/gemini-2.5-flash",
-
-        // 2.0 Flash (Next-gen standard)
-        "gemini-2.0-flash",
-        "models/gemini-2.0-flash",
-
-        // Fallbacks (1.5 Family)
-        "gemini-1.5-flash",
-        "models/gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "models/gemini-1.5-pro",
-      ];
+      const modelsToTry = [this.primaryModel, ...this.fallbackModels];
 
       for (const modelName of modelsToTry) {
         try {
           console.log(`Generating resume with model: ${modelName}...`);
-          // Use v1 API version
           const currentModel = genAI.getGenerativeModel({ model: modelName });
           const result = await currentModel.generateContent(prompt);
-          return result.response.text();
+          return { response: result.response.text(), modelUsed: modelName };
         } catch (error: any) {
           console.log(
             `Failed with ${modelName}: ${error.message?.slice(0, 100)}...`,
           );
 
-          // Run out of quota?
-          // Run out of quota?
           if (error.message?.includes("429")) {
-            // Try to extract wait time from error message "Please retry in 48.71s"
             const match = error.message.match(/retry in\s+([\d.]+)\s*s/);
-            const waitSeconds = match ? parseFloat(match[1]) + 2 : 60; // Add 2s buffer or default to 60s
-
+            const waitSeconds = match ? parseFloat(match[1]) + 2 : 5;
             console.log(
-              `Rate limit (429) hit for ${modelName}. Waiting ${waitSeconds.toFixed(1)}s (dynamic)...`,
+              `Rate limit (429) hit for ${modelName}. Waiting ${waitSeconds.toFixed(
+                1,
+              )}s...`,
             );
-
             await new Promise((resolve) =>
               setTimeout(resolve, waitSeconds * 1000),
             );
-
-            // Retry the same model once after waiting
+            // Retry the same model once
             try {
               console.log(`Retrying ${modelName} after wait...`);
-              const currentModel = genAI.getGenerativeModel({
-                model: modelName,
-              });
-              const result = await currentModel.generateContent(prompt);
-              return result.response.text();
+              const retryModel = genAI.getGenerativeModel({ model: modelName });
+              const result = await retryModel.generateContent(prompt);
+              return { response: result.response.text(), modelUsed: modelName };
             } catch (retryError) {
-              console.log(`Retry failed for ${modelName}: ${retryError}`);
-              continue; // Move to next model
+              continue;
             }
           }
-
-          // Model not found?
-          if (error.message?.includes("404")) {
-            console.log(`Model ${modelName} not found (404). Skipping.`);
-            continue;
-          }
-
-          // Other errors, continue
+          if (error.message?.includes("404")) continue;
         }
       }
-
+      console.error("CRITICAL: All AI models failed to generate content.");
       throw new Error("All AI models failed to generate resume.");
     };
 
     try {
-      console.log("Calling AI to generate resume...");
-      const response = await generateWithFallback();
-
+      const { response, modelUsed } = await generateWithFallback();
       const cleanJson = response
         .replace(/```json\n?/g, "")
         .replace(/```\n?/g, "")
         .trim();
-
       const parsed = JSON.parse(cleanJson);
+      parsed.modelUsed = modelUsed;
 
-      // Debug logging
-      console.log("✅ AI Response parsed successfully");
-      console.log("   - ATS Score:", parsed.atsScore);
-      console.log("   - Keywords count:", parsed.keywords?.length || 0);
-      console.log("   - Has keywordAnalysis:", !!parsed.keywordAnalysis);
-      console.log(
-        "   - Matched keywords:",
-        parsed.keywordAnalysis?.matchedKeywords?.length || 0,
-      );
-
-      // Ensure keywordAnalysis exists (AI sometimes omits it)
       if (!parsed.keywordAnalysis) {
-        console.log("⚠️ keywordAnalysis missing, generating from keywords...");
         parsed.keywordAnalysis = {
           matchedKeywords: (parsed.keywords || []).map((k: string) => ({
             keyword: k,
@@ -520,43 +451,31 @@ Return ONLY valid JSON with this structure:
           })),
           missingKeywords: parsed.atsScoreBreakdown?.missingKeywords || [],
           totalJobKeywords: (parsed.keywords?.length || 0) + 5,
-          matchPercentage: parsed.keywords?.length
-            ? Math.min(
-                85,
-                (parsed.keywords.length / (parsed.keywords.length + 5)) * 100,
-              )
-            : 50,
+          matchPercentage: 50,
         };
       }
 
-      // Ensure atsScoreBreakdown exists (AI sometimes omits it)
       if (!parsed.atsScoreBreakdown) {
-        console.log("⚠️ atsScoreBreakdown missing, generating from score...");
         const score = parsed.atsScore || 70;
         parsed.atsScoreBreakdown = {
           keywordMatch: Math.round(score * 0.4),
           skillsMatch: Math.round(score * 0.3),
           formatting: Math.round(score * 0.3),
           missingKeywords: parsed.keywordAnalysis?.missingKeywords || [],
-          explanation: `Score based on ${parsed.keywords?.length || 0} matched keywords and ${parsed.skills?.length || 0} skills.`,
+          explanation: "Generated based on candidate profile.",
         };
       }
 
       return parsed;
     } catch (error: any) {
-      console.error("=== AI GENERATION FAILED ===");
-      console.error("Error type:", error.constructor.name);
-      console.error("Error message:", error.message);
-      console.error("Stack:", error.stack?.slice(0, 500));
-      console.error("Using fallback basic resume...");
-      // Return a basic resume structure from profile data ONLY if all AIs fail
-      return this.createBasicResume(profile);
+      console.error("=== AI GENERATION FAILED ===", error.message);
+      return {
+        ...this.createBasicResume(profile),
+        modelUsed: "fallback-basic",
+      };
     }
   }
 
-  /**
-   * Create a basic resume from profile data (fallback)
-   */
   private createBasicResume(profile: ProfileData): GeneratedResume {
     return {
       contactInfo: {
@@ -596,26 +515,11 @@ Return ONLY valid JSON with this structure:
         date: c.date,
       })),
       atsScore: 70,
-      atsScoreBreakdown: {
-        keywordMatch: 28,
-        skillsMatch: 21,
-        formatting: 21,
-        missingKeywords: [],
-        explanation: "Fallback resume - no AI analysis available.",
-      },
       keywords: [],
-      keywordAnalysis: {
-        matchedKeywords: [],
-        missingKeywords: [],
-        totalJobKeywords: 0,
-        matchPercentage: 0,
-      },
+      modelUsed: "fallback-basic",
     };
   }
 
-  /**
-   * Improve a single bullet point
-   */
   async improveBulletPoint(bullet: string, context: string): Promise<string> {
     const prompt = `Improve this resume bullet point to be more impactful and ATS-friendly.
     
@@ -631,7 +535,8 @@ Rules:
 Return ONLY the improved bullet point, no quotes or explanation.`;
 
     try {
-      const result = await this.model.generateContent(prompt);
+      const model = genAI.getGenerativeModel({ model: this.primaryModel });
+      const result = await model.generateContent(prompt);
       return result.response.text().trim();
     } catch (error) {
       return bullet;

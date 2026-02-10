@@ -1,40 +1,22 @@
-import * as dotenv from "dotenv";
-dotenv.config();
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { config } from "dotenv";
 
-const apiKey = process.env.GEMINI_API_KEY;
+config();
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 async function listModels() {
-  console.log("Fetching available models...\n");
-
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
-    );
-
-    if (!response.ok) {
-      console.error("Error:", response.status, response.statusText);
-      const text = await response.text();
-      console.error(text);
-      return;
-    }
-
-    const data = await response.json();
-
+    const models = await genAI.listModels();
     console.log("Available Gemini Models:");
-    console.log("========================\n");
-
-    data.models?.forEach((model: any) => {
-      if (model.name.includes("gemini")) {
-        console.log(`Name: ${model.name}`);
-        console.log(`  Display: ${model.displayName}`);
-        console.log(
-          `  Methods: ${model.supportedGenerationMethods?.join(", ")}`,
-        );
-        console.log("");
-      }
+    models.models.forEach((m) => {
+      console.log(`- ${m.name} (${m.displayName})`);
+      console.log(
+        `  Supported Actions: ${m.supportedGenerationMethods.join(", ")}`,
+      );
     });
   } catch (error) {
-    console.error("Error fetching models:", error);
+    console.error("Error listing models:", error);
   }
 }
 

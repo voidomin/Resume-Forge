@@ -8,6 +8,7 @@ import {
   ArrowRight,
   AlertCircle,
   CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ResumePreview from "../components/Resume/ResumePreview";
@@ -75,6 +76,7 @@ interface GeneratedResume {
     totalJobKeywords: number;
     matchPercentage: number;
   };
+  modelUsed?: string;
 }
 
 function ResumeGenerator() {
@@ -105,11 +107,19 @@ function ResumeGenerator() {
         targetRole: targetRole || undefined,
       });
 
+      console.log("DEBUG RESPONSE:", response.data);
       setGeneratedResume(response.data.content);
       setResumeId(response.data.resume.id);
       setAtsReport(response.data.atsReport || null);
       setStep("preview");
-      toast.success("Resume generated successfully!");
+      if (response.data.content.modelUsed === "fallback-basic") {
+        toast.error("AI customization unavailable. Using basic template.", {
+          duration: 5000,
+          icon: "⚠️",
+        });
+      } else {
+        toast.success("Resume generated successfully!");
+      }
     } catch (err: any) {
       const message = err.response?.data?.error || "Failed to generate resume";
       setError(message);
@@ -308,6 +318,23 @@ Required Skills:
       {/* Step 3: Preview */}
       {step === "preview" && generatedResume && (
         <div className="max-w-7xl mx-auto">
+          {generatedResume.modelUsed === "fallback-basic" && (
+            <div className="mb-6 flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">
+                  AI Optimization Unavailable
+                </p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Due to high demand, we've generated a clean, readable resume
+                  using your profile data without AI tailoring. Try regenerating
+                  in a few minutes for full optimization.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Left: Controls */}
             <div className="lg:w-80 flex-shrink-0">
@@ -331,6 +358,19 @@ Required Skills:
                         style={{ width: `${generatedResume.atsScore}%` }}
                       />
                     </div>
+
+                    {/* AI Model Badge */}
+                    {generatedResume.modelUsed && (
+                      <div className="mt-3 flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg">
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                        <span className="text-[10px] font-semibold text-indigo-700 uppercase tracking-wider">
+                          AI:{" "}
+                          {generatedResume.modelUsed
+                            .replace("models/", "")
+                            .replace(/-/g, " ")}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Score Breakdown */}
                     {generatedResume.atsScoreBreakdown && (

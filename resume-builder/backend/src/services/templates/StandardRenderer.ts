@@ -28,7 +28,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
 
     // Section Header - Left Aligned with Line
     const drawHeader = (title: string) => {
-      doc.moveDown(0.2); // Tiny clear space
+      doc.moveDown(0.2 * spacingScale); // Tiny clear space
       doc
         .font(fontBold)
         .fontSize(sectionTitleSize)

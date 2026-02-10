@@ -25,7 +25,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
 
     // Helper: Section Headers (Uppercase, Tracking, TextLight Color)
     const drawHeader = (title: string) => {
-      doc.moveDown(0.2);
+      doc.moveDown(0.2 * spacingScale);
       doc
         .font(fontBold)
         .fontSize(sectionTitleSize)
@@ -89,7 +89,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
           .fillColor(text)
           .text(exp.role);
 
-        doc.moveDown(0.2);
+        doc.moveDown(0.2 * spacingScale);
 
         // Company | Location | Date (Single line secondary)
         doc
@@ -100,7 +100,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
             `${exp.company} ${exp.location ? " | " + exp.location : ""} | ${exp.dateRange}`,
           );
 
-        doc.moveDown(0.5);
+        doc.moveDown(0.5 * spacingScale);
 
         // Bullets (Clean indentation)
         exp.bullets.forEach((b: string) => {
@@ -134,7 +134,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
           doc.text("");
         }
 
-        doc.moveDown(0.2);
+        doc.moveDown(0.2 * spacingScale);
 
         if (proj.link) {
           doc
@@ -142,7 +142,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
             .fontSize(baseFontSize - 1)
             .fillColor(primary)
             .text(proj.link, { link: proj.link });
-          doc.moveDown(0.2);
+          doc.moveDown(0.2 * spacingScale);
         }
 
         if (proj.description) {

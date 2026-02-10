@@ -1,0 +1,74 @@
+name: Test & Deploy
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: resume_builder_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Backend Tests
+      - name: Install Backend Dependencies
+        run: cd resume-builder/backend && npm ci
+
+      - name: Build Backend
+        run: cd resume-builder/backend && npm run build
+
+      - name: Run Backend Tests
+        run: cd resume-builder/backend && npm test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/resume_builder_test
+          JWT_SECRET: test-secret
+          GEMINI_API_KEY: test-key
+
+      # Frontend Tests
+      - name: Install Frontend Dependencies
+        run: cd resume-builder/frontend && npm ci
+
+      - name: Build Frontend
+        run: cd resume-builder/frontend && npm run build
+
+      - name: Run E2E Tests
+        run: cd resume-builder/frontend && npm test
+        env:
+          CI: true
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy to Production
+        run: |
+          echo "Deploying to production..."
+          # Add your deployment commands here
+          # Example: deploy to Railway, Vercel, or your hosting provider

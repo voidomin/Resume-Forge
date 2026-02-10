@@ -23,6 +23,9 @@ interface Resume {
   targetRole?: string;
   atsScore?: number;
   createdAt: string;
+  content?: {
+    modelUsed?: string;
+  };
 }
 
 interface Profile {
@@ -267,6 +270,13 @@ function Dashboard() {
                       {resume.atsScore && (
                         <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
                           ATS Score: {resume.atsScore}%
+                        </span>
+                      )}
+                      {resume.content?.modelUsed && (
+                        <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full text-[10px] font-semibold border border-indigo-100">
+                          {resume.content.modelUsed
+                            .replace("models/", "")
+                            .replace(/-/g, " ")}
                         </span>
                       )}
                     </div>

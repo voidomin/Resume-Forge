@@ -18,8 +18,9 @@
     "baseUrl": "./src",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "types": ["node"]
   },
-  "include": ["src"],
+  "include": ["src", "tests", "playwright.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   Download,
   RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ResumePreview from "../components/Resume/ResumePreview";
@@ -59,6 +60,7 @@ interface GeneratedResume {
     totalJobKeywords: number;
     matchPercentage: number;
   };
+  modelUsed?: string;
 }
 
 interface Resume {
@@ -143,10 +145,9 @@ function ResumeView() {
       }
 
       // Use structured DOCX endpoint
-      const response = await api.get(
-        `/resumes/${id}/export/docx`,
-        { responseType: "blob" },
-      );
+      const response = await api.get(`/resumes/${id}/export/docx`, {
+        responseType: "blob",
+      });
 
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -215,6 +216,22 @@ function ResumeView() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-7xl mx-auto">
+        {resume.content.modelUsed === "fallback-basic" && (
+          <div className="mb-6 flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 shadow-sm">
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">
+                AI Optimization Unavailable
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                This version was generated using a basic template without AI
+                tailoring due to high service demand at the time of creation.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left: Controls */}
           <div className="lg:w-80 flex-shrink-0">
@@ -251,6 +268,19 @@ function ResumeView() {
                       style={{ width: `${resume.content.atsScore}%` }}
                     />
                   </div>
+
+                  {/* AI Model Badge */}
+                  {resume.content.modelUsed && (
+                    <div className="mt-3 flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg">
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                      <span className="text-[10px] font-semibold text-indigo-700 uppercase tracking-wider">
+                        AI:{" "}
+                        {resume.content.modelUsed
+                          .replace("models/", "")
+                          .replace(/-/g, " ")}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Score Breakdown */}
                   {resume.content.atsScoreBreakdown && (
@@ -364,6 +394,21 @@ function ResumeView() {
                   <p className="text-xs text-gray-500 mt-2">
                     Generate a new version with the same job description
                   </p>
+
+                  {/* AI Model Badge (Secondary) */}
+                  {resume.content.modelUsed && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-100 rounded-md w-fit">
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tight">
+                          Powered by{" "}
+                          {resume.content.modelUsed
+                            .replace("models/", "")
+                            .replace(/-/g, " ")}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -385,7 +430,3 @@ function ResumeView() {
 }
 
 export default ResumeView;
-
-
-
-

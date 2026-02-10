@@ -176,6 +176,7 @@ async function profileRoutes(server: FastifyInstance) {
           },
         });
 
+        console.log(`Clearing existing profile data for id: ${profile.id}`);
         // Delete existing experiences, education, skills, projects, certifications
         await prisma.experience.deleteMany({
           where: { profileId: profile.id },
@@ -187,6 +188,9 @@ async function profileRoutes(server: FastifyInstance) {
           where: { profileId: profile.id },
         });
 
+        console.log(
+          `Importing ${data.experiences?.length || 0} experiences...`,
+        );
         // Add experiences
         if (data.experiences && Array.isArray(data.experiences)) {
           for (const exp of data.experiences) {
@@ -206,6 +210,9 @@ async function profileRoutes(server: FastifyInstance) {
           }
         }
 
+        console.log(
+          `Importing ${data.education?.length || 0} education entries...`,
+        );
         // Add education
         if (data.education && Array.isArray(data.education)) {
           for (const edu of data.education) {
@@ -227,6 +234,7 @@ async function profileRoutes(server: FastifyInstance) {
           }
         }
 
+        console.log("Importing skills, projects, and certifications...");
         // Add skills
         if (data.skills && Array.isArray(data.skills)) {
           for (const skill of data.skills) {
@@ -271,11 +279,13 @@ async function profileRoutes(server: FastifyInstance) {
           }
         }
 
+        console.log("Profile import complete.");
         return reply.send({
           message: "Profile imported successfully",
           profileId: profile.id,
         });
       } catch (error) {
+        console.error("Profile import error:", error);
         request.log.error(error);
         return reply.status(500).send({ error: "Failed to import profile" });
       }
