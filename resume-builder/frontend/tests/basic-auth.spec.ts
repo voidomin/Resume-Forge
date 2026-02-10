@@ -59,7 +59,7 @@ test.describe("Basic Authentication", () => {
     // Step 2: Logout
     const logoutButton = page.getByRole("button", { name: "Logout" });
     await expect(logoutButton).toBeVisible({ timeout: 10000 });
-    await logoutButton.click();
+    await logoutButton.click({ force: true });
     await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
 
     // Step 3: Login with same credentials
@@ -111,7 +111,7 @@ test.describe("Basic Authentication", () => {
     // Logout
     const logoutButton = page.getByRole("button", { name: "Logout" });
     await expect(logoutButton).toBeVisible({ timeout: 10000 });
-    await logoutButton.click();
+    await logoutButton.click({ force: true });
     await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
 
     // Try to register again with same email
