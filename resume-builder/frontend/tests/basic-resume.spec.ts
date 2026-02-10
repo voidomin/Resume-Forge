@@ -20,8 +20,7 @@ test.describe("Basic Resume Generation", () => {
     const password = "TestPassword123!";
 
     // Register
-    await page.goto("http://localhost:5173/register");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/register", { waitUntil: "domcontentloaded" });
 
     await page.fill('input#email', email);
     await page.fill('input#password', password);
@@ -31,8 +30,7 @@ test.describe("Basic Resume Generation", () => {
     await expect(page).toHaveURL(/\/(dashboard|profile)/, { timeout: 30000 });
 
     // Add minimal profile data (go to profile and just save to create profile record)
-    await page.goto("http://localhost:5173/profile");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/profile", { waitUntil: "domcontentloaded" });
     
     // Click save on personal info to ensure profile exists
     const saveButton = page.locator('button:has-text("Save"), button:has-text("Save Profile")').first();
@@ -48,8 +46,7 @@ test.describe("Basic Resume Generation", () => {
     await setupTestUser(page);
 
     // Navigate to resume generation
-    await page.goto("http://localhost:5173/resume/new");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
 
     // Verify we're on the resume page
     await expect(page).toHaveURL(/\/resume\/new/);
@@ -69,8 +66,7 @@ test.describe("Basic Resume Generation", () => {
     await setupTestUser(page);
 
     // Navigate to resume generation
-    await page.goto("http://localhost:5173/resume/new");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
 
     // Fill job description
     const jobDescription = "Software Engineer position requiring JavaScript, React, and Node.js experience.";
@@ -95,8 +91,7 @@ test.describe("Basic Resume Generation", () => {
     await setupTestUser(page);
 
     // Navigate and generate
-    await page.goto("http://localhost:5173/resume/new");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
 
     const jobDescInput = page.locator('textarea').first();
     await expect(jobDescInput).toBeVisible({ timeout: 10000 });
@@ -120,8 +115,7 @@ test.describe("Basic Resume Generation", () => {
     await setupTestUser(page);
 
     // Navigate and generate
-    await page.goto("http://localhost:5173/resume/new");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
 
     const jobDescInput = page.locator('textarea').first();
     await expect(jobDescInput).toBeVisible({ timeout: 10000 });
@@ -144,8 +138,7 @@ test.describe("Basic Resume Generation", () => {
     await setupTestUser(page);
 
     // Navigate and generate
-    await page.goto("http://localhost:5173/resume/new");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
 
     const jobDescInput = page.locator('textarea').first();
     await expect(jobDescInput).toBeVisible({ timeout: 10000 });

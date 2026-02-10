@@ -19,8 +19,7 @@ test.describe("Basic Profile Management", () => {
     const email = generateTestEmail();
     const password = "TestPassword123!";
 
-    await page.goto("http://localhost:5173/register");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/register", { waitUntil: "domcontentloaded" });
 
     await page.fill('input#email', email);
     await page.fill('input#password', password);
@@ -37,8 +36,7 @@ test.describe("Basic Profile Management", () => {
     const { email } = await registerTestUser(page);
 
     // Navigate to profile
-    await page.goto("http://localhost:5173/profile");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/profile", { waitUntil: "domcontentloaded" });
 
     // Verify on profile page
     await expect(
@@ -94,7 +92,6 @@ test.describe("Basic Profile Management", () => {
 
     // Reload page
     await page.reload();
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000); // Wait for data to load
 
     // Click Personal Info tab again
@@ -123,8 +120,7 @@ test.describe("Basic Profile Management", () => {
     await registerTestUser(page);
 
     // Navigate to profile
-    await page.goto("http://localhost:5173/profile");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/profile", { waitUntil: "domcontentloaded" });
 
     // Verify all tabs are visible
     const personalTab = page.getByRole("button", { name: "Personal Info" }).first();
@@ -177,8 +173,7 @@ test.describe("Basic Profile Management", () => {
     await registerTestUser(page);
 
     // Navigate to profile
-    await page.goto("http://localhost:5173/profile");
-    await page.waitForLoadState("networkidle");
+    await page.goto("http://localhost:5173/profile", { waitUntil: "domcontentloaded" });
 
     // Verify upload/import buttons are visible
     await expect(page.getByRole("button", { name: "Upload Resume" }).first()).toBeVisible({ timeout: 10000 });
