@@ -19,11 +19,13 @@ test.describe("Basic Profile Management", () => {
     const email = generateTestEmail();
     const password = "TestPassword123!";
 
-    await page.goto("http://localhost:5173/register", { waitUntil: "domcontentloaded" });
+    await page.goto("http://localhost:5173/register", {
+      waitUntil: "domcontentloaded",
+    });
 
-    await page.fill('input#email', email);
-    await page.fill('input#password', password);
-    await page.fill('input#confirmPassword', password);
+    await page.fill("input#email", email);
+    await page.fill("input#password", password);
+    await page.fill("input#confirmPassword", password);
     await page.click('button[type="submit"]');
 
     await expect(page).toHaveURL(/\/(dashboard|profile)/, { timeout: 30000 });
@@ -31,20 +33,26 @@ test.describe("Basic Profile Management", () => {
     return { email, password };
   };
 
-  test("should update personal info and persist after reload", async ({ page }) => {
+  test("should update personal info and persist after reload", async ({
+    page,
+  }) => {
     // Register user
     const { email } = await registerTestUser(page);
 
     // Navigate to profile
-    await page.goto("http://localhost:5173/profile", { waitUntil: "domcontentloaded" });
+    await page.goto("http://localhost:5173/profile", {
+      waitUntil: "domcontentloaded",
+    });
 
     // Verify on profile page
     await expect(
-      page.getByRole("heading", { name: "Edit Profile" })
+      page.getByRole("heading", { name: "Edit Profile" }),
     ).toBeVisible({ timeout: 10000 });
 
     // Make sure Personal Info tab is active (should be default)
-    const personalInfoButton = page.getByRole("button", { name: "Personal Info" }).first();
+    const personalInfoButton = page
+      .getByRole("button", { name: "Personal Info" })
+      .first();
     await personalInfoButton.click();
     await page.waitForTimeout(1000); // Wait for tab to load
 
@@ -55,13 +63,17 @@ test.describe("Basic Profile Management", () => {
     const website = "testuser.dev";
 
     // Try to find and fill phone field
-    const phoneInput = page.locator('input[placeholder*="phone" i], input[type="tel"]').first();
+    const phoneInput = page
+      .locator('input[placeholder*="phone" i], input[type="tel"]')
+      .first();
     if (await phoneInput.isVisible().catch(() => false)) {
       await phoneInput.fill(phone);
     }
 
     // Try to find and fill LinkedIn field
-    const linkedinInput = page.locator('input[placeholder*="linkedin" i]').first();
+    const linkedinInput = page
+      .locator('input[placeholder*="linkedin" i]')
+      .first();
     if (await linkedinInput.isVisible().catch(() => false)) {
       await linkedinInput.fill(linkedin);
     }
@@ -73,18 +85,26 @@ test.describe("Basic Profile Management", () => {
     }
 
     // Try to find and fill website field
-    const websiteInput = page.locator('input[placeholder*="website" i], input[placeholder*="portfolio" i]').first();
+    const websiteInput = page
+      .locator(
+        'input[placeholder*="website" i], input[placeholder*="portfolio" i]',
+      )
+      .first();
     if (await websiteInput.isVisible().catch(() => false)) {
       await websiteInput.fill(website);
     }
 
     // Look for save button (try multiple possible texts)
-    const saveButton = page.locator('button:has-text("Save"), button:has-text("Save Profile"), button:has-text("Update Profile")').first();
+    const saveButton = page
+      .locator(
+        'button:has-text("Save"), button:has-text("Save Profile"), button:has-text("Update Profile")',
+      )
+      .first();
     await saveButton.click();
 
     // Wait for success message
     await expect(
-      page.locator('text=/profile saved|saved successfully|updated/i')
+      page.locator("text=/profile saved|saved successfully|updated/i"),
     ).toBeVisible({ timeout: 10000 });
 
     // Wait a bit for API to process
@@ -106,7 +126,7 @@ test.describe("Basic Profile Management", () => {
     const websiteStillThere = await websiteInput.inputValue().catch(() => "");
 
     // At least one should still be there
-    const hasPersistedData = 
+    const hasPersistedData =
       phoneStillThere.includes(phone) ||
       linkedinStillThere.includes(linkedin) ||
       githubStillThere.includes(github) ||
@@ -120,12 +140,20 @@ test.describe("Basic Profile Management", () => {
     await registerTestUser(page);
 
     // Navigate to profile
-    await page.goto("http://localhost:5173/profile", { waitUntil: "domcontentloaded" });
+    await page.goto("http://localhost:5173/profile", {
+      waitUntil: "domcontentloaded",
+    });
 
     // Verify all tabs are visible
-    const personalTab = page.getByRole("button", { name: "Personal Info" }).first();
-    const experienceTab = page.getByRole("button", { name: "Experience" }).first();
-    const educationTab = page.getByRole("button", { name: "Education" }).first();
+    const personalTab = page
+      .getByRole("button", { name: "Personal Info" })
+      .first();
+    const experienceTab = page
+      .getByRole("button", { name: "Experience" })
+      .first();
+    const educationTab = page
+      .getByRole("button", { name: "Education" })
+      .first();
     const skillsTab = page.getByRole("button", { name: "Skills" }).first();
 
     await expect(personalTab).toBeVisible();
@@ -136,34 +164,34 @@ test.describe("Basic Profile Management", () => {
     // Click Experience tab
     await experienceTab.click();
     await page.waitForTimeout(1000);
-    
+
     // Should see experience-related content (Add Experience button)
     await expect(
-      page.getByRole('button', { name: 'Add Experience' }).first()
+      page.getByRole("button", { name: "Add Experience" }).first(),
     ).toBeVisible({ timeout: 10000 });
 
     // Click Education tab
     await educationTab.click();
     await page.waitForTimeout(1000);
-    
+
     // Should see education-related content (actual button text is "Add Education")
-    await expect(
-      page.locator('button:has-text("Add Education")')
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('button:has-text("Add Education")')).toBeVisible({
+      timeout: 10000,
+    });
 
     // Click Skills tab
     await skillsTab.click();
     await page.waitForTimeout(1000);
-    
+
     // Should see skills-related content (Save Skills button)
     await expect(
-      page.getByRole('button', { name: 'Save Skills' }).first()
+      page.getByRole("button", { name: "Save Skills" }).first(),
     ).toBeVisible({ timeout: 10000 });
 
     // Go back to Personal Info
     await personalTab.click();
     await page.waitForTimeout(1000);
-    
+
     // Should see personal info form again
     await expect(page.locator('input[type="email"]').first()).toBeVisible();
   });
@@ -173,11 +201,19 @@ test.describe("Basic Profile Management", () => {
     await registerTestUser(page);
 
     // Navigate to profile
-    await page.goto("http://localhost:5173/profile", { waitUntil: "domcontentloaded" });
+    await page.goto("http://localhost:5173/profile", {
+      waitUntil: "domcontentloaded",
+    });
 
     // Verify upload/import buttons are visible
-    await expect(page.getByRole("button", { name: "Upload Resume" }).first()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole("button", { name: "Import JSON" }).first()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole("button", { name: "Export" }).first()).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("button", { name: "Upload Resume" }).first(),
+    ).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("button", { name: "Import JSON" }).first(),
+    ).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("button", { name: "Export" }).first(),
+    ).toBeVisible({ timeout: 10000 });
   });
 });

@@ -19,7 +19,9 @@ test.describe("Basic Authentication", () => {
     const password = "TestPassword123!";
 
     // Navigate to register page
-    await page.goto("http://localhost:5173/register", { waitUntil: "domcontentloaded" });
+    await page.goto("http://localhost:5173/register", {
+      waitUntil: "domcontentloaded",
+    });
 
     // Fill registration form (email, password, confirm password)
     await page.fill("input#email", email);
@@ -42,7 +44,9 @@ test.describe("Basic Authentication", () => {
     const password = "TestPassword123!";
 
     // Step 1: Register user first
-    await page.goto("http://localhost:5173/register", { waitUntil: "domcontentloaded" });
+    await page.goto("http://localhost:5173/register", {
+      waitUntil: "domcontentloaded",
+    });
 
     await page.fill("input#email", email);
     await page.fill("input#password", password);
@@ -69,7 +73,9 @@ test.describe("Basic Authentication", () => {
   });
 
   test("should show validation error for invalid email", async ({ page }) => {
-    await page.goto("http://localhost:5173/register", { waitUntil: "domcontentloaded" });
+    await page.goto("http://localhost:5173/register", {
+      waitUntil: "domcontentloaded",
+    });
 
     // Fill form with invalid email
     await page.fill("input#email", "invalid-email");
@@ -91,7 +97,9 @@ test.describe("Basic Authentication", () => {
     const password = "TestPassword123!";
 
     // Register first time
-    await page.goto("http://localhost:5173/register", { waitUntil: "domcontentloaded" });
+    await page.goto("http://localhost:5173/register", {
+      waitUntil: "domcontentloaded",
+    });
 
     await page.fill("input#email", email);
     await page.fill("input#password", password);
@@ -107,7 +115,9 @@ test.describe("Basic Authentication", () => {
     await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
 
     // Try to register again with same email
-    await page.goto("http://localhost:5173/register", { waitUntil: "domcontentloaded" });
+    await page.goto("http://localhost:5173/register", {
+      waitUntil: "domcontentloaded",
+    });
 
     await page.fill("input#email", email);
     await page.fill("input#password", password);

@@ -156,4 +156,252 @@ test.describe("Basic Resume Generation", () => {
     const pageHasContent = await page.locator('main, [role="main"]').first().isVisible().catch(() => false);
     expect(pageHasContent).toBeTruthy();
   });
+
+  test("should display AI model badge when resume generated with AI", async ({ page }) => {
+    await setupTestUser(page);
+
+    // Mock successful AI generation response
+    await page.route("**/api/resumes/generate", (route) => {
+      route.fulfill({
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: {
+            atsScore: 85,
+            atsScoreBreakdown: { keywordMatch: 30, skillsMatch: 28, formatting: 27 },
+            modelUsed: "models/gemini-2.0-flash",
+            generationMethod: "ai",
+            sections: { summary: "Test summary", experience: [], skills: [], education: [] },
+          },
+          resume: { id: "test-resume-123" },
+          atsReport: null,
+        }),
+      });
+    });
+
+    // Navigate and generate
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
+
+    const jobDescInput = page.locator('textarea').first();
+    await expect(jobDescInput).toBeVisible({ timeout: 10000 });
+    await jobDescInput.fill("Software Engineer role");
+    await page.waitForTimeout(500);
+
+    const generateButton = page.locator('button:has-text("Generate"), button:has-text("AI"), button[type="submit"]').first();
+    await generateButton.click();
+
+    // Wait for model badge to appear
+    const modelBadge = page.locator('span:has-text("AI:")').first();
+    await expect(modelBadge).toBeVisible({ timeout: 15000 });
+
+    // Verify model name is parsed correctly (models/gemini-2.0-flash -> gemini 2.0 flash)
+    await expect(modelBadge).toContainText("gemini 2.0 flash");
+  });
+
+  test("should show amber alert with quota exceeded message", async ({ page }) => {
+    await setupTestUser(page);
+
+    // Mock fallback response with quota exceeded
+    await page.route("**/api/resumes/generate", (route) => {
+      route.fulfill({
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: {
+            atsScore: 72,
+            atsScoreBreakdown: { keywordMatch: 25, skillsMatch: 24, formatting: 23 },
+            modelUsed: "fallback-basic",
+            failureReason: "quota_exceeded",
+            generationMethod: "fallback",
+            sections: { summary: "Basic summary", experience: [], skills: [], education: [] },
+          },
+          resume: { id: "test-resume-456" },
+          atsReport: null,
+        }),
+      });
+    });
+
+    // Navigate and generate
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
+
+    const jobDescInput = page.locator('textarea').first();
+    await expect(jobDescInput).toBeVisible({ timeout: 10000 });
+    await jobDescInput.fill("Test job");
+    await page.waitForTimeout(500);
+
+    const generateButton = page.locator('button:has-text("Generate"), button:has-text("AI"), button[type="submit"]').first();
+    await generateButton.click();
+
+    // Wait for fallback alert
+    const fallbackAlert = page.locator('text=AI Optimization Unavailable').first();
+    await expect(fallbackAlert).toBeVisible({ timeout: 15000 });
+
+    // Verify quota exceeded specific message
+    const quotaMessage = page.locator('text=Daily AI quota reached').first();
+    await expect(quotaMessage).toBeVisible();
+    await expect(quotaMessage).toContainText("midnight PT");
+  });
+
+  test("should show amber alert with high demand message when fallback without quota", async ({ page }) => {
+    await setupTestUser(page);
+
+    // Mock fallback response without quota reason
+    await page.route("**/api/resumes/generate", (route) => {
+      route.fulfill({
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: {
+            atsScore: 72,
+            atsScoreBreakdown: { keywordMatch: 25, skillsMatch: 24, formatting: 23 },
+            modelUsed: "fallback-basic",
+            failureReason: "service_overload",
+            generationMethod: "fallback",
+            sections: { summary: "Basic summary", experience: [], skills: [], education: [] },
+          },
+          resume: { id: "test-resume-789" },
+          atsReport: null,
+        }),
+      });
+    });
+
+    // Navigate and generate
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
+
+    const jobDescInput = page.locator('textarea').first();
+    await expect(jobDescInput).toBeVisible({ timeout: 10000 });
+    await jobDescInput.fill("Test job");
+    await page.waitForTimeout(500);
+
+    const generateButton = page.locator('button:has-text("Generate"), button:has-text("AI"), button[type="submit"]').first();
+    await generateButton.click();
+
+    // Wait for fallback alert
+    const fallbackAlert = page.locator('text=AI Optimization Unavailable').first();
+    await expect(fallbackAlert).toBeVisible({ timeout: 15000 });
+
+    // Verify high demand message (not quota)
+    const demandMessage = page.locator('text=Due to high demand').first();
+    await expect(demandMessage).toBeVisible();
+    await expect(demandMessage).not.toContainText("midnight PT");
+  });
+
+  test("should show success toast when AI generation succeeds", async ({ page }) => {
+    await setupTestUser(page);
+
+    // Mock successful AI generation
+    await page.route("**/api/resumes/generate", (route) => {
+      route.fulfill({
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: {
+            atsScore: 88,
+            atsScoreBreakdown: { keywordMatch: 32, skillsMatch: 29, formatting: 27 },
+            modelUsed: "models/gemini-2.0-flash",
+            generationMethod: "ai",
+            sections: { summary: "Professional summary", experience: [], skills: [], education: [] },
+          },
+          resume: { id: "test-resume-success" },
+          atsReport: null,
+        }),
+      });
+    });
+
+    // Navigate and generate
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
+
+    const jobDescInput = page.locator('textarea').first();
+    await expect(jobDescInput).toBeVisible({ timeout: 10000 });
+    await jobDescInput.fill("Senior role");
+    await page.waitForTimeout(500);
+
+    const generateButton = page.locator('button:has-text("Generate"), button:has-text("AI"), button[type="submit"]').first();
+    await generateButton.click();
+
+    // Wait for success toast
+    const successToast = page.locator('text=Resume generated successfully').first();
+    await expect(successToast).toBeVisible({ timeout: 15000 });
+  });
+
+  test("should show error toast when fallback is used", async ({ page }) => {
+    await setupTestUser(page);
+
+    // Mock fallback response
+    await page.route("**/api/resumes/generate", (route) => {
+      route.fulfill({
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: {
+            atsScore: 70,
+            atsScoreBreakdown: { keywordMatch: 24, skillsMatch: 23, formatting: 23 },
+            modelUsed: "fallback-basic",
+            failureReason: "quota_exceeded",
+            generationMethod: "fallback",
+            sections: { summary: "Basic", experience: [], skills: [], education: [] },
+          },
+          resume: { id: "test-resume-fallback" },
+          atsReport: null,
+        }),
+      });
+    });
+
+    // Navigate and generate
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
+
+    const jobDescInput = page.locator('textarea').first();
+    await expect(jobDescInput).toBeVisible({ timeout: 10000 });
+    await jobDescInput.fill("Job desc");
+    await page.waitForTimeout(500);
+
+    const generateButton = page.locator('button:has-text("Generate"), button:has-text("AI"), button[type="submit"]').first();
+    await generateButton.click();
+
+    // Wait for error toast
+    const errorToast = page.locator('text=AI customization unavailable').first();
+    await expect(errorToast).toBeVisible({ timeout: 15000 });
+  });
+
+  test("should format model name correctly (remove prefix and dashes)", async ({ page }) => {
+    await setupTestUser(page);
+
+    // Mock with different model formats
+    await page.route("**/api/resumes/generate", (route) => {
+      route.fulfill({
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: {
+            atsScore: 86,
+            atsScoreBreakdown: { keywordMatch: 31, skillsMatch: 28, formatting: 27 },
+            modelUsed: "models/gpt-4-turbo",
+            generationMethod: "ai",
+            sections: { summary: "Test", experience: [], skills: [], education: [] },
+          },
+          resume: { id: "test-model-format" },
+          atsReport: null,
+        }),
+      });
+    });
+
+    // Navigate and generate
+    await page.goto("http://localhost:5173/resume/new", { waitUntil: "domcontentloaded" });
+
+    const jobDescInput = page.locator('textarea').first();
+    await expect(jobDescInput).toBeVisible({ timeout: 10000 });
+    await jobDescInput.fill("Job");
+    await page.waitForTimeout(500);
+
+    const generateButton = page.locator('button:has-text("Generate"), button:has-text("AI"), button[type="submit"]').first();
+    await generateButton.click();
+
+    // Verify model name is formatted: models/gpt-4-turbo -> gpt 4 turbo
+    const modelBadge = page.locator('span:has-text("AI:")').first();
+    await expect(modelBadge).toBeVisible({ timeout: 15000 });
+    await expect(modelBadge).toContainText("gpt 4 turbo");
+    // Should NOT contain prefix or dashes
+    await expect(modelBadge).not.toContainText("models/");
+    await expect(modelBadge).not.toContainText("gpt-4");
+  });
 });
