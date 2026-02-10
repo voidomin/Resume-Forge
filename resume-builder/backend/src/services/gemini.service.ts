@@ -101,6 +101,8 @@ export interface GeneratedResume {
     link?: string;
   }[];
   modelUsed?: string;
+  generationMethod?: "ai" | "fallback"; // Track if AI was used or fallback
+  failureReason?: string; // Reason if fallback was used (e.g., "quota_exceeded", "all_models_failed")
   atsScore: number;
   atsScoreBreakdown?: {
     keywordMatch: number;
@@ -124,9 +126,9 @@ export interface GeneratedResume {
 export class GeminiService {
   private primaryModel = "models/gemini-1.5-flash";
   private fallbackModels = [
-    "models/gemini-2.0-flash-lite",
+    "models/gemini-2.0-flash-exp", // Fixed: was gemini-2.0-flash-lite (does not exist)
     "models/gemini-1.5-flash-8b",
-    "models/gemini-1.0-pro",
+    "models/gemini-1.5-pro", // Fixed: replaced deprecated gemini-1.0-pro
   ];
 
   /**
@@ -442,6 +444,7 @@ Return ONLY valid JSON with this structure:
         .trim();
       const parsed = JSON.parse(cleanJson);
       parsed.modelUsed = modelUsed;
+      parsed.generationMethod = "ai"; // Mark as AI-generated
 
       if (!parsed.keywordAnalysis) {
         parsed.keywordAnalysis = {
@@ -469,10 +472,12 @@ Return ONLY valid JSON with this structure:
       return parsed;
     } catch (error: any) {
       console.error("=== AI GENERATION FAILED ===", error.message);
-      return {
-        ...this.createBasicResume(profile),
-        modelUsed: "fallback-basic",
-      };
+      const fallbackResume = this.createBasicResume(profile);
+      fallbackResume.generationMethod = "fallback";
+      fallbackResume.failureReason = error.message?.includes("429") 
+        ? "quota_exceeded" 
+        : "all_models_failed";
+      return fallbackResume;
     }
   }
 
@@ -517,6 +522,7 @@ Return ONLY valid JSON with this structure:
       atsScore: 70,
       keywords: [],
       modelUsed: "fallback-basic",
+      generationMethod: "fallback" as const,
     };
   }
 

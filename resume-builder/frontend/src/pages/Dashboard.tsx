@@ -25,6 +25,8 @@ interface Resume {
   createdAt: string;
   content?: {
     modelUsed?: string;
+    generationMethod?: "ai" | "fallback";
+    failureReason?: string;
   };
 }
 

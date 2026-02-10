@@ -77,6 +77,8 @@ interface GeneratedResume {
     matchPercentage: number;
   };
   modelUsed?: string;
+  generationMethod?: "ai" | "fallback";
+  failureReason?: string;
 }
 
 function ResumeGenerator() {
@@ -328,9 +330,9 @@ Required Skills:
                   AI Optimization Unavailable
                 </p>
                 <p className="text-xs text-amber-700 mt-0.5">
-                  Due to high demand, we've generated a clean, readable resume
-                  using your profile data without AI tailoring. Try regenerating
-                  in a few minutes for full optimization.
+                  {generatedResume.failureReason === "quota_exceeded" 
+                    ? "Daily AI quota reached. This version uses a basic template. Service resets at midnight PT. Try regenerating tomorrow for AI optimization."
+                    : "Due to high demand, we've generated a clean, readable resume using your profile data without AI tailoring. Try regenerating in a few minutes for full optimization."}
                 </p>
               </div>
             </div>
