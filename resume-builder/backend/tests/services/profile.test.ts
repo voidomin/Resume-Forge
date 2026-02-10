@@ -1,4 +1,9 @@
-import { mockProfile, mockExperience, mockEducation, mockSkill } from "../fixtures";
+import {
+  mockProfile,
+  mockExperience,
+  mockEducation,
+  mockSkill,
+} from "../fixtures";
 
 /**
  * Profile Service Tests
@@ -79,10 +84,9 @@ describe("Profile Service", () => {
     });
 
     it("should accept optional GPA field", () => {
-      const educationNoGPA = { ...mockEducation };
-      delete educationNoGPA.gpa;
+      const educationNoGPA = { ...mockEducation, gpa: undefined };
 
-      expect(educationNoGPA).not.toHaveProperty("gpa");
+      expect(educationNoGPA.gpa).toBeUndefined();
     });
   });
 
