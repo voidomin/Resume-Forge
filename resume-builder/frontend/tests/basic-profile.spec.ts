@@ -37,7 +37,7 @@ test.describe("Basic Profile Management", () => {
     page,
   }) => {
     // Register user
-    const { email } = await registerTestUser(page);
+    await registerTestUser(page);
 
     // Navigate to profile
     await page.goto("http://localhost:5173/profile", {
