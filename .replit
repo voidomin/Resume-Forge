@@ -1,0 +1,1 @@
+run = "cd resume-builder/backend && npm install && npm run build && npm start"
