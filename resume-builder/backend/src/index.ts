@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import helmet from "@fastify/helmet";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import multipart from "@fastify/multipart";
@@ -21,6 +22,21 @@ const server = Fastify({
 
 // Register plugins
 async function registerPlugins() {
+  // Security headers
+  await server.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
+    },
+    xContentTypeOptions: true,
+    xFrameOptions: true,
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  });
+
   // CORS
   await server.register(cors, {
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
