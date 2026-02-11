@@ -114,8 +114,8 @@
 - [x] API endpoints documented
 - [x] Deployment guide (DEPLOYMENT.md)
 - [x] Environment setup (.env.example)
-- [ ] User guide/help documentation
-- [ ] API swagger/OpenAPI docs
+- [x] User guide/help documentation
+- [x] API swagger/OpenAPI docs
 - [ ] Troubleshooting guide
 
 ---
