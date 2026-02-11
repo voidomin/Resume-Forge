@@ -329,7 +329,7 @@ Required Skills:
                   AI Optimization Unavailable
                 </p>
                 <p className="text-xs text-amber-700 mt-0.5">
-                  {generatedResume.failureReason === "quota_exceeded" 
+                  {generatedResume.failureReason === "quota_exceeded"
                     ? "Daily AI quota reached. This version uses a basic template. Service resets at midnight PT. Try regenerating tomorrow for AI optimization."
                     : "Due to high demand, we've generated a clean, readable resume using your profile data without AI tailoring. Try regenerating in a few minutes for full optimization."}
                 </p>

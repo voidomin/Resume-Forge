@@ -13,7 +13,12 @@ config();
 
 // Validate required environment variables
 function validateEnvironment() {
-  const required = ["DATABASE_URL", "GEMINI_API_KEY", "JWT_SECRET"];
+  const required = [
+    "DATABASE_URL",
+    "GEMINI_API_KEY",
+    "JWT_SECRET",
+    "FRONTEND_URL",
+  ];
   const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
@@ -68,7 +73,7 @@ async function registerPlugins() {
 
   // CORS
   await server.register(cors, {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL!,
     credentials: true,
   });
 
@@ -122,7 +127,7 @@ server.get("/", async () => {
 });
 
 // Error handler
-server.setErrorHandler((error, request, reply) => {
+server.setErrorHandler((error: any, request, reply) => {
   server.log.error(error);
   reply.status(error.statusCode || 500).send({
     error: error.message || "Internal Server Error",
@@ -179,7 +184,7 @@ const start = async () => {
     const port = parseInt(process.env.PORT || "3000", 10);
     await server.listen({ port, host: "0.0.0.0" });
 
-    console.log(`
+    server.log.info(`
 ╔══════════════════════════════════════════════════════════╗
 ║                                                          ║
 ║   🚀 Resume Builder API Server                          ║

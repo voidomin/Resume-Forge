@@ -25,6 +25,7 @@ This guide covers common issues and solutions for Resume Forge users and adminis
 **Symptoms**: Login fails repeatedly with valid email/password
 
 **Solutions**:
+
 1. **Clear browser cache & cookies**
    - Ctrl+Shift+Delete (or Cmd+Shift+Delete on Mac)
    - Clear all browsing data from the beginning of time
@@ -41,7 +42,8 @@ This guide covers common issues and solutions for Resume Forge users and adminis
 4. **Check database connectivity**
    - If still failing, contact support with timestamp
 
-**Error Message in Console**: 
+**Error Message in Console**:
+
 ```
 Error: Invalid email or password
 Status: 401
@@ -122,6 +124,7 @@ Status: 401
    - Check if changes persisted
 
 **Debug Steps**:
+
 ```
 1. Open DevTools (F12)
 2. Go to Network tab
@@ -186,7 +189,8 @@ Status: 401
 
 ### Problem: AI fails to generate resume ("All models failed")
 
-**Symptoms**: 
+**Symptoms**:
+
 - Generation spins indefinitely
 - Error: "All AI models failed to generate resume"
 - Resume shows fallback template
@@ -221,13 +225,15 @@ Status: 401
    - Try again later or contact support if consistent
 
 **Log Entry Examples**:
+
 ```
 Failed with models/gemini-2.5-flash: [GoogleGenerativeAI Error]: Error fetching...
 All models failed for JD analysis, using defaults
 === AI GENERATION FAILED ===
 ```
 
-**Fix**: 
+**Fix**:
+
 - Verify API key and quota
 - Retry generation after 1 hour
 - Use fallback resume if urgent
@@ -236,7 +242,8 @@ All models failed for JD analysis, using defaults
 
 ### Problem: Generated resume looks wrong or has formatting issues
 
-**Symptoms**: 
+**Symptoms**:
+
 - Content overflows to 2+ pages
 - Formatting is broken
 - Bullets appear as text blocks
@@ -292,6 +299,7 @@ All models failed for JD analysis, using defaults
    - Use the best-performing version
 
 **Example Improvement**:
+
 ```
 ❌ Bad: "Worked on backend systems"
 ✅ Good: "Architected microservices using Node.js and PostgreSQL, reducing API latency by 40%"
@@ -303,7 +311,8 @@ All models failed for JD analysis, using defaults
 
 ### Problem: PDF download is empty or corrupted
 
-**Symptoms**: 
+**Symptoms**:
+
 - Downloaded PDF won't open
 - PDF opens but is blank or has garbled text
 
@@ -334,7 +343,8 @@ All models failed for JD analysis, using defaults
 
 ### Problem: DOCX export opens with formatting issues in Word
 
-**Symptoms**: 
+**Symptoms**:
+
 - Formatting broken when opened in Word
 - Bullets appear as shapes
 - Fonts don't render correctly
@@ -363,7 +373,8 @@ All models failed for JD analysis, using defaults
 
 ### Problem: File size is too large
 
-**Symptoms**: 
+**Symptoms**:
+
 - Downloaded file is > 10MB
 - Upload fails when sending resume
 
@@ -387,7 +398,8 @@ All models failed for JD analysis, using defaults
 
 ### Problem: UI is broken, buttons don't work, or page is blank
 
-**Symptoms**: 
+**Symptoms**:
+
 - Buttons unresponsive
 - Layout broken
 - Page shows only white screen
@@ -420,7 +432,8 @@ All models failed for JD analysis, using defaults
 
 ### Problem: Slow page load or app is laggy
 
-**Symptoms**: 
+**Symptoms**:
+
 - Page takes 10+ seconds to load
 - Typing is delayed
 - Buttons lag
@@ -452,7 +465,8 @@ All models failed for JD analysis, using defaults
 
 ### Problem: Mobile version doesn't display correctly
 
-**Symptoms**: 
+**Symptoms**:
+
 - Layout broken on phone/tablet
 - Buttons too small
 - Can't scroll properly
@@ -481,7 +495,8 @@ All models failed for JD analysis, using defaults
 
 ### Problem: Backend won't start ("EADDRINUSE" or port already in use)
 
-**Symptoms**: 
+**Symptoms**:
+
 ```
 Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
 ```
@@ -489,17 +504,19 @@ Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
 **Solutions**:
 
 1. **Find process using port 3000**
+
    ```bash
    # Windows
    netstat -ano | findstr :3000
    taskkill /PID <PID> /F
-   
+
    # Mac/Linux
    lsof -i :3000
    kill -9 <PID>
    ```
 
 2. **Use different port**
+
    ```bash
    PORT=3001 npm run dev
    ```
@@ -512,7 +529,8 @@ Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
 
 ### Problem: Backend starts but API returns 500 errors
 
-**Symptoms**: 
+**Symptoms**:
+
 ```
 Response: {"error":"Internal Server Error","statusCode":500}
 ```
@@ -542,7 +560,8 @@ Response: {"error":"Internal Server Error","statusCode":500}
 
 ### Problem: Health check fails (GET /health returns error)
 
-**Symptoms**: 
+**Symptoms**:
+
 ```
 curl http://localhost:3000/health
 Connection refused or Timeout
@@ -567,7 +586,8 @@ Connection refused or Timeout
 
 ### Problem: Rate limiting blocking requests (429 Too Many Requests)
 
-**Symptoms**: 
+**Symptoms**:
+
 ```
 Response: {"error":"Rate limit exceeded","statusCode":429}
 ```
@@ -579,11 +599,13 @@ Response: {"error":"Rate limit exceeded","statusCode":429}
    - Wait 1 minute before retrying
 
 2. **Increase rate limit for development**
-   - In `.env`: 
+   - In `.env`:
+
    ```
    RATE_LIMIT_MAX=1000
    RATE_LIMIT_WINDOW=1 minute
    ```
+
    - Restart backend
 
 3. **Implement backoff in client**
@@ -596,7 +618,8 @@ Response: {"error":"Rate limit exceeded","statusCode":429}
 
 ### Problem: "Database connection error" or "ECONNREFUSED"
 
-**Symptoms**: 
+**Symptoms**:
+
 ```
 Error: ECONNREFUSED 127.0.0.1:5432
 ```
@@ -604,13 +627,14 @@ Error: ECONNREFUSED 127.0.0.1:5432
 **Solutions**:
 
 1. **Verify PostgreSQL is running**
+
    ```bash
    # Windows
    net start postgresql
-   
+
    # Mac
    brew services start postgresql
-   
+
    # Linux
    sudo systemctl start postgresql
    ```
@@ -623,6 +647,7 @@ Error: ECONNREFUSED 127.0.0.1:5432
 3. **Check credentials**
    - Username and password correct?
    - Try connecting manually:
+
    ```bash
    psql postgresql://user:password@localhost:5432/database
    ```
@@ -635,7 +660,8 @@ Error: ECONNREFUSED 127.0.0.1:5432
 
 ### Problem: Migrations fail ("Prisma migrate error")
 
-**Symptoms**: 
+**Symptoms**:
+
 ```
 Error: Direct execution of query 'CREATE...' against '...' failed
 ```
@@ -643,19 +669,23 @@ Error: Direct execution of query 'CREATE...' against '...' failed
 **Solutions**:
 
 1. **View migration status**
+
    ```bash
    npx prisma migrate status
    ```
 
 2. **See which migrations failed**
+
    ```bash
    npx prisma migrate deploy
    ```
 
 3. **Reset database (development only)**
+
    ```bash
    npx prisma migrate reset
    ```
+
    - ⚠️ Deletes all data, use only in development
 
 4. **Verify schema**
@@ -668,7 +698,8 @@ Error: Direct execution of query 'CREATE...' against '...' failed
 
 ### Problem: Resume generation takes > 10 seconds
 
-**Symptoms**: 
+**Symptoms**:
+
 - AI generation hangs for a long time
 - Timeout errors
 
@@ -691,7 +722,8 @@ Error: Direct execution of query 'CREATE...' against '...' failed
 
 ### Problem: Large file upload fails
 
-**Symptoms**: 
+**Symptoms**:
+
 - Upload hangs and times out
 - "File too large" error
 
@@ -715,7 +747,8 @@ Error: Direct execution of query 'CREATE...' against '...' failed
 
 ### Problem: Docker build fails
 
-**Symptoms**: 
+**Symptoms**:
+
 ```
 Error: COPY failed: file not found
 ```
@@ -738,7 +771,8 @@ Error: COPY failed: file not found
 
 ### Problem: Docker container exits immediately
 
-**Symptoms**: 
+**Symptoms**:
+
 ```
 docker ps shows no running containers
 docker logs <container> shows error
@@ -747,6 +781,7 @@ docker logs <container> shows error
 **Solutions**:
 
 1. **Check logs**
+
    ```bash
    docker logs <container_id>
    ```
@@ -766,7 +801,8 @@ docker logs <container> shows error
 
 ### Problem: Frontend can't reach backend (CORS error)
 
-**Symptoms**: 
+**Symptoms**:
+
 ```
 Error: Access to XMLHttpRequest blocked by CORS policy
 ```

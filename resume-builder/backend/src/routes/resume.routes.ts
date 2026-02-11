@@ -284,13 +284,13 @@ async function resumeRoutes(server: FastifyInstance) {
   //     ) => {
   //       try {
   //         const { html } = request.body;
-  // 
+  //
   //         if (!html) {
   //           return reply.status(400).send({ error: "HTML is required" });
   //         }
-  // 
+  //
   //         const docxBuffer = await docxService.generateDocxFromHtml(html);
-  // 
+  //
   //         reply.header(
   //           "Content-Type",
   //           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -306,7 +306,7 @@ async function resumeRoutes(server: FastifyInstance) {
   //       }
   //     },
   //   );
-  // 
+  //
   //   // Export resume as DOCX
   server.get<{ Params: { id: string } }>(
     "/:id/export/docx",

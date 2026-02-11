@@ -12,6 +12,41 @@ interface LoginBody {
   password: string;
 }
 
+// Password strength validation
+function validatePasswordStrength(password: string): {
+  isValid: boolean;
+  error?: string;
+} {
+  if (password.length < 8) {
+    return { isValid: false, error: "Password must be at least 8 characters" };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return {
+      isValid: false,
+      error: "Password must contain at least one uppercase letter",
+    };
+  }
+  if (!/[a-z]/.test(password)) {
+    return {
+      isValid: false,
+      error: "Password must contain at least one lowercase letter",
+    };
+  }
+  if (!/[0-9]/.test(password)) {
+    return {
+      isValid: false,
+      error: "Password must contain at least one number",
+    };
+  }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return {
+      isValid: false,
+      error: "Password must contain at least one special character (!@#$%^&*)",
+    };
+  }
+  return { isValid: true };
+}
+
 async function authRoutes(server: FastifyInstance) {
   // Register new user
   server.post<{ Body: RegisterBody }>(
@@ -37,10 +72,9 @@ async function authRoutes(server: FastifyInstance) {
         }
 
         // Password strength validation
-        if (password.length < 6) {
-          return reply
-            .status(400)
-            .send({ error: "Password must be at least 6 characters" });
+        const passwordValidation = validatePasswordStrength(password);
+        if (!passwordValidation.isValid) {
+          return reply.status(400).send({ error: passwordValidation.error });
         }
 
         // Check if user already exists

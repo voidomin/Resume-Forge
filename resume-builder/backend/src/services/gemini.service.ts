@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { config } from "dotenv";
 import path from "path";
+import { logger } from "../lib/logger";
 
 config({ path: path.resolve(__dirname, "../../.env") });
 
@@ -170,7 +171,7 @@ Return this exact JSON structure:
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`Analyzing JD with model: ${modelName}...`);
+        logger.debug(`Analyzing JD with model: ${modelName}...`);
         const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent(prompt);
         const response = result.response.text();
@@ -179,14 +180,14 @@ Return this exact JSON structure:
           .replace(/```\n?/g, "")
           .trim();
         const parsed = JSON.parse(cleanJson);
-        console.log(`✅ JD analysis successful with ${modelName}`);
+        logger.debug(`✅ JD analysis successful with ${modelName}`);
         return { ...parsed, modelUsed: modelName };
       } catch (error: any) {
         const info = extractGeminiErrorInfo(error);
-        console.log(
+        logger.debug(
           `JD analysis failed with ${modelName}: ${info.message?.slice(0, 100)}...`,
         );
-        console.log("Gemini error info:", info);
+        logger.debug(`Gemini error info:`, info);
         if (error.message?.includes("429")) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
@@ -435,7 +436,7 @@ Return ONLY valid JSON with this structure:
             );
             // Retry the same model once
             try {
-              console.log(`Retrying ${modelName} after wait...`);
+              logger.debug(`Retrying ${modelName} after wait...`);
               const retryModel = genAI.getGenerativeModel({ model: modelName });
               const result = await retryModel.generateContent(prompt);
               return { response: result.response.text(), modelUsed: modelName };
