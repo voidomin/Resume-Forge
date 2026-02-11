@@ -16,6 +16,7 @@ Frontend  Backend    PostgreSQL
 ```
 
 **Services Used:**
+
 - **Frontend:** Vercel (auto-deploys from GitHub)
 - **Backend:** Render (free tier with 5GB storage)
 - **Database:** Neon (free PostgreSQL with 3 projects)
@@ -28,6 +29,7 @@ Frontend  Backend    PostgreSQL
 ## ✅ Prerequisites (5 minutes)
 
 You need:
+
 1. GitHub account (you have this ✓)
 2. Google account (for Gemini API)
 3. That's it!
@@ -96,14 +98,14 @@ You need:
 
 Fill in these fields:
 
-| Field | Value |
-|-------|-------|
-| **Name** | `resume-builder-api` |
-| **Environment** | `Node` |
-| **Region** | `Oregon` (or closest to you) |
-| **Branch** | `main` |
+| Field             | Value                                                       |
+| ----------------- | ----------------------------------------------------------- |
+| **Name**          | `resume-builder-api`                                        |
+| **Environment**   | `Node`                                                      |
+| **Region**        | `Oregon` (or closest to you)                                |
+| **Branch**        | `main`                                                      |
 | **Build Command** | `cd resume-builder/backend && npm install && npm run build` |
-| **Start Command** | `cd resume-builder/backend && npm start` |
+| **Start Command** | `cd resume-builder/backend && npm start`                    |
 
 ### 3.4 Add Environment Variables
 
@@ -118,6 +120,7 @@ GEMINI_API_KEY=[paste-gemini-api-key]
 ```
 
 **To generate JWT_SECRET:**
+
 - Go to: https://www.uuidgenerator.net/
 - Generate and copy a UUID (it's a temporary password)
 
@@ -131,6 +134,7 @@ GEMINI_API_KEY=[paste-gemini-api-key]
 ### ⚠️ Fix Cold Start Issue
 
 Free Render services sleep after 15 minutes. To reactivate:
+
 1. Go to service settings
 2. Set a **cron job** to ping endpoint every 10 minutes
 3. Or accept the 30-second cold start (your choice)
@@ -154,11 +158,11 @@ Free Render services sleep after 15 minutes. To reactivate:
 
 ### 4.3 Configure Frontend
 
-| Field | Value |
-|-------|-------|
-| **Project Name** | `resume-builder` |
-| **Framework Preset** | `Vite` |
-| **Root Directory** | `resume-builder/frontend` |
+| Field                | Value                     |
+| -------------------- | ------------------------- |
+| **Project Name**     | `resume-builder`          |
+| **Framework Preset** | `Vite`                    |
+| **Root Directory**   | `resume-builder/frontend` |
 
 ### 4.4 Add Environment Variables
 
@@ -216,14 +220,14 @@ You should see: `{"status":"ok"}`
 
 ## 🎯 Summary - What You've Set Up
 
-| Component | Service | Cost | URL |
-|-----------|---------|------|-----|
-| **Database** | Neon | FREE | Internal |
-| **Backend API** | Render | FREE | https://resume-builder-api.onrender.com |
-| **Frontend UI** | Vercel | FREE | https://resume-builder.vercel.app |
-| **AI Service** | Google Gemini | FREE* | Internal |
+| Component       | Service       | Cost   | URL                                     |
+| --------------- | ------------- | ------ | --------------------------------------- |
+| **Database**    | Neon          | FREE   | Internal                                |
+| **Backend API** | Render        | FREE   | https://resume-builder-api.onrender.com |
+| **Frontend UI** | Vercel        | FREE   | https://resume-builder.vercel.app       |
+| **AI Service**  | Google Gemini | FREE\* | Internal                                |
 
-*Free tier: 60 requests/minute (more than enough!)
+\*Free tier: 60 requests/minute (more than enough!)
 
 ---
 
@@ -232,12 +236,14 @@ You should see: `{"status":"ok"}`
 ### When You Push Code to GitHub:
 
 **Frontend:**
+
 1. Push to `main` branch
 2. Vercel auto-detects change
 3. Auto-builds and deploys (2-3 min)
 4. Your site updates automatically ✅
 
 **Backend:**
+
 1. Push to `main` branch
 2. Render auto-detects change
 3. Auto-builds and deploys (3-5 min)
@@ -249,13 +255,13 @@ You should see: `{"status":"ok"}`
 
 ### Limitations of Free Tier
 
-| Service | Limitation | Impact |
-|---------|-----------|--------|
-| **Neon** | 3 projects | Can run 3 separate instances |
-| **Render** | 10GB/month bandwidth | ~50K requests |
-| **Render** | 15 min inactivity sleep | 30-sec cold start |
-| **Vercel** | 1 concurrent build | Fast enough for learning |
-| **Gemini** | 60 req/min | Fine for typical usage |
+| Service    | Limitation              | Impact                       |
+| ---------- | ----------------------- | ---------------------------- |
+| **Neon**   | 3 projects              | Can run 3 separate instances |
+| **Render** | 10GB/month bandwidth    | ~50K requests                |
+| **Render** | 15 min inactivity sleep | 30-sec cold start            |
+| **Vercel** | 1 concurrent build      | Fast enough for learning     |
+| **Gemini** | 60 req/min              | Fine for typical usage       |
 
 ### Best Practices
 
@@ -275,6 +281,7 @@ You should see: `{"status":"ok"}`
 ### Issue: Backend slow to respond first time
 
 **Solution:** Render free tier sleeps. Either:
+
 - Add a cron job to ping it
 - Or just wait 30 seconds after starting
 
@@ -285,6 +292,7 @@ You should see: `{"status":"ok"}`
 ### Issue: Cannot register/login
 
 **Solution:** Check Render logs - likely DATABASE_URL issue
+
 ```bash
 # In Render dashboard → Logs tab
 # Look for database connection errors

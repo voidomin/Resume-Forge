@@ -25,7 +25,7 @@ services:
   backend:
     build:
       context: ./resume-builder/backend
-      dockerfile: ../../Dockerfile
+      dockerfile: Dockerfile
     container_name: resume_builder_api
     environment:
       NODE_ENV: production

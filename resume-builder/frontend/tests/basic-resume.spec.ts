@@ -97,9 +97,9 @@ test.describe("Basic Resume Generation", () => {
     await expect(generateButton).toBeEnabled({ timeout: 10000 });
     await generateButton.click();
 
-    // Wait for generation to complete (very generous timeout)
+    // Wait for generation to complete (very generous timeout for real API)
     // Just verify page rendered something
-    await page.waitForTimeout(30000);
+    await page.waitForTimeout(120000);
     const hasAnyContent = await page
       .locator('main, [role="main"]')
       .first()
@@ -130,7 +130,8 @@ test.describe("Basic Resume Generation", () => {
     await generateButton.click();
 
     // Wait for resume to be generated
-    await page.waitForTimeout(30000); // Wait 30 seconds for generation
+    // Wait for generation to complete (very generous timeout for real API)
+    await page.waitForTimeout(120000); // 30s -> 120s
 
     // Look for download buttons (PDF and DOCX)
     // They might appear on the page, focus on the simple fact that we're past generation
@@ -164,7 +165,7 @@ test.describe("Basic Resume Generation", () => {
     await generateButton.click();
 
     // Wait for generation
-    await page.waitForTimeout(30000);
+    await page.waitForTimeout(120000);
 
     // Just verify page rendered something
     const pageHasContent = await page
@@ -197,7 +198,7 @@ test.describe("Basic Resume Generation", () => {
     await generateButton.click();
 
     // Wait for some result (could be success or fallback)
-    await page.waitForTimeout(30000);
+    await page.waitForTimeout(120000);
 
     // Just verify page rendered something
     const pageHasContent = await page
@@ -237,7 +238,7 @@ test.describe("Basic Resume Generation", () => {
     await generateButton.click();
 
     // Wait for generation
-    await page.waitForTimeout(30000);
+    await page.waitForTimeout(120000);
 
     // Just verify page rendered something
     const pageHasContent = await page

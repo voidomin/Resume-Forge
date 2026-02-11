@@ -84,9 +84,9 @@ if (-not $SkipTests) {
 }
 
 Write-Host ""
-Write-Host "🐳 Building Docker image..." -ForegroundColor Yellow
-docker build -t resume-builder:1.0.0 -f Dockerfile . --quiet
-Write-Host "✅ Docker image built" -ForegroundColor Green
+Write-Host "🐳 Building with Docker Compose..." -ForegroundColor Yellow
+docker-compose build
+Write-Host "✅ Docker images built" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "📝 Checking .env file..." -ForegroundColor Yellow
