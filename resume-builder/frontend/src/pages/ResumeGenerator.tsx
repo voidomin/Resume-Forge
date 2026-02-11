@@ -109,7 +109,6 @@ function ResumeGenerator() {
         targetRole: targetRole || undefined,
       });
 
-      console.log("DEBUG RESPONSE:", response.data);
       setGeneratedResume(response.data.content);
       setResumeId(response.data.resume.id);
       setAtsReport(response.data.atsReport || null);

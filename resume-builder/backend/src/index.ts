@@ -11,10 +11,37 @@ import { config } from "dotenv";
 // Load environment variables
 config();
 
+// Validate required environment variables
+function validateEnvironment() {
+  const required = ["DATABASE_URL", "GEMINI_API_KEY", "JWT_SECRET"];
+  const missing = required.filter((key) => !process.env[key]);
+
+  if (missing.length > 0) {
+    console.error(
+      `❌ Missing required environment variables: ${missing.join(", ")}`,
+    );
+    process.exit(1);
+  }
+
+  // Validate JWT_SECRET strength (not a default value)
+  if (
+    process.env.JWT_SECRET === "your-secret-key" ||
+    (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32)
+  ) {
+    console.error(
+      "❌ JWT_SECRET is too weak. Must be at least 32 characters and not the default value.",
+    );
+    process.exit(1);
+  }
+}
+
 // Import routes
 import authRoutes from "./routes/auth.routes";
 import profileRoutes from "./routes/profile.routes";
 import resumeRoutes from "./routes/resume.routes";
+
+// Validate before starting
+validateEnvironment();
 
 const server = Fastify({
   logger: {
@@ -47,7 +74,7 @@ async function registerPlugins() {
 
   // JWT
   await server.register(jwt, {
-    secret: process.env.JWT_SECRET || "your-secret-key",
+    secret: process.env.JWT_SECRET!,
   });
 
   // Multipart for file uploads

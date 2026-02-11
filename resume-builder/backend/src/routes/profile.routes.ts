@@ -1,9 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { PrismaClient } from "@prisma/client";
 import { authenticateToken } from "./auth.routes";
 import { resumeParserService } from "../services/resumeParser.service";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 interface ProfileBody {
   firstName: string;

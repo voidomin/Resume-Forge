@@ -1,8 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 interface RegisterBody {
   email: string;

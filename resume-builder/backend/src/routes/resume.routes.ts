@@ -1,12 +1,10 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { PrismaClient } from "@prisma/client";
 import { authenticateToken } from "./auth.routes";
 import { geminiService, ProfileData } from "../services/gemini.service";
 import { pdfService } from "../services/pdf.service";
 import { docxService } from "../services/docx.service";
 import { atsCheckerService } from "../services/atsChecker.service";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 interface GenerateBody {
   jobDescription: string;
