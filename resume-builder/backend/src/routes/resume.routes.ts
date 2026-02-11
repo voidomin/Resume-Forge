@@ -5,6 +5,7 @@ import { pdfService } from "../services/pdf.service";
 import { docxService } from "../services/docx.service";
 import { atsCheckerService } from "../services/atsChecker.service";
 import { prisma } from "../lib/prisma";
+import { sanitizeInput } from "../lib/sanitize";
 
 interface GenerateBody {
   jobDescription: string;
@@ -22,12 +23,24 @@ async function resumeRoutes(server: FastifyInstance) {
     ) => {
       try {
         const { userId } = (request as any).user;
-        const { jobDescription, targetRole } = request.body;
+        let { jobDescription, targetRole } = request.body;
 
         if (!jobDescription) {
           return reply
             .status(400)
             .send({ error: "Job description is required" });
+        }
+
+        // Sanitize inputs
+        try {
+          jobDescription = sanitizeInput.jobDescription(jobDescription);
+          if (targetRole) {
+            targetRole = sanitizeInput.text(targetRole, 100, 1);
+          }
+        } catch (sanitizeError) {
+          return reply
+            .status(400)
+            .send({ error: (sanitizeError as Error).message });
         }
 
         // Get user profile
