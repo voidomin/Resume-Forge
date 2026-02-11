@@ -6,6 +6,16 @@ config({ path: path.resolve(__dirname, "../../.env") });
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+const extractGeminiErrorInfo = (error: any) => {
+  return {
+    status: error?.status || error?.response?.status || error?.code,
+    statusText: error?.statusText || error?.response?.statusText,
+    message: error?.message,
+    details:
+      error?.response?.data || error?.error?.message || error?.error?.details,
+  };
+};
+
 export interface ProfileData {
   firstName: string;
   lastName: string;
@@ -124,11 +134,11 @@ export interface GeneratedResume {
 }
 
 export class GeminiService {
-  private primaryModel = "models/gemini-1.5-flash";
+  private primaryModel = "models/gemini-2.5-flash";
   private fallbackModels = [
-    "models/gemini-2.0-flash-exp", // Fixed: was gemini-2.0-flash-lite (does not exist)
-    "models/gemini-1.5-flash-8b",
-    "models/gemini-1.5-pro", // Fixed: replaced deprecated gemini-1.0-pro
+    "models/gemini-2.0-flash",
+    "models/gemini-flash-latest",
+    "models/gemini-pro-latest",
   ];
 
   /**
@@ -172,9 +182,11 @@ Return this exact JSON structure:
         console.log(`✅ JD analysis successful with ${modelName}`);
         return { ...parsed, modelUsed: modelName };
       } catch (error: any) {
+        const info = extractGeminiErrorInfo(error);
         console.log(
-          `JD analysis failed with ${modelName}: ${error.message?.slice(0, 100)}...`,
+          `JD analysis failed with ${modelName}: ${info.message?.slice(0, 100)}...`,
         );
+        console.log("Gemini error info:", info);
         if (error.message?.includes("429")) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
@@ -404,9 +416,11 @@ Return ONLY valid JSON with this structure:
           const result = await currentModel.generateContent(prompt);
           return { response: result.response.text(), modelUsed: modelName };
         } catch (error: any) {
+          const info = extractGeminiErrorInfo(error);
           console.log(
-            `Failed with ${modelName}: ${error.message?.slice(0, 100)}...`,
+            `Failed with ${modelName}: ${info.message?.slice(0, 100)}...`,
           );
+          console.log("Gemini error info:", info);
 
           if (error.message?.includes("429")) {
             const match = error.message.match(/retry in\s+([\d.]+)\s*s/);

@@ -148,6 +148,13 @@ async function profileRoutes(server: FastifyInstance) {
         const { userId } = (request as any).user;
         const data = request.body as any;
 
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+          return reply.status(401).send({
+            error: "Invalid or expired session. Please log in again.",
+          });
+        }
+
         // Create or update profile
         const profile = await prisma.profile.upsert({
           where: { userId },
@@ -842,7 +849,12 @@ async function profileRoutes(server: FastifyInstance) {
           message: "Profile imported from resume successfully",
           profileId: profile.id,
         });
-      } catch (error) {
+      } catch (error: any) {
+        if (error?.code === "P2003") {
+          return reply.status(401).send({
+            error: "Invalid or expired session. Please log in again.",
+          });
+        }
         request.log.error(error);
         return reply.status(500).send({ error: "Failed to import profile" });
       }

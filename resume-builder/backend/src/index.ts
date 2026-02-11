@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import multipart from "@fastify/multipart";
+import rateLimit from "@fastify/rate-limit";
 import { config } from "dotenv";
 
 // Load environment variables
@@ -36,6 +37,19 @@ async function registerPlugins() {
     limits: {
       fileSize: 5 * 1024 * 1024, // 5MB
     },
+  });
+
+  const rateLimitMax = Number.parseInt(
+    process.env.RATE_LIMIT_MAX || "120",
+    10,
+  );
+  const rateLimitWindow = process.env.RATE_LIMIT_WINDOW || "1 minute";
+
+  await server.register(rateLimit, {
+    global: true,
+    max: Number.isFinite(rateLimitMax) ? rateLimitMax : 120,
+    timeWindow: rateLimitWindow,
+    skipOnError: true,
   });
 }
 

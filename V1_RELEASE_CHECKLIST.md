@@ -78,7 +78,7 @@
 - [x] Input validation
 - [x] SQL injection prevention (Prisma)
 - [x] XSS protection (React)
-- [ ] Rate limiting on API
+- [x] Rate limiting on API
 - [ ] HTTPS enforcement (production)
 - [ ] Security headers (CSP, X-Frame-Options)
 - [ ] Database encryption at rest
