@@ -8,6 +8,9 @@ import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
 import { config } from "dotenv";
 
+// Import middleware
+import { requestIdMiddleware } from "./middleware/requestId";
+
 // Load environment variables
 config();
 
@@ -56,6 +59,9 @@ const server = Fastify({
 
 // Register plugins
 async function registerPlugins() {
+  // Request ID tracking middleware
+  server.addHook("onRequest", requestIdMiddleware);
+
   // Security headers
   await server.register(helmet, {
     contentSecurityPolicy: {

@@ -1,9 +1,24 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { logger } from "../lib/logger";
+
 // pdf-parse and mammoth need require syntax for CommonJS compatibility
 const pdfParse = require("pdf-parse");
 const mammoth = require("mammoth");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
+// API timeout configuration (30 seconds)
+const API_TIMEOUT_MS = 30000;
+
+/**
+ * Wrapper to add timeout to async API calls
+ */
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number = API_TIMEOUT_MS): Promise<T> => {
+  const timeoutPromise = new Promise<T>((_, reject) =>
+    setTimeout(() => reject(new Error(`API call timeout after ${timeoutMs}ms`)), timeoutMs),
+  );
+  return Promise.race([promise, timeoutPromise]);
+};
 
 export interface ParsedProfile {
   firstName: string;
@@ -62,7 +77,7 @@ class ResumeParserService {
       const data = await pdfParse(buffer);
       return data.text;
     } catch (error) {
-      console.error("PDF parsing error:", error);
+      logger.error("PDF parsing error:", error);
       throw new Error("Failed to parse PDF file");
     }
   }
@@ -75,7 +90,7 @@ class ResumeParserService {
       const result = await mammoth.extractRawText({ buffer });
       return result.value;
     } catch (error) {
-      console.error("DOCX parsing error:", error);
+      logger.error("DOCX parsing error:", error);
       throw new Error("Failed to parse DOCX file");
     }
   }
@@ -84,7 +99,7 @@ class ResumeParserService {
    * Extract structured profile data from resume text using Gemini AI
    */
   async extractProfileFromText(resumeText: string): Promise<ParsedProfile> {
-    console.log(
+    logger.debug(
       `Extracted resume text length: ${resumeText.length} characters`,
     );
 
@@ -176,15 +191,15 @@ Return the JSON object:`;
 
       for (const modelName of modelsToTry) {
         try {
-          console.log(`Attempting with model: ${modelName}...`);
+        logger.debug(`Attempting with model: ${modelName}...`);
           const currentModel = genAI.getGenerativeModel({ model: modelName });
-          const result = await currentModel.generateContent(prompt);
+          const result = await withTimeout(currentModel.generateContent(prompt));
           return result.response.text();
         } catch (error: any) {
-          console.log(`Failed with ${modelName}: ${error.message}`);
+          logger.debug(`Failed with ${modelName}: ${error.message}`);
 
           if (error.message?.includes("429")) {
-            console.log(`Rate limit hit. Waiting 2s before next model...`);
+            logger.debug(`Rate limit hit. Waiting 2s before next model...`);
             await new Promise((resolve) => setTimeout(resolve, 2000));
             continue; // Try next model
           }
@@ -201,7 +216,7 @@ Return the JSON object:`;
 
     try {
       const response = await generateWithFallback();
-      console.log("Received response from Gemini AI");
+      logger.debug("Received response from Gemini AI");
 
       // Extract JSON from response (handle potential markdown code blocks)
       let jsonStr = response;

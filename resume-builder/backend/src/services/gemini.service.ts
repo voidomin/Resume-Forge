@@ -7,6 +7,19 @@ config({ path: path.resolve(__dirname, "../../.env") });
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+// API timeout configuration (30 seconds)
+const API_TIMEOUT_MS = 30000;
+
+/**
+ * Wrapper to add timeout to async API calls
+ */
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number = API_TIMEOUT_MS): Promise<T> => {
+  const timeoutPromise = new Promise<T>((_, reject) =>
+    setTimeout(() => reject(new Error(`API call timeout after ${timeoutMs}ms`)), timeoutMs),
+  );
+  return Promise.race([promise, timeoutPromise]);
+};
+
 const extractGeminiErrorInfo = (error: any) => {
   return {
     status: error?.status || error?.response?.status || error?.code,
@@ -173,7 +186,7 @@ Return this exact JSON structure:
       try {
         logger.debug(`Analyzing JD with model: ${modelName}...`);
         const model = genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent(prompt);
+        const result = await withTimeout(model.generateContent(prompt));
         const response = result.response.text();
         const cleanJson = response
           .replace(/```json\n?/g, "")
@@ -412,21 +425,21 @@ Return ONLY valid JSON with this structure:
 
       for (const modelName of modelsToTry) {
         try {
-          console.log(`Generating resume with model: ${modelName}...`);
+          logger.debug(`Generating resume with model: ${modelName}...`);
           const currentModel = genAI.getGenerativeModel({ model: modelName });
-          const result = await currentModel.generateContent(prompt);
+          const result = await withTimeout(currentModel.generateContent(prompt));
           return { response: result.response.text(), modelUsed: modelName };
         } catch (error: any) {
           const info = extractGeminiErrorInfo(error);
-          console.log(
+          logger.debug(
             `Failed with ${modelName}: ${info.message?.slice(0, 100)}...`,
           );
-          console.log("Gemini error info:", info);
+          logger.debug("Gemini error info:", info);
 
           if (error.message?.includes("429")) {
             const match = error.message.match(/retry in\s+([\d.]+)\s*s/);
             const waitSeconds = match ? parseFloat(match[1]) + 2 : 5;
-            console.log(
+            logger.debug(
               `Rate limit (429) hit for ${modelName}. Waiting ${waitSeconds.toFixed(
                 1,
               )}s...`,
@@ -438,7 +451,7 @@ Return ONLY valid JSON with this structure:
             try {
               logger.debug(`Retrying ${modelName} after wait...`);
               const retryModel = genAI.getGenerativeModel({ model: modelName });
-              const result = await retryModel.generateContent(prompt);
+              const result = await withTimeout(retryModel.generateContent(prompt));
               return { response: result.response.text(), modelUsed: modelName };
             } catch (retryError) {
               continue;
@@ -447,7 +460,7 @@ Return ONLY valid JSON with this structure:
           if (error.message?.includes("404")) continue;
         }
       }
-      console.error("CRITICAL: All AI models failed to generate content.");
+      logger.error("CRITICAL: All AI models failed to generate content.");
       throw new Error("All AI models failed to generate resume.");
     };
 

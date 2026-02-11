@@ -679,7 +679,7 @@ async function profileRoutes(server: FastifyInstance) {
             chunks.push(chunk);
           }
           buffer = Buffer.concat(chunks);
-          console.log("Buffer size (fallback):", buffer.length);
+          request.log.debug(`Buffer size (fallback): ${buffer.length}`);
         }
 
         // Check file size (max 5MB)
@@ -693,13 +693,13 @@ async function profileRoutes(server: FastifyInstance) {
           return reply.status(400).send({ error: "Empty file uploaded" });
         }
 
-        console.log("Starting resume parsing...");
+        request.log.debug("Starting resume parsing...");
         // Parse resume and extract profile data
         const parsedProfile = await resumeParserService.parseResume(
           buffer,
           data.mimetype,
         );
-        console.log("Resume parsed successfully");
+        request.log.debug("Resume parsed successfully");
 
         return reply.send({
           message: "Resume parsed successfully",

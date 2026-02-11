@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma";
+import { sanitizeInput } from "../lib/sanitize";
 
 interface RegisterBody {
   email: string;
@@ -56,7 +57,7 @@ async function authRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
-        const { email, password } = request.body;
+        let { email, password } = request.body;
 
         // Validation
         if (!email || !password) {
@@ -66,9 +67,10 @@ async function authRoutes(server: FastifyInstance) {
         }
 
         // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-          return reply.status(400).send({ error: "Invalid email format" });
+        try {
+          email = sanitizeInput.email(email);
+        } catch (err) {
+          return reply.status(400).send({ error: (err as Error).message });
         }
 
         // Password strength validation
@@ -118,12 +120,19 @@ async function authRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
-        const { email, password } = request.body;
+        let { email, password } = request.body;
 
         if (!email || !password) {
           return reply
             .status(400)
             .send({ error: "Email and password are required" });
+        }
+
+        // Email validation
+        try {
+          email = sanitizeInput.email(email);
+        } catch (err) {
+          return reply.status(400).send({ error: (err as Error).message });
         }
 
         // Find user
