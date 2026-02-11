@@ -166,7 +166,7 @@ Once satisfied with your generated resume:
 ### Complete Workflow from Start to Finish
 
 ```
-1. Create Account → 2. Build Master Profile → 3. Generate Tailored Resume 
+1. Create Account → 2. Build Master Profile → 3. Generate Tailored Resume
 → 4. Review ATS Score → 5. Improve if Needed → 6. Download & Submit
 ```
 
@@ -200,7 +200,8 @@ Once satisfied with your generated resume:
 
 ### Q2: My generated resume doesn't look right. What do I do?
 
-**A**: 
+**A**:
+
 - Check if your profile information has proper formatting
 - Ensure bullet points are concise (1-2 lines max)
 - Try regenerating with an updated job description
@@ -209,6 +210,7 @@ Once satisfied with your generated resume:
 ### Q3: The ATS score is low. How can I improve it?
 
 **A**:
+
 - **Review missing keywords**: The report shows which keywords are absent
 - **Add relevant skills**: Update your master profile with matching skills
 - **Update experiences**: Add metrics and results (e.g., "Increased sales by 40%")
@@ -216,13 +218,15 @@ Once satisfied with your generated resume:
 
 ### Q4: Can I edit the generated resume before downloading?
 
-**A**: 
+**A**:
+
 - Current version: Generate resume → Download → Edit in Word/Google Docs
 - Direct editing in-app is planned for future releases
 
 ### Q5: What if the AI fails to generate a resume?
 
-**A**: 
+**A**:
+
 - **Fallback Mode**: Resume Forge has a fallback system
 - Your resume is generated using a template if AI is unavailable
 - You'll see a message indicating fallback mode was used
@@ -230,14 +234,16 @@ Once satisfied with your generated resume:
 
 ### Q6: Can I have multiple resumes for the same job?
 
-**A**: 
+**A**:
+
 - Yes! Generate multiple resumes by giving them different names
 - Compare the ATS scores to see which version performs better
 - Example: "Google_SWE_v1", "Google_SWE_v2_optimized"
 
 ### Q7: Is my data secure?
 
-**A**: 
+**A**:
+
 - ✅ Passwords are hashed with bcrypt
 - ✅ JWT tokens secure your sessions
 - ✅ HTTPS encryption in production
@@ -246,13 +252,15 @@ Once satisfied with your generated resume:
 
 ### Q8: Can I download my profile as JSON?
 
-**A**: 
+**A**:
+
 - Feature coming in v1.1
 - For now, manually export by copying profile text or taking screenshots
 
 ### Q9: What file formats are supported for resume import?
 
-**A**: 
+**A**:
+
 - ✅ PDF (.pdf)
 - ✅ Word (.docx)
 - ✅ Coming soon: Google Docs, LinkedIn
@@ -325,16 +333,16 @@ Once satisfied with your generated resume:
 
 ## Keyboard Shortcuts
 
-| Action                        | Shortcut       |
-| ----------------------------- | -------------- |
-| Save Profile                  | `Ctrl + S`     |
-| Generate New Resume           | `Ctrl + G`     |
-| Download PDF                  | `Ctrl + Shift + D` |
-| Download DOCX                 | `Ctrl + Shift + E` |
-| View ATS Score Details        | `Ctrl + Shift + A` |
-| Logout                        | `Ctrl + L`     |
-| Full Screen Resume Preview    | `F11`          |
-| Search Profiles/Resumes       | `Ctrl + F`     |
+| Action                     | Shortcut           |
+| -------------------------- | ------------------ |
+| Save Profile               | `Ctrl + S`         |
+| Generate New Resume        | `Ctrl + G`         |
+| Download PDF               | `Ctrl + Shift + D` |
+| Download DOCX              | `Ctrl + Shift + E` |
+| View ATS Score Details     | `Ctrl + Shift + A` |
+| Logout                     | `Ctrl + L`         |
+| Full Screen Resume Preview | `F11`              |
+| Search Profiles/Resumes    | `Ctrl + F`         |
 
 ---
 
@@ -406,4 +414,4 @@ Once satisfied with your generated resume:
 
 **Happy job hunting! 🚀**
 
-*Resume Forge – Craft your perfect resume. Every time.*
+_Resume Forge – Craft your perfect resume. Every time._

@@ -57,10 +57,7 @@ async function registerPlugins() {
     },
   });
 
-  const rateLimitMax = Number.parseInt(
-    process.env.RATE_LIMIT_MAX || "120",
-    10,
-  );
+  const rateLimitMax = Number.parseInt(process.env.RATE_LIMIT_MAX || "120", 10);
   const rateLimitWindow = process.env.RATE_LIMIT_WINDOW || "1 minute";
 
   await server.register(rateLimit, {

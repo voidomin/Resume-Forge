@@ -116,7 +116,7 @@
 - [x] Environment setup (.env.example)
 - [x] User guide/help documentation
 - [x] API swagger/OpenAPI docs
-- [ ] Troubleshooting guide
+- [x] Troubleshooting guide
 
 ---
 
@@ -194,10 +194,12 @@
 
 ## 🎯 Post-Release Tasks (v1.1 Planning)
 
-- [ ] Add unit tests for backend
-- [ ] Implement API rate limiting
+- [x] Add unit tests for backend
+- [x] Implement API rate limiting
+- [x] Add security headers
+- [x] Add API documentation (Swagger/OpenAPI)
 - [ ] Add monitoring (Sentry)
-- [ ] Create user onboarding guide
+- [x] Create user guide & onboarding documentation
 - [ ] Add cover letter generation
 - [ ] Implement analytics tracking
 - [ ] Performance optimization pass
