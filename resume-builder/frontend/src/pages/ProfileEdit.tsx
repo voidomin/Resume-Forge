@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { api } from "../api/client";
+import { AxiosError } from "axios";
 import {
   User,
   Briefcase,
@@ -187,8 +188,12 @@ function ProfileEdit() {
       setParsedData(response.data.profile);
       setShowPreview(true);
       toast.success("Resume parsed successfully! Review and confirm.");
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || "Failed to parse resume");
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data?.error || "Failed to parse resume");
+      } else {
+        toast.error("Failed to parse resume");
+      }
     } finally {
       setUploading(false);
       if (fileInputRef.current) {

@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Upload, X, Loader2, Check, AlertCircle } from "lucide-react";
 import { api } from "../../api/client";
+import { AxiosError } from "axios";
 import toast from "react-hot-toast";
 
 interface ImportResumeModalProps {
@@ -76,9 +77,12 @@ export default function ImportResumeModal({
 
       setParsedData(response.data.profile);
       toast.success("Resume parsed successfully!");
-    } catch (error: any) {
-      console.error("Upload error:", error);
-      toast.error(error.response?.data?.error || "Failed to parse resume");
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data?.error || "Failed to parse resume");
+      } else {
+        toast.error("Failed to parse resume");
+      }
       setParsedData(null);
     } finally {
       setUploading(false);
