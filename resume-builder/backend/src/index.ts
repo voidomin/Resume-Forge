@@ -4,6 +4,8 @@ import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
+import swagger from "@fastify/swagger";
+import swaggerUI from "@fastify/swagger-ui";
 import { config } from "dotenv";
 
 // Load environment variables
@@ -104,11 +106,51 @@ server.setErrorHandler((error, request, reply) => {
   });
 });
 
+// Register API documentation
+async function registerDocumentation() {
+  await server.register(swagger, {
+    swagger: {
+      info: {
+        title: "Resume Builder API",
+        description:
+          "ATS-optimized resume builder API with AI-powered resume tailoring",
+        version: "1.0.0",
+        contact: {
+          name: "Resume Builder",
+          url: "https://github.com/voidomin/Resume-Forge",
+        },
+      },
+      host: "localhost:3000",
+      schemes: ["http", "https"],
+      consumes: ["application/json"],
+      produces: ["application/json"],
+      securityDefinitions: {
+        bearerAuth: {
+          type: "apiKey",
+          name: "authorization",
+          in: "header",
+          description: "JWT Bearer token",
+        },
+      },
+    },
+  });
+
+  await server.register(swaggerUI, {
+    routePrefix: "/documentation",
+    uiConfig: {
+      docExpansion: "list",
+      deepLinking: false,
+    },
+    staticCSP: true,
+  });
+}
+
 // Start server
 const start = async () => {
   try {
     await registerPlugins();
     await registerRoutes();
+    await registerDocumentation();
 
     const port = parseInt(process.env.PORT || "3000", 10);
     await server.listen({ port, host: "0.0.0.0" });
@@ -120,6 +162,7 @@ const start = async () => {
 ║                                                          ║
 ║   Server:  http://localhost:${port}                       ║
 ║   Health:  http://localhost:${port}/health                ║
+║   API Docs: http://localhost:${port}/documentation        ║
 ║                                                          ║
 ║   Gemini AI: ${process.env.GEMINI_API_KEY ? "✓ Configured" : "✗ Missing"}                         ║
 ║                                                          ║
