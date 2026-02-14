@@ -8,26 +8,62 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 let cachedPdfParse: ((buffer: Buffer) => Promise<{ text: string }>) | null =
   null;
 
+const extractPdfParse = (mod: unknown) => {
+  if (typeof mod === "function") {
+    return mod as (buffer: Buffer) => Promise<{ text: string }>;
+  }
+  if (mod && typeof mod === "object") {
+    const obj = mod as {
+      default?: unknown;
+      pdfParse?: unknown;
+      parse?: unknown;
+    };
+    const candidate = obj.default ?? obj.pdfParse ?? obj.parse;
+    if (typeof candidate === "function") {
+      return candidate as (buffer: Buffer) => Promise<{ text: string }>;
+    }
+    if (candidate && typeof candidate === "object") {
+      const nested = candidate as {
+        default?: unknown;
+        pdfParse?: unknown;
+        parse?: unknown;
+      };
+      const nestedFn = nested.default ?? nested.pdfParse ?? nested.parse;
+      if (typeof nestedFn === "function") {
+        return nestedFn as (buffer: Buffer) => Promise<{ text: string }>;
+      }
+    }
+  }
+  return null;
+};
+
 const getPdfParse = async () => {
   if (cachedPdfParse) {
     return cachedPdfParse;
   }
-  const mod = await import("pdf-parse");
-  const candidate = (mod as { default?: unknown; pdfParse?: unknown }).default ??
-    (mod as { pdfParse?: unknown }).pdfParse ??
-    mod;
-  const fn = typeof candidate === "function"
-    ? candidate
-    : typeof (candidate as { default?: unknown }).default === "function"
-      ? (candidate as { default: unknown }).default
-      : null;
+  const moduleIds = [
+    "pdf-parse",
+    "pdf-parse/lib/pdf-parse.js",
+    "pdf-parse/lib/pdf-parse",
+    "pdf-parse/dist/pdf-parse.cjs",
+    "pdf-parse/dist/pdf-parse.cjs/index.js",
+    "pdf-parse/dist/pdf-parse/cjs/index",
+  ];
 
-  if (!fn || typeof fn !== "function") {
-    throw new Error("pdf-parse module did not export a function");
+  for (const id of moduleIds) {
+    try {
+      const mod = await import(id);
+      const fn = extractPdfParse(mod);
+      if (fn) {
+        cachedPdfParse = fn;
+        return cachedPdfParse;
+      }
+    } catch (error) {
+      logger.warn(`pdf-parse import failed for ${id}`, error);
+    }
   }
 
-  cachedPdfParse = fn as (buffer: Buffer) => Promise<{ text: string }>;
-  return cachedPdfParse;
+  throw new Error("pdf-parse module did not export a function");
 };
 
 // API timeout configuration (30 seconds)
