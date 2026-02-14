@@ -248,6 +248,16 @@ function ResumeView() {
                 Back to Dashboard
               </button>
 
+              {/* Refresh Button */}
+              <button
+                onClick={() => window.location.reload()}
+                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                title="Refresh the page"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh Page
+              </button>
+
               <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                 <h2 className="font-bold text-gray-900 mb-4">
                   {resume.targetRole || resume.name}
