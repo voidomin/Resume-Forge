@@ -3,7 +3,8 @@
 An **ATS-optimized, role-based resume builder** that generates tailored resumes for specific job applications. Simply maintain one master profile and generate customized resumes for each job you apply to!
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Status](https://img.shields.io/badge/status-Development-yellow.svg)
+![Status](https://img.shields.io/badge/status-Production%20v1.0.0-green.svg)
+![Tests](https://img.shields.io/badge/tests-37%2F37%20passing-brightgreen.svg)
 
 ---
 
@@ -41,11 +42,32 @@ An **ATS-optimized, role-based resume builder** that generates tailored resumes 
 
 ## 📚 Documentation
 
+### Core Documentation
+
 | Document                                                                    | Description                                            |
 | --------------------------------------------------------------------------- | ------------------------------------------------------ |
 | [PRD_Resume_Builder.md](docs/PRD_Resume_Builder.md)                         | Product requirements, goals, and success metrics       |
 | [Design_Document_Resume_Builder.md](docs/Design_Document_Resume_Builder.md) | Technical architecture, data models, and scaling logic |
 | [Tech_Stack_Resume_Builder.md](docs/Tech_Stack_Resume_Builder.md)           | Technology decisions, costs, and AI service selection  |
+| [USER_GUIDE.md](docs/USER_GUIDE.md)                                         | Complete user guide and feature documentation          |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)                              | Common issues and solutions                            |
+
+### Development & Contribution
+
+| Document                                        | Description                                      |
+| ----------------------------------------------- | ------------------------------------------------ |
+| [CHANGELOG.md](CHANGELOG.md)                    | Version history and release notes                |
+| [CONTRIBUTING.md](CONTRIBUTING.md)              | How to contribute, workflow, and guidelines      |
+| [KNOWN_ISSUES.md](KNOWN_ISSUES.md)              | Bug tracking and known issues                    |
+| [V1_RELEASE_CHECKLIST.md](V1_RELEASE_CHECKLIST.md) | v1.0 release verification checklist           |
+
+### Deployment
+
+| Document                                        | Description                                      |
+| ----------------------------------------------- | ------------------------------------------------ |
+| [DEPLOYMENT.md](DEPLOYMENT.md)                  | Production deployment guide                      |
+| [DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)  | Deployment completion summary                    |
+| [FREE_DEPLOYMENT_GUIDE.md](FREE_DEPLOYMENT_GUIDE.md) | Free hosting options and setup            |
 
 ---
 
@@ -123,7 +145,9 @@ cv-maker/
 
 ---
 
-## 📋 Development Roadmap
+## 📋 Development Status
+
+### v1.0.0 (Released - February 14, 2026) ✅
 
 - [x] Project documentation
 - [x] Authentication system
@@ -134,8 +158,26 @@ cv-maker/
 - [x] ATS validation & Score reporting
 - [x] One-page A4 scaling architecture
 - [x] AI Fallback & Failure transparency
-- [ ] Multi-template preview (Custom themes)
-- [ ] Deployment
+- [x] 4 professional templates (Modern, Standard, Executive, Minimalist)
+- [x] Comprehensive testing (37 unit tests, E2E tests)
+- [x] Docker deployment setup
+- [x] Production deployment
+
+### v1.1.0 (Planned - Bug Fixes)
+
+- [ ] Bug fixes from user feedback
+- [ ] Performance optimizations
+- [ ] Documentation improvements
+
+### Future Roadmap
+
+- [ ] Custom theme builder
+- [ ] Browser extension for job sites
+- [ ] Mobile app (iOS/Android)
+- [ ] AI interview coach
+- [ ] Collaborative resume reviews
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
 ---
 
