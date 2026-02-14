@@ -13,10 +13,19 @@ const getPdfParse = async () => {
     return cachedPdfParse;
   }
   const mod = await import("pdf-parse");
-  const fn = (mod as { default?: unknown }).default ?? mod;
-  if (typeof fn !== "function") {
+  const candidate = (mod as { default?: unknown; pdfParse?: unknown }).default ??
+    (mod as { pdfParse?: unknown }).pdfParse ??
+    mod;
+  const fn = typeof candidate === "function"
+    ? candidate
+    : typeof (candidate as { default?: unknown }).default === "function"
+      ? (candidate as { default: unknown }).default
+      : null;
+
+  if (!fn || typeof fn !== "function") {
     throw new Error("pdf-parse module did not export a function");
   }
+
   cachedPdfParse = fn as (buffer: Buffer) => Promise<{ text: string }>;
   return cachedPdfParse;
 };
