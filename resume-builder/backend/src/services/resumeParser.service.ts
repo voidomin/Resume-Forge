@@ -5,65 +5,28 @@ import mammoth from "mammoth";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // Dynamically load pdf-parse to handle ESM/CJS export differences.
-let cachedPdfParse: ((buffer: Buffer) => Promise<{ text: string }>) | null =
-  null;
-
-const extractPdfParse = (mod: unknown) => {
-  if (typeof mod === "function") {
-    return mod as (buffer: Buffer) => Promise<{ text: string }>;
-  }
-  if (mod && typeof mod === "object") {
-    const obj = mod as {
-      default?: unknown;
-      pdfParse?: unknown;
-      parse?: unknown;
-    };
-    const candidate = obj.default ?? obj.pdfParse ?? obj.parse;
-    if (typeof candidate === "function") {
-      return candidate as (buffer: Buffer) => Promise<{ text: string }>;
-    }
-    if (candidate && typeof candidate === "object") {
-      const nested = candidate as {
-        default?: unknown;
-        pdfParse?: unknown;
-        parse?: unknown;
-      };
-      const nestedFn = nested.default ?? nested.pdfParse ?? nested.parse;
-      if (typeof nestedFn === "function") {
-        return nestedFn as (buffer: Buffer) => Promise<{ text: string }>;
-      }
-    }
-  }
-  return null;
-};
+// Dynamically load pdf-parse to handle ESM/CJS export differences.
+let PDFParseClass: any = null;
 
 const getPdfParse = async () => {
-  if (cachedPdfParse) {
-    return cachedPdfParse;
+  if (PDFParseClass) {
+    return PDFParseClass;
   }
-  const moduleIds = [
-    "pdf-parse",
-    "pdf-parse/lib/pdf-parse.js",
-    "pdf-parse/lib/pdf-parse",
-    "pdf-parse/dist/pdf-parse.cjs",
-    "pdf-parse/dist/pdf-parse.cjs/index.js",
-    "pdf-parse/dist/pdf-parse/cjs/index",
-  ];
 
-  for (const id of moduleIds) {
-    try {
-      const mod = await import(id);
-      const fn = extractPdfParse(mod);
-      if (fn) {
-        cachedPdfParse = fn;
-        return cachedPdfParse;
-      }
-    } catch (error) {
-      logger.warn(`pdf-parse import failed for ${id}`, error);
+  try {
+    const mod = await import("pdf-parse");
+    if (mod.PDFParse) {
+      PDFParseClass = mod.PDFParse;
+    } else if (mod.default && mod.default.PDFParse) {
+      PDFParseClass = mod.default.PDFParse;
+    } else {
+      throw new Error("Could not find PDFParse class in export");
     }
+    return PDFParseClass;
+  } catch (error) {
+    logger.error("Failed to import pdf-parse", error);
+    throw new Error("Failed to load PDF parser library");
   }
-
-  throw new Error("pdf-parse module did not export a function");
 };
 
 // API timeout configuration (30 seconds)
@@ -139,8 +102,9 @@ class ResumeParserService {
    */
   async parsePDF(buffer: Buffer): Promise<string> {
     try {
-      const parsePdf = await getPdfParse();
-      const data = await parsePdf(buffer);
+      const PDFParse = await getPdfParse();
+      const parser = new PDFParse({ data: buffer });
+      const data = await parser.getText();
       return data.text;
     } catch (error) {
       logger.error("PDF parsing error:", error);
