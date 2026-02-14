@@ -5,6 +5,9 @@ import mammoth from "mammoth";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+// Work around pdf-parse ESM/CJS typing mismatch.
+const parsePdf = pdfParse as unknown as (buffer: Buffer) => Promise<{ text: string }>;
+
 // API timeout configuration (30 seconds)
 const API_TIMEOUT_MS = 30000;
 
@@ -72,7 +75,7 @@ class ResumeParserService {
    */
   async parsePDF(buffer: Buffer): Promise<string> {
     try {
-      const data = await pdfParse(buffer);
+      const data = await parsePdf(buffer);
       return data.text;
     } catch (error) {
       logger.error("PDF parsing error:", error);
