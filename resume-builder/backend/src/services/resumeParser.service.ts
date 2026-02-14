@@ -1,12 +1,25 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "../lib/logger";
-import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-// Work around pdf-parse ESM/CJS typing mismatch.
-const parsePdf = pdfParse as unknown as (buffer: Buffer) => Promise<{ text: string }>;
+// Dynamically load pdf-parse to handle ESM/CJS export differences.
+let cachedPdfParse: ((buffer: Buffer) => Promise<{ text: string }>) | null =
+  null;
+
+const getPdfParse = async () => {
+  if (cachedPdfParse) {
+    return cachedPdfParse;
+  }
+  const mod = await import("pdf-parse");
+  const fn = (mod as { default?: unknown }).default ?? mod;
+  if (typeof fn !== "function") {
+    throw new Error("pdf-parse module did not export a function");
+  }
+  cachedPdfParse = fn as (buffer: Buffer) => Promise<{ text: string }>;
+  return cachedPdfParse;
+};
 
 // API timeout configuration (30 seconds)
 const API_TIMEOUT_MS = 30000;
@@ -14,9 +27,15 @@ const API_TIMEOUT_MS = 30000;
 /**
  * Wrapper to add timeout to async API calls
  */
-const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number = API_TIMEOUT_MS): Promise<T> => {
+const withTimeout = async <T>(
+  promise: Promise<T>,
+  timeoutMs: number = API_TIMEOUT_MS,
+): Promise<T> => {
   const timeoutPromise = new Promise<T>((_, reject) =>
-    setTimeout(() => reject(new Error(`API call timeout after ${timeoutMs}ms`)), timeoutMs),
+    setTimeout(
+      () => reject(new Error(`API call timeout after ${timeoutMs}ms`)),
+      timeoutMs,
+    ),
   );
   return Promise.race([promise, timeoutPromise]);
 };
@@ -75,6 +94,7 @@ class ResumeParserService {
    */
   async parsePDF(buffer: Buffer): Promise<string> {
     try {
+      const parsePdf = await getPdfParse();
       const data = await parsePdf(buffer);
       return data.text;
     } catch (error) {
@@ -192,9 +212,11 @@ Return the JSON object:`;
 
       for (const modelName of modelsToTry) {
         try {
-        logger.debug(`Attempting with model: ${modelName}...`);
+          logger.debug(`Attempting with model: ${modelName}...`);
           const currentModel = genAI.getGenerativeModel({ model: modelName });
-          const result = await withTimeout(currentModel.generateContent(prompt));
+          const result = await withTimeout(
+            currentModel.generateContent(prompt),
+          );
           return result.response.text();
         } catch (error: any) {
           logger.debug(`Failed with ${modelName}: ${error.message}`);
