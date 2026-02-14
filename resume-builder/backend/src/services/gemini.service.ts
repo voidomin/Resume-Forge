@@ -13,9 +13,15 @@ const API_TIMEOUT_MS = 30000;
 /**
  * Wrapper to add timeout to async API calls
  */
-const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number = API_TIMEOUT_MS): Promise<T> => {
+const withTimeout = async <T>(
+  promise: Promise<T>,
+  timeoutMs: number = API_TIMEOUT_MS,
+): Promise<T> => {
   const timeoutPromise = new Promise<T>((_, reject) =>
-    setTimeout(() => reject(new Error(`API call timeout after ${timeoutMs}ms`)), timeoutMs),
+    setTimeout(
+      () => reject(new Error(`API call timeout after ${timeoutMs}ms`)),
+      timeoutMs,
+    ),
   );
   return Promise.race([promise, timeoutPromise]);
 };
@@ -148,12 +154,8 @@ export interface GeneratedResume {
 }
 
 export class GeminiService {
-  private primaryModel = "models/gemini-2.5-flash";
-  private fallbackModels = [
-    "models/gemini-2.0-flash",
-    "models/gemini-flash-latest",
-    "models/gemini-pro-latest",
-  ];
+  private primaryModel = "gemini-2.0-flash";
+  private fallbackModels = ["gemini-1.5-flash", "gemini-1.5-pro"];
 
   /**
    * Analyze job description and extract key requirements
@@ -427,14 +429,16 @@ Return ONLY valid JSON with this structure:
         try {
           logger.debug(`Generating resume with model: ${modelName}...`);
           const currentModel = genAI.getGenerativeModel({ model: modelName });
-          const result = await withTimeout(currentModel.generateContent(prompt));
+          const result = await withTimeout(
+            currentModel.generateContent(prompt),
+          );
           return { response: result.response.text(), modelUsed: modelName };
         } catch (error: any) {
           const info = extractGeminiErrorInfo(error);
-          logger.debug(
-            `Failed with ${modelName}: ${info.message?.slice(0, 100)}...`,
+          logger.warn(
+            `Failed with ${modelName}: ${info.message?.slice(0, 200)}...`,
           );
-          logger.debug("Gemini error info:", info);
+          logger.warn("Gemini error info:", info);
 
           if (error.message?.includes("429")) {
             const match = error.message.match(/retry in\s+([\d.]+)\s*s/);
@@ -451,7 +455,9 @@ Return ONLY valid JSON with this structure:
             try {
               logger.debug(`Retrying ${modelName} after wait...`);
               const retryModel = genAI.getGenerativeModel({ model: modelName });
-              const result = await withTimeout(retryModel.generateContent(prompt));
+              const result = await withTimeout(
+                retryModel.generateContent(prompt),
+              );
               return { response: result.response.text(), modelUsed: modelName };
             } catch (retryError) {
               continue;
