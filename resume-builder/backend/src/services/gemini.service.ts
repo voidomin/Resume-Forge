@@ -155,7 +155,13 @@ export interface GeneratedResume {
 
 export class GeminiService {
   private primaryModel = "gemini-2.0-flash";
-  private fallbackModels = ["gemini-1.5-flash", "gemini-1.5-pro"];
+  private fallbackModels = [
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-pro-latest",
+    "gemini-pro",
+  ];
 
   /**
    * Analyze job description and extract key requirements
