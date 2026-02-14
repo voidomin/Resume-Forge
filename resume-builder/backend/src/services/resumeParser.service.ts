@@ -1,9 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "../lib/logger";
-
-// pdf-parse and mammoth need require syntax for CommonJS compatibility
-const pdfParse = require("pdf-parse");
-const mammoth = require("mammoth");
+import pdfParse from "pdf-parse";
+import mammoth from "mammoth";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
