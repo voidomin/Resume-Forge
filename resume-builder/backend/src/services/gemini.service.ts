@@ -157,8 +157,11 @@ export class GeminiService {
   private primaryModel = "gemini-2.5-flash";
   private fallbackModels = [
     "gemini-2.5-flash-lite",
-    "gemini-2.0-flash", // Deprecated but might work
-    "gemini-pro", // 1.0 Pro
+    "gemini-flash-latest",
+    "gemini-pro-latest",
+    "gemini-2.0-flash",
+    "gemini-3-flash-preview",
+    "gemini-3-pro-preview",
   ];
 
   /**
