@@ -154,13 +154,11 @@ export interface GeneratedResume {
 }
 
 export class GeminiService {
-  private primaryModel = "gemini-2.0-flash";
+  private primaryModel = "gemini-2.5-flash";
   private fallbackModels = [
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-pro-latest",
-    "gemini-pro",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash", // Deprecated but might work
+    "gemini-pro", // 1.0 Pro
   ];
 
   /**
