@@ -45,7 +45,46 @@ If you encounter any bugs or issues:
 
 ## Medium Priority Issues 🟡
 
-**Status:** None identified
+### [Missing "Forgot Password" Feature]
+
+**Issue ID:** #TBD  
+**Reported:** 2026-02-15  
+**Priority:** Medium  
+**Status:** Open  
+**Affected Version:** v1.0.0
+
+**Description:**
+Users have no way to recover their account if they forget their password. The login page does not have a "Forgot Password" link or functionality.
+
+**Steps to Reproduce:**
+1. Go to login page
+2. Look for "Forgot Password" option
+3. Option does not exist
+
+**Expected Behavior:**
+- "Forgot Password" link on login page
+- Password reset flow via email
+- Secure token-based password reset
+
+**Actual Behavior:**
+No password recovery mechanism exists. Users who forget their password cannot access their account.
+
+**Environment:**
+- All browsers
+- All devices
+
+**Implementation Requirements:**
+- Email service integration (e.g., SendGrid, AWS SES, Resend)
+- Password reset token generation and validation
+- Reset password form
+- Email template for password reset link
+- Token expiration (e.g., 1 hour)
+
+**Workaround:**
+For now, users can create a new account if they forget their password. No data migration available.
+
+**Assignee:** Unassigned  
+**Target Version:** v1.1.0
 
 ---
 
@@ -59,7 +98,8 @@ If you encounter any bugs or issues:
 
 ### Planned for v1.1.0
 
-**Status:** Awaiting user feedback from deployment testing
+- Password reset functionality (Forgot Password feature)
+- Additional improvements based on user feedback
 
 ---
 
