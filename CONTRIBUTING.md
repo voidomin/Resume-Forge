@@ -89,6 +89,8 @@ The `main` branch is **protected** and represents production-ready code:
 - ❌ No direct commits to `main`
 - ❌ No force pushes
 
+**For administrators:** See [BRANCH_PROTECTION_SETUP.md](BRANCH_PROTECTION_SETUP.md) for detailed instructions on configuring GitHub branch protection rules or rulesets.
+
 ### Development Branch
 
 All development work happens on the `develop` branch:
@@ -447,6 +449,7 @@ Closes #234
 - [README.md](README.md) - Overview and quick start
 - [CHANGELOG.md](CHANGELOG.md) - Version history
 - [KNOWN_ISSUES.md](KNOWN_ISSUES.md) - Known bugs
+- [BRANCH_PROTECTION_SETUP.md](BRANCH_PROTECTION_SETUP.md) - Branch protection configuration
 - [docs/USER_GUIDE.md](docs/USER_GUIDE.md) - End-user documentation
 - [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - Common problems
 
