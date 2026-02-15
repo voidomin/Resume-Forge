@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { afterAll, beforeEach } from "@jest/globals";
 
 // Mock environment
 process.env.NODE_ENV = "test";
