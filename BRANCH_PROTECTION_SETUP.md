@@ -1,6 +1,8 @@
 # GitHub Branch Protection Setup Guide
 
-This guide provides step-by-step instructions for setting up branch protection rules on the `main` branch to prevent accidental changes and enforce code review workflows.
+This guide provides step-by-step instructions for setting up branch protection on the `main` branch to prevent accidental changes and enforce code review workflows.
+
+**⚠️ Note:** GitHub now uses **Rulesets** (the modern interface) for branch protection. Instructions for both the new Rulesets interface and the legacy Branch protection rules are provided below.
 
 ---
 
@@ -15,9 +17,109 @@ Branch protection ensures:
 
 ---
 
-## Setup Instructions
+## Method 1: Rulesets (Recommended - Modern Interface)
 
-### Step 1: Navigate to Repository Settings
+GitHub's newer Rulesets interface provides more flexibility and better organization.
+
+### Step 1: Navigate to Rulesets
+
+1. Go to your GitHub repository: [https://github.com/voidomin/Resume-Forge](https://github.com/voidomin/Resume-Forge)
+2. Click on **Settings** (top navigation bar)
+3. In the left sidebar under "Code and automation", click on **Rulesets**
+
+### Step 2: Create New Ruleset
+
+1. Click **New branch ruleset** button
+2. You'll see a form with multiple sections
+
+### Step 3: Configure Ruleset
+
+#### Ruleset Name
+```
+main
+```
+
+#### Enforcement Status
+Select: **Active** (not "Disabled" or "Evaluate")
+
+#### Bypass List (Optional)
+- **Recommended:** Leave empty for strictest protection
+- **Alternative:** Add your username if you need emergency override capability
+  - Click "Add bypass"
+  - Select your username or team
+
+#### Target Branches
+Click **Add target** and configure:
+- Select **Include by pattern**
+- Enter pattern: `main`
+- Or check **Include default branch** checkbox
+
+#### Rules (Check These Boxes)
+
+**Essential Protection Rules:**
+
+✅ **Restrict deletions**
+   - Prevents accidental branch deletion
+
+✅ **Block force pushes**
+   - Prevents rewriting git history
+
+✅ **Require linear history**
+   - Prevents merge commits, keeps clean history
+
+✅ **Require a pull request before merging**
+   - Ensures all changes go through PR workflow
+   - After checking this, set:
+     - **Required approvals:** `1`
+     - ☑ **Dismiss stale pull request approvals when new commits are pushed**
+     - ☑ **Require review from Code Owners** (if you add CODEOWNERS file later)
+
+**Optional (Enable Later):**
+
+⬜ **Require status checks to pass**
+   - Enable when you set up CI/CD (GitHub Actions)
+
+⬜ **Require signed commits**
+   - Extra security if you use GPG signing
+
+⬜ **Require deployments to succeed**
+   - If you set up deployment previews
+
+**Skip These:**
+
+⬜ **Restrict creations** - Not needed
+⬜ **Restrict updates** - Not needed
+⬜ **Require code scanning results** - Add later if needed
+⬜ **Automatically request Copilot code review** - Optional
+
+### Step 4: Save the Ruleset
+
+1. Scroll to the top or bottom of the page
+2. Click **Create** button (green button)
+3. Your ruleset is now active!
+
+### Quick Checklist
+
+```
+☑ Ruleset Name: "main"
+☑ Enforcement: Active
+☑ Target branches: "main" (or default branch)
+☑ Restrict deletions: ENABLED
+☑ Block force pushes: ENABLED
+☑ Require linear history: ENABLED
+☑ Require pull request: ENABLED
+  ↳ Required approvals: 1
+  ↳ Dismiss stale approvals: ENABLED
+☑ Bypass list: Empty (or add yourself for emergencies)
+```
+
+---
+
+## Method 2: Classic Branch Protection Rules (Legacy)
+
+If you see "Branch protection rules" instead of "Rulesets" in your sidebar:
+
+### Step 1: Navigate to Branch Settings
 
 1. Go to your GitHub repository: [https://github.com/voidomin/Resume-Forge](https://github.com/voidomin/Resume-Forge)
 2. Click on **Settings** (top navigation bar)
@@ -100,9 +202,18 @@ git push origin main
 ```
 
 **Expected Result:** Push should be **rejected** with an error message:
+
+**Rulesets error:**
+```
+! [remote rejected] main -> main (protected by ruleset)
+```
+
+**Legacy protection error:**
 ```
 remote: error: GH006: Protected branch update failed
 ```
+
+Both indicate your branch protection is working correctly! ✅
 
 ### Test 2: Proper Workflow Via Pull Request
 

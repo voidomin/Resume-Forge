@@ -59,6 +59,7 @@ An **ATS-optimized, role-based resume builder** that generates tailored resumes 
 | [CHANGELOG.md](CHANGELOG.md)                    | Version history and release notes                |
 | [CONTRIBUTING.md](CONTRIBUTING.md)              | How to contribute, workflow, and guidelines      |
 | [KNOWN_ISSUES.md](KNOWN_ISSUES.md)              | Bug tracking and known issues                    |
+| [BRANCH_PROTECTION_SETUP.md](BRANCH_PROTECTION_SETUP.md) | GitHub branch protection configuration guide |
 | [V1_RELEASE_CHECKLIST.md](V1_RELEASE_CHECKLIST.md) | v1.0 release verification checklist           |
 
 ### Deployment
