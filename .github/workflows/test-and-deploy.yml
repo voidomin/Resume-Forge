@@ -32,6 +32,9 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+          cache-dependency-path: |
+            resume-builder/backend/package-lock.json
+            resume-builder/frontend/package-lock.json
 
       # Backend Tests
       - name: Install Backend Dependencies
