@@ -1,7 +1,7 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
-import { DesignTokens } from "./design-tokens";
+import { UnifiedDesignSystem } from "../../../shared/design-system";
 
 export class ModernRenderer extends BaseTemplateRenderer {
   render(
@@ -10,94 +10,82 @@ export class ModernRenderer extends BaseTemplateRenderer {
     fontScale: number = 1,
     spacingScale: number = 1,
   ): void {
-    const fontRegular = DesignTokens.fonts.sans;
-    const fontBold = DesignTokens.fonts.sansBold;
-    const { primary, secondary, text, textLight, white } = DesignTokens.colors;
-    const fontScaleVal = fontScale;
-    const spacingScaleVal = spacingScale;
+    // Use Unified Design System
+    const ds = UnifiedDesignSystem;
+    const fontRegular = ds.fonts.primary.pdf;
+    const fontBold = ds.fonts.primary.pdfBold;
 
-    // Header
+    // Apply scaling factors
+    const fs = fontScale;
+    const ss = spacingScale;
+
+    // Header - Name
     doc
       .font(fontBold)
-      .fontSize(14 * fontScaleVal)
-      .fillColor(primary) // Pro Max Primary
+      .fontSize(ds.fontSize.h1 * fs)
+      .fillColor(ds.colors.primary)
       .text(resume.contactInfo.name.toUpperCase(), { align: "center" });
 
-    doc.moveDown(0.2 * fontScaleVal);
+    // Small spacing after name
+    doc.moveDown((ds.spacing.tight / 12) * fs);
 
-    // Contact
-    this.renderContactLine(doc, resume, fontRegular, 8.5 * fontScaleVal, false);
+    // Contact Line
+    this.renderContactLine(doc, resume, fontRegular, ds.fontSize.contact * fs, false);
 
-    doc.moveDown(0.5 * fontScaleVal);
+    // Spacing after contact
+    doc.moveDown((ds.spacing.element / 12) * fs);
 
-    // Sections
+    // Professional Summary
     if (resume.summary) {
-      this.drawModernHeader(doc, "PROFESSIONAL SUMMARY", fontScaleVal);
+      this.drawModernHeader(doc, "PROFESSIONAL SUMMARY", fs);
       doc
         .font(fontRegular)
-        .fontSize(8.5 * fontScaleVal)
-        .fillColor(text)
+        .fontSize(ds.fontSize.body * fs)
+        .fillColor(ds.colors.text)
         .text(resume.summary, {
           align: "justify",
-          lineGap: 0.2 * fontScaleVal,
+          lineGap: ds.spacing.minimal / 2,
         });
-      doc.moveDown(0.5 * fontScaleVal);
+      doc.moveDown((ds.spacing.element / 12) * fs);
     }
 
+    // Work Experience
     if (resume.experiences?.length) {
-      this.drawModernHeader(doc, "WORK EXPERIENCE", fontScaleVal);
+      this.drawModernHeader(doc, "WORK EXPERIENCE", fs);
       resume.experiences.forEach((exp) => {
-        this.renderExperienceModern(
-          doc,
-          exp,
-          fontBold,
-          fontRegular,
-          fontScaleVal,
-          spacingScaleVal,
-        );
-        doc.moveDown(0.25 * spacingScaleVal);
+        this.renderExperienceModern(doc, exp, fontBold, fontRegular, fs, ss);
+        doc.moveDown((ds.spacing.tight / 12) * ss);
       });
     }
 
+    // Projects
     if (resume.projects?.length) {
-      this.drawModernHeader(doc, "PROJECTS", fontScaleVal);
+      this.drawModernHeader(doc, "PROJECTS", fs);
       resume.projects.forEach((proj) => {
-        this.renderProjectModern(
-          doc,
-          proj,
-          fontBold,
-          fontRegular,
-          fontScaleVal,
-          spacingScaleVal,
-        );
-        doc.moveDown(0.25 * spacingScaleVal);
+        this.renderProjectModern(doc, proj, fontBold, fontRegular, fs, ss);
+        doc.moveDown((ds.spacing.tight / 12) * ss);
       });
     }
 
+    // Education
     if (resume.education?.length) {
-      this.drawModernHeader(doc, "EDUCATION", fontScaleVal);
+      this.drawModernHeader(doc, "EDUCATION", fs);
       resume.education.forEach((edu) => {
-        this.renderEducationModern(
-          doc,
-          edu,
-          fontBold,
-          fontRegular,
-          fontScaleVal,
-          spacingScaleVal,
-        );
-        doc.moveDown(0.25 * spacingScaleVal);
+        this.renderEducationModern(doc, edu, fontBold, fontRegular, fs, ss);
+        doc.moveDown((ds.spacing.tight / 12) * ss);
       });
     }
 
+    // Skills
     if (resume.skills?.length) {
-      this.drawModernHeader(doc, "SKILLS", fontScaleVal);
+      this.drawModernHeader(doc, "SKILLS", fs);
       doc
         .font(fontRegular)
-        .fontSize(8.5 * fontScaleVal)
-        .fillColor(text)
+        .fontSize(ds.fontSize.body * fs)
+        .fillColor(ds.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "left",
-          lineGap: 0.2 * fontScaleVal,
+          lineGap: ds.spacing.minimal / 2,
         });
     }
   }
@@ -107,23 +95,23 @@ export class ModernRenderer extends BaseTemplateRenderer {
     title: string,
     fontScaleVal: number,
   ) {
-    const { primary, text } = DesignTokens.colors;
+    const ds = UnifiedDesignSystem;
     doc
-      .font(DesignTokens.fonts.sansBold)
-      .fontSize(11 * fontScaleVal)
-      .fillColor(primary)
+      .font(ds.fonts.primary.pdfBold)
+      .fontSize(ds.fontSize.h2 * fontScaleVal)
+      .fillColor(ds.colors.primary)
       .text(title.toUpperCase());
 
-    // Underline
+    // Underline with design system border width
     doc
-      .strokeColor(primary)
-      .lineWidth(1)
+      .strokeColor(ds.colors.primary)
+      .lineWidth(ds.borders.sectionUnderline.width)
       .moveTo(doc.x, doc.y + 2)
       .lineTo(doc.page.width - doc.page.margins.right, doc.y + 2)
       .stroke();
 
-    doc.fillColor(text); // Reset to standard text color
-    doc.moveDown(0.5 * fontScaleVal);
+    doc.fillColor(ds.colors.text); // Reset to standard text color
+    doc.moveDown((ds.spacing.element / 12) * fontScaleVal);
   }
 
   private renderExperienceModern(
@@ -134,34 +122,34 @@ export class ModernRenderer extends BaseTemplateRenderer {
     fontScaleVal: number,
     spacingScaleVal: number,
   ) {
-    const { primary, secondary, text, textLight } = DesignTokens.colors;
+    const ds = UnifiedDesignSystem;
 
     doc
       .font(fontBold)
-      .fontSize(10 * fontScaleVal)
-      .fillColor(text)
+      .fontSize(ds.fontSize.h3 * fontScaleVal)
+      .fillColor(ds.colors.text)
       .text(exp.role, { continued: true });
 
     doc
       .font(fontRegular)
-      .fillColor(secondary)
+      .fillColor(ds.colors.secondary)
       .text(" | ", { continued: true })
-      .fillColor(primary)
+      .fillColor(ds.colors.primary)
       .text(exp.company, { continued: true });
 
-    doc.fillColor(textLight).text(exp.location ? ` | ${exp.location}` : "", {
+    doc.fillColor(ds.colors.textLight).text(exp.location ? ` | ${exp.location}` : "", {
       continued: false,
     });
 
     doc.moveUp(1);
-    doc.fillColor(textLight).text(exp.dateRange, { align: "right" });
+    doc.fontSize(ds.fontSize.small * fontScaleVal).fillColor(ds.colors.textLight).text(exp.dateRange, { align: "right" });
 
     doc
       .font(fontRegular)
-      .fontSize(9 * fontScaleVal)
-      .fillColor(text);
+      .fontSize(ds.fontSize.body * fontScaleVal)
+      .fillColor(ds.colors.text);
     exp.bullets.forEach((b: string) => {
-      doc.text(`• ${b}`, { indent: 10, lineGap: 1 * spacingScaleVal });
+      doc.text(`• ${b}`, { indent: ds.spacing.bulletIndent, lineGap: ds.spacing.minimal / 2 });
     });
   }
 
@@ -173,39 +161,39 @@ export class ModernRenderer extends BaseTemplateRenderer {
     fontScaleVal: number,
     spacingScaleVal: number,
   ) {
-    const { primary, secondary, text, textLight } = DesignTokens.colors;
+    const ds = UnifiedDesignSystem;
 
     doc
       .font(fontBold)
-      .fontSize(10 * fontScaleVal)
-      .fillColor(text)
+      .fontSize(ds.fontSize.h3 * fontScaleVal)
+      .fillColor(ds.colors.text)
       .text(proj.name, { continued: true });
     if (proj.link) {
       doc
         .font(fontRegular)
-        .fillColor(textLight)
+        .fillColor(ds.colors.textLight)
         .text(` | `, { continued: true })
-        .fillColor(primary)
+        .fillColor(ds.colors.primary)
         .text(proj.link, { link: proj.link, continued: false })
-        .fillColor(text);
+        .fillColor(ds.colors.text);
     } else {
       doc.text("");
     }
 
-    doc.font(fontRegular).fontSize(9 * fontScaleVal);
+    doc.font(fontRegular).fontSize(ds.fontSize.body * fontScaleVal);
     if (proj.technologies) {
       doc
-        .fillColor(secondary)
+        .fillColor(ds.colors.secondary)
         .text(`Stack: ${proj.technologies}`, { oblique: true });
     }
 
-    doc.fillColor(text);
+    doc.fillColor(ds.colors.text);
     if (proj.bullets) {
       proj.bullets.forEach((b: string) => {
-        doc.text(`• ${b}`, { indent: 10, lineGap: 1 * spacingScaleVal });
+        doc.text(`• ${b}`, { indent: ds.spacing.bulletIndent, lineGap: ds.spacing.minimal / 2 });
       });
     } else if (proj.description) {
-      doc.text(proj.description, { lineGap: 1 * spacingScaleVal });
+      doc.text(proj.description, { lineGap: ds.spacing.minimal / 2 });
     }
   }
 
@@ -217,25 +205,26 @@ export class ModernRenderer extends BaseTemplateRenderer {
     fontScaleVal: number,
     spacingScaleVal: number,
   ) {
-    const { primary, text, textLight } = DesignTokens.colors;
+    const ds = UnifiedDesignSystem;
 
     doc
       .font(fontBold)
-      .fontSize(10 * fontScaleVal)
-      .fillColor(text) // Institution in text color for Modern? Or Primary? Let's stick to Text for consistency
+      .fontSize(ds.fontSize.h3 * fontScaleVal)
+      .fillColor(ds.colors.primary)
       .text(edu.institution, { continued: true });
     doc
       .font(fontRegular)
-      .fillColor(textLight)
+      .fontSize(ds.fontSize.body * fontScaleVal)
+      .fillColor(ds.colors.textLight)
       .text(` | ${edu.degree} in ${edu.field}`, { continued: false });
 
     doc.moveUp(1);
-    doc.fillColor(textLight).text(edu.dateRange, { align: "right" });
+    doc.fontSize(ds.fontSize.small * fontScaleVal).fillColor(ds.colors.textLight).text(edu.dateRange, { align: "right" });
 
     if (edu.gpa) {
       doc
-        .fontSize(9 * fontScaleVal)
-        .fillColor(textLight)
+        .fontSize(ds.fontSize.body * fontScaleVal)
+        .fillColor(ds.colors.textLight)
         .text(`GPA: ${edu.gpa}`);
     }
   }
