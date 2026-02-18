@@ -11,6 +11,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    fs: {
+      allow: ['..'], // Allow access to parent directory (to access shared folder)
+    },
     proxy: {
       "/api": {
         target: "http://localhost:3000",

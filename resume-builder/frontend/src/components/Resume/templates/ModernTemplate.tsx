@@ -5,7 +5,7 @@ import { UnifiedDesignSystem } from "@shared/design-system";
 export function ModernTemplate({ resume }: TemplateProps) {
   // Use Unified Design System
   const ds = UnifiedDesignSystem;
-  
+
   // Helper functions
   const formatUrl = (url: string) => {
     return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
@@ -82,7 +82,9 @@ export function ModernTemplate({ resume }: TemplateProps) {
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: "center", marginBottom: `${ds.spacing.section}pt` }}>
+      <div
+        style={{ textAlign: "center", marginBottom: `${ds.spacing.section}pt` }}
+      >
         <h1
           style={{
             fontSize: `${ds.fontSize.h1}pt`,
@@ -143,7 +145,10 @@ export function ModernTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Work Experience</h2>
           {resume.experiences.map((exp, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.element}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.element}pt` }}
+            >
               <div
                 style={{
                   display: "flex",
@@ -224,9 +229,17 @@ export function ModernTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Projects</h2>
           {resume.projects.map((proj, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.element}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.element}pt` }}
+            >
               <div style={{ marginBottom: `${ds.spacing.minimal}pt` }}>
-                <span style={{ fontWeight: ds.fontWeights.bold, fontSize: `${ds.fontSize.h3}pt` }}>
+                <span
+                  style={{
+                    fontWeight: ds.fontWeights.bold,
+                    fontSize: `${ds.fontSize.h3}pt`,
+                  }}
+                >
                   {proj.name}
                 </span>
                 {proj.technologies && (
@@ -284,7 +297,10 @@ export function ModernTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Education</h2>
           {resume.education.map((edu, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.tight + 2}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.tight + 2}pt` }}
+            >
               <div
                 style={{
                   display: "flex",
@@ -294,7 +310,10 @@ export function ModernTemplate({ resume }: TemplateProps) {
               >
                 <div>
                   <span
-                    style={{ fontWeight: ds.fontWeights.bold, color: ds.colors.primary }}
+                    style={{
+                      fontWeight: ds.fontWeights.bold,
+                      color: ds.colors.primary,
+                    }}
                   >
                     {edu.institution}
                   </span>
@@ -330,12 +349,21 @@ export function ModernTemplate({ resume }: TemplateProps) {
       Object.keys(resume.skillsCategories).length > 0 ? (
         <section style={{ marginBottom: "0" }}>
           <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: `${ds.spacing.tight}pt` }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: `${ds.spacing.tight}pt`,
+            }}
+          >
             {Object.entries(resume.skillsCategories).map(
               ([category, skills]) =>
                 skills &&
                 skills.length > 0 && (
-                  <div key={category} style={{ fontSize: `${ds.fontSize.body}pt` }}>
+                  <div
+                    key={category}
+                    style={{ fontSize: `${ds.fontSize.body}pt` }}
+                  >
                     <span
                       style={{
                         fontWeight: ds.fontWeights.bold,
@@ -358,7 +386,13 @@ export function ModernTemplate({ resume }: TemplateProps) {
         resume.skills.length > 0 && (
           <section style={{ marginBottom: "0" }}>
             <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-            <p style={{ margin: 0, fontSize: `${ds.fontSize.body}pt`, lineHeight: ds.spacing.line }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: `${ds.fontSize.body}pt`,
+                lineHeight: ds.spacing.line,
+              }}
+            >
               {resume.skills.join("  •  ")}
             </p>
           </section>
@@ -367,11 +401,21 @@ export function ModernTemplate({ resume }: TemplateProps) {
 
       {/* Certifications */}
       {resume.certifications && resume.certifications.length > 0 && (
-        <section style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}>
+        <section
+          style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}
+        >
           <h2 style={sectionHeaderStyle}>Certifications</h2>
           {resume.certifications.map((cert, index) => (
-            <div key={index} style={{ fontSize: `${ds.fontSize.body}pt`, marginBottom: `${ds.spacing.minimal}pt` }}>
-              <span style={{ fontWeight: ds.fontWeights.bold }}>{cert.name}</span>
+            <div
+              key={index}
+              style={{
+                fontSize: `${ds.fontSize.body}pt`,
+                marginBottom: `${ds.spacing.minimal}pt`,
+              }}
+            >
+              <span style={{ fontWeight: ds.fontWeights.bold }}>
+                {cert.name}
+              </span>
               <span style={{ color: ds.colors.textLight }}>
                 {" "}
                 – {cert.issuer}

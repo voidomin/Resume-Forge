@@ -30,7 +30,13 @@ export class ModernRenderer extends BaseTemplateRenderer {
     doc.moveDown((ds.spacing.tight / 12) * fs);
 
     // Contact Line
-    this.renderContactLine(doc, resume, fontRegular, ds.fontSize.contact * fs, false);
+    this.renderContactLine(
+      doc,
+      resume,
+      fontRegular,
+      ds.fontSize.contact * fs,
+      false,
+    );
 
     // Spacing after contact
     doc.moveDown((ds.spacing.element / 12) * fs);
@@ -137,19 +143,27 @@ export class ModernRenderer extends BaseTemplateRenderer {
       .fillColor(ds.colors.primary)
       .text(exp.company, { continued: true });
 
-    doc.fillColor(ds.colors.textLight).text(exp.location ? ` | ${exp.location}` : "", {
-      continued: false,
-    });
+    doc
+      .fillColor(ds.colors.textLight)
+      .text(exp.location ? ` | ${exp.location}` : "", {
+        continued: false,
+      });
 
     doc.moveUp(1);
-    doc.fontSize(ds.fontSize.small * fontScaleVal).fillColor(ds.colors.textLight).text(exp.dateRange, { align: "right" });
+    doc
+      .fontSize(ds.fontSize.small * fontScaleVal)
+      .fillColor(ds.colors.textLight)
+      .text(exp.dateRange, { align: "right" });
 
     doc
       .font(fontRegular)
       .fontSize(ds.fontSize.body * fontScaleVal)
       .fillColor(ds.colors.text);
     exp.bullets.forEach((b: string) => {
-      doc.text(`• ${b}`, { indent: ds.spacing.bulletIndent, lineGap: ds.spacing.minimal / 2 });
+      doc.text(`• ${b}`, {
+        indent: ds.spacing.bulletIndent,
+        lineGap: ds.spacing.minimal / 2,
+      });
     });
   }
 
@@ -190,7 +204,10 @@ export class ModernRenderer extends BaseTemplateRenderer {
     doc.fillColor(ds.colors.text);
     if (proj.bullets) {
       proj.bullets.forEach((b: string) => {
-        doc.text(`• ${b}`, { indent: ds.spacing.bulletIndent, lineGap: ds.spacing.minimal / 2 });
+        doc.text(`• ${b}`, {
+          indent: ds.spacing.bulletIndent,
+          lineGap: ds.spacing.minimal / 2,
+        });
       });
     } else if (proj.description) {
       doc.text(proj.description, { lineGap: ds.spacing.minimal / 2 });
@@ -219,7 +236,10 @@ export class ModernRenderer extends BaseTemplateRenderer {
       .text(` | ${edu.degree} in ${edu.field}`, { continued: false });
 
     doc.moveUp(1);
-    doc.fontSize(ds.fontSize.small * fontScaleVal).fillColor(ds.colors.textLight).text(edu.dateRange, { align: "right" });
+    doc
+      .fontSize(ds.fontSize.small * fontScaleVal)
+      .fillColor(ds.colors.textLight)
+      .text(edu.dateRange, { align: "right" });
 
     if (edu.gpa) {
       doc

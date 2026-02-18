@@ -1,6 +1,6 @@
 /**
  * Unit Conversion Utilities
- * 
+ *
  * Converts design system units (base: points) to target format units:
  * - Points (pt) - Base unit used in design system
  * - Pixels (px) - Frontend CSS
@@ -92,8 +92,12 @@ export class UnitConverter {
    * Get CSS value string from points
    * Returns a string like "9pt" or "12px"
    */
-  static ptToCss(pt: number, unit: 'pt' | 'px' = 'pt', dpi: number = 96): string {
-    if (unit === 'px') {
+  static ptToCss(
+    pt: number,
+    unit: "pt" | "px" = "pt",
+    dpi: number = 96,
+  ): string {
+    if (unit === "px") {
       return `${this.ptToPixels(pt, dpi)}px`;
     }
     return `${pt}pt`;
@@ -170,7 +174,11 @@ export const in2tw = UnitConverter.inchesToTwip;
 /**
  * Ensure a value is within acceptable range for font sizes
  */
-export function validateFontSize(size: number, min: number = 6, max: number = 72): number {
+export function validateFontSize(
+  size: number,
+  min: number = 6,
+  max: number = 72,
+): number {
   return Math.max(min, Math.min(max, size));
 }
 

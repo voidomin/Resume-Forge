@@ -11,7 +11,10 @@ import {
   ExternalHyperlink,
 } from "docx";
 import { GeneratedResume } from "./gemini.service";
-import { UnifiedDesignSystem, getCleanColor } from "../../../shared/design-system";
+import {
+  UnifiedDesignSystem,
+  getCleanColor,
+} from "../../../shared/design-system";
 import { UnitConverter } from "../../../shared/unit-converters";
 
 export class DocxService {
@@ -21,7 +24,7 @@ export class DocxService {
    */
   async generateResumeDocx(resume: GeneratedResume): Promise<Buffer> {
     const ds = UnifiedDesignSystem;
-    
+
     // Page setup using design system
     const pageWidthInches = ds.page.widthInches;
     const pageHeightInches = ds.page.heightInches;
@@ -74,7 +77,9 @@ export class DocxService {
             this.createLinksLine(resume.contactInfo, bodyFont),
 
             // Spacing
-            new Paragraph({ spacing: { after: UnitConverter.ptToTwip(ds.spacing.section) } }),
+            new Paragraph({
+              spacing: { after: UnitConverter.ptToTwip(ds.spacing.section) },
+            }),
 
             // Professional Summary
             ...(resume.summary
@@ -274,9 +279,9 @@ export class DocxService {
     const ds = UnifiedDesignSystem;
 
     return new Paragraph({
-      spacing: { 
-        before: UnitConverter.ptToTwip(ds.spacing.section), 
-        after: UnitConverter.ptToTwip(ds.spacing.element) 
+      spacing: {
+        before: UnitConverter.ptToTwip(ds.spacing.section),
+        after: UnitConverter.ptToTwip(ds.spacing.element),
       },
       border: {
         bottom: {
@@ -333,9 +338,9 @@ export class DocxService {
       // Role | Company | Location  (Date right-aligned)
       paragraphs.push(
         new Paragraph({
-          spacing: { 
-            before: index > 0 ? UnitConverter.ptToTwip(ds.spacing.section) : 0, 
-            after: UnitConverter.ptToTwip(ds.spacing.minimal) 
+          spacing: {
+            before: index > 0 ? UnitConverter.ptToTwip(ds.spacing.section) : 0,
+            after: UnitConverter.ptToTwip(ds.spacing.minimal),
           },
           tabStops: [
             {
