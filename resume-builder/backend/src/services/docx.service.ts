@@ -324,17 +324,19 @@ export class DocxService {
     rightTabStop: number,
     font: string,
   ): Paragraph[] {
+    const ds = UnifiedDesignSystem;
     const paragraphs: Paragraph[] = [
       this.createSectionHeader("WORK EXPERIENCE", font),
     ];
-    const { text, primary, secondary, textLight } = DesignTokens.colors;
-    const cleanColor = (hex: string) => hex.replace("#", "");
 
     experiences.forEach((exp, index) => {
       // Role | Company | Location  (Date right-aligned)
       paragraphs.push(
         new Paragraph({
-          spacing: { before: index > 0 ? 120 : 0, after: 40 },
+          spacing: { 
+            before: index > 0 ? UnitConverter.ptToTwip(ds.spacing.section) : 0, 
+            after: UnitConverter.ptToTwip(ds.spacing.minimal) 
+          },
           tabStops: [
             {
               type: TabStopType.RIGHT,
@@ -345,38 +347,38 @@ export class DocxService {
             new TextRun({
               text: exp.role,
               bold: true,
-              size: 20, // 10pt
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.h3),
               font: font,
-              color: cleanColor(text),
+              color: getCleanColor(ds.colors.text),
             }),
             new TextRun({
               text: "  |  ",
-              size: 20,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.h3),
               font: font,
-              color: cleanColor(secondary),
+              color: getCleanColor(ds.colors.secondary),
             }),
             new TextRun({
               text: exp.company,
-              size: 20,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.h3),
               bold: true,
               font: font,
-              color: cleanColor(primary),
+              color: getCleanColor(ds.colors.primary),
             }),
             ...(exp.location
               ? [
                   new TextRun({
                     text: `  |  ${exp.location}`,
-                    size: 20,
+                    size: UnitConverter.ptToHalfPoint(ds.fontSize.small),
                     font: font,
-                    color: cleanColor(textLight),
+                    color: getCleanColor(ds.colors.textLight),
                   }),
                 ]
               : []),
             new TextRun({
               text: "\t" + exp.dateRange,
-              size: 19, // 9.5pt
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.small),
               font: font,
-              color: cleanColor(textLight),
+              color: getCleanColor(ds.colors.textLight),
               bold: true,
             }),
           ],
@@ -387,14 +389,14 @@ export class DocxService {
       exp.bullets.forEach((bullet) => {
         paragraphs.push(
           new Paragraph({
-            spacing: { after: 40 },
-            indent: { left: convertInchesToTwip(0.15) },
+            spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
+            indent: { left: UnitConverter.ptToTwip(ds.spacing.bulletIndent) },
             children: [
               new TextRun({
                 text: `•  ${bullet}`,
-                size: 20, // 10pt
+                size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
                 font: font,
-                color: cleanColor(text),
+                color: getCleanColor(ds.colors.text),
               }),
             ],
           }),
@@ -410,16 +412,15 @@ export class DocxService {
     rightTabStop: number,
     font: string,
   ): Paragraph[] {
+    const ds = UnifiedDesignSystem;
     const paragraphs: Paragraph[] = [
       this.createSectionHeader("EDUCATION", font),
     ];
-    const { text, textLight, secondary } = DesignTokens.colors;
-    const cleanColor = (hex: string) => hex.replace("#", "");
 
     education.forEach((edu) => {
       paragraphs.push(
         new Paragraph({
-          spacing: { after: 40 },
+          spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
           tabStops: [
             {
               type: TabStopType.RIGHT,
@@ -430,27 +431,27 @@ export class DocxService {
             new TextRun({
               text: `${edu.degree} in ${edu.field}`,
               bold: true,
-              size: 20, // 10pt
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.h3),
               font: font,
-              color: cleanColor(text),
+              color: getCleanColor(ds.colors.text),
             }),
             new TextRun({
               text: "  |  ",
-              size: 20,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
               font: font,
-              color: cleanColor(secondary),
+              color: getCleanColor(ds.colors.secondary),
             }),
             new TextRun({
               text: edu.institution,
-              size: 20,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
               font: font,
-              color: cleanColor(text),
+              color: getCleanColor(ds.colors.primary),
             }),
             new TextRun({
               text: "\t" + (edu.dateRange || ""),
-              size: 19,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.small),
               font: font,
-              color: cleanColor(textLight),
+              color: getCleanColor(ds.colors.textLight),
             }),
           ],
         }),
@@ -459,13 +460,13 @@ export class DocxService {
       if (edu.gpa) {
         paragraphs.push(
           new Paragraph({
-            spacing: { after: 40 },
+            spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
             children: [
               new TextRun({
                 text: `GPA: ${edu.gpa}`,
-                size: 18, // 9pt
+                size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
                 font: font,
-                color: cleanColor(textLight),
+                color: getCleanColor(ds.colors.textLight),
               }),
             ],
           }),
@@ -477,19 +478,18 @@ export class DocxService {
   }
 
   private createSkillsSection(skills: string[], font: string): Paragraph[] {
-    const { text } = DesignTokens.colors;
-    const cleanColor = (hex: string) => hex.replace("#", "");
+    const ds = UnifiedDesignSystem;
 
     return [
       this.createSectionHeader("SKILLS", font),
       new Paragraph({
-        spacing: { after: 60 },
+        spacing: { after: UnitConverter.ptToTwip(ds.spacing.element) },
         children: [
           new TextRun({
             text: skills.join("  •  "),
-            size: 20, // 10pt
+            size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
             font: font,
-            color: cleanColor(text),
+            color: getCleanColor(ds.colors.text),
           }),
         ],
       }),
@@ -500,20 +500,19 @@ export class DocxService {
     projects: NonNullable<GeneratedResume["projects"]>,
     font: string,
   ): Paragraph[] {
+    const ds = UnifiedDesignSystem;
     const paragraphs: Paragraph[] = [
       this.createSectionHeader("PROJECTS", font),
     ];
-    const { text, primary, secondary, textLight } = DesignTokens.colors;
-    const cleanColor = (hex: string) => hex.replace("#", "");
 
     projects.forEach((proj) => {
       const headerParts: any[] = [
         new TextRun({
           text: proj.name,
           bold: true,
-          size: 20, // 10pt
+          size: UnitConverter.ptToHalfPoint(ds.fontSize.h3),
           font: font,
-          color: cleanColor(text),
+          color: getCleanColor(ds.colors.text),
         }),
       ];
 
@@ -529,9 +528,9 @@ export class DocxService {
         headerParts.push(
           new TextRun({
             text: "  |  ",
-            size: 20,
+            size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
             font: font,
-            color: cleanColor(secondary),
+            color: getCleanColor(ds.colors.secondary),
           }),
         );
 
@@ -540,9 +539,9 @@ export class DocxService {
             children: [
               new TextRun({
                 text: formatUrl(proj.link),
-                size: 20,
+                size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
                 font: font,
-                color: cleanColor(primary),
+                color: getCleanColor(ds.colors.primary),
                 underline: {},
               }),
             ],
@@ -553,7 +552,7 @@ export class DocxService {
 
       paragraphs.push(
         new Paragraph({
-          spacing: { after: 40 },
+          spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
           children: headerParts,
         }),
       );
@@ -561,14 +560,14 @@ export class DocxService {
       if (proj.technologies) {
         paragraphs.push(
           new Paragraph({
-            spacing: { after: 30 },
+            spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
             children: [
               new TextRun({
                 text: proj.technologies,
                 italics: true,
-                size: 18, // 9pt
+                size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
                 font: font,
-                color: cleanColor(textLight),
+                color: getCleanColor(ds.colors.textLight),
               }),
             ],
           }),
@@ -578,13 +577,13 @@ export class DocxService {
       if (proj.description) {
         paragraphs.push(
           new Paragraph({
-            spacing: { after: 30 },
+            spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
             children: [
               new TextRun({
                 text: proj.description,
-                size: 20, // 10pt
+                size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
                 font: font,
-                color: cleanColor(text),
+                color: getCleanColor(ds.colors.text),
               }),
             ],
           }),
@@ -596,14 +595,14 @@ export class DocxService {
         proj.bullets.forEach((bullet) => {
           paragraphs.push(
             new Paragraph({
-              spacing: { after: 30 },
-              indent: { left: convertInchesToTwip(0.15) },
+              spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
+              indent: { left: UnitConverter.ptToTwip(ds.spacing.bulletIndent) },
               children: [
                 new TextRun({
                   text: `•  ${bullet}`,
-                  size: 20, // 10pt
+                  size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
                   font: font,
-                  color: cleanColor(text),
+                  color: getCleanColor(ds.colors.text),
                 }),
               ],
             }),
@@ -620,16 +619,15 @@ export class DocxService {
     rightTabStop: number,
     font: string,
   ): Paragraph[] {
+    const ds = UnifiedDesignSystem;
     const paragraphs: Paragraph[] = [
       this.createSectionHeader("CERTIFICATIONS", font),
     ];
-    const { text, textLight } = DesignTokens.colors;
-    const cleanColor = (hex: string) => hex.replace("#", "");
 
     certifications.forEach((cert) => {
       paragraphs.push(
         new Paragraph({
-          spacing: { after: 40 },
+          spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
           tabStops: [
             {
               type: TabStopType.RIGHT,
@@ -640,21 +638,21 @@ export class DocxService {
             new TextRun({
               text: cert.name,
               bold: true,
-              size: 20, // 10pt
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
               font: font,
-              color: cleanColor(text),
+              color: getCleanColor(ds.colors.text),
             }),
             new TextRun({
               text: `  |  ${cert.issuer}`,
-              size: 20, // 10pt
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
               font: font,
-              color: cleanColor(textLight),
+              color: getCleanColor(ds.colors.textLight),
             }),
             new TextRun({
               text: "\t" + (cert.date || ""),
-              size: 20, // 10pt
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
               font: font,
-              color: cleanColor(textLight),
+              color: getCleanColor(ds.colors.textLight),
             }),
           ],
         }),
