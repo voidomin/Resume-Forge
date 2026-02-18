@@ -39,7 +39,83 @@ If you encounter any bugs or issues:
 
 ## High Priority Issues 🟠
 
-**Status:** None identified
+### [Template Inconsistency: Preview vs Downloaded Files]
+
+**Issue ID:** #TEMPLATE-CONSISTENCY-001  
+**Reported:** 2026-02-18  
+**Priority:** High  
+**Status:** Open - Planning Phase  
+**Affected Version:** v1.0.0
+
+**Description:**
+Significant visual inconsistencies exist between the frontend resume preview and the downloaded PDF/DOCX files. Users see one design and formatting in the browser preview, but the downloaded files have different fonts, spacing, sizes, and layouts. This affects **ALL templates** (Modern, Standard, Executive, Minimalist).
+
+**Steps to Reproduce:**
+1. Create or view any resume
+2. Observe the preview in browser
+3. Download as PDF
+4. Download as DOCX
+5. Compare all three versions
+
+**Expected Behavior:**
+- Frontend preview should match PDF download exactly
+- PDF and DOCX downloads should have identical layouts
+- Font sizes, spacing, and positioning should be consistent
+- What You See Is What You Get (WYSIWYG)
+
+**Actual Behavior:**
+- Different fonts: Frontend uses Inter/Arial, PDF uses Helvetica, DOCX uses Times New Roman
+- Different font sizes: Frontend uses pt units, PDF uses scaled values, DOCX uses half-points
+- Different spacing: CSS pixels vs PDFKit moveDown() vs DOCX twips
+- Different layouts: Flexbox vs sequential positioning vs Word flow
+- Text wraps at different points causing layout shifts
+
+**Root Causes:**
+1. **Font inconsistencies** across rendering engines
+2. **Font size unit differences** (pt vs scaled pt vs half-points)
+3. **Spacing system differences** (pixels vs document points vs twips)
+4. **Layout system differences** (CSS flexbox vs PDF positioning vs DOCX flow)
+5. **No shared design system** between frontend and backend
+6. **Different scaling algorithms** for content overflow
+
+**Environment:**
+- All browsers
+- All devices
+- All templates affected
+
+**Impact:**
+- User confusion and frustration
+- Loss of trust in preview accuracy
+- Potential resume formatting issues for job applications
+- Professional appearance compromised
+
+**Implementation Plan:**
+See [TEMPLATE_CONSISTENCY_FIX_PLAN.md](TEMPLATE_CONSISTENCY_FIX_PLAN.md) for comprehensive solution.
+
+**Key Solutions:**
+1. Create unified design system shared across frontend/backend
+2. Standardize font to Arial/Helvetica across all formats
+3. Convert all measurements to consistent pt-based system
+4. Implement visual regression testing
+5. Add "Download Preview" mode showing exact PDF styling
+6. Create template consistency validation tests
+
+**Quick Wins:**
+- Phase 1: Standardize fonts to Arial/Helvetica ✅  
+- Phase 2: Fix font size units (all use base pt) ✅  
+- Phase 3: Align spacing values ✅  
+- Phase 4: Add basic consistency tests ✅  
+
+**Workaround:**
+Currently, users should download and review the actual PDF/DOCX files before using them for applications, rather than relying solely on the preview.
+
+**Assignee:** To be assigned  
+**Target Version:** v1.1.0  
+**Estimated Effort:** 2-3 weeks  
+**Related Files:**
+- Frontend: `resume-builder/frontend/src/components/Resume/templates/*.tsx`
+- Backend PDF: `resume-builder/backend/src/services/templates/*.ts`
+- Backend DOCX: `resume-builder/backend/src/services/docx.service.ts`
 
 ---
 
