@@ -11,30 +11,28 @@ import {
   ExternalHyperlink,
 } from "docx";
 import { GeneratedResume } from "./gemini.service";
-import { DesignTokens } from "./templates/design-tokens";
+import { UnifiedDesignSystem, getCleanColor } from "../../../shared/design-system";
+import { UnitConverter } from "../../../shared/unit-converters";
 
 export class DocxService {
   /**
    * Generate a one-page ATS-friendly DOCX resume
-   * Narrow margins (0.5 inch)
+   * Using unified design system for consistency
    */
   async generateResumeDocx(resume: GeneratedResume): Promise<Buffer> {
-    const pageWidthInches = 8.27;
-    const pageHeightInches = 11.69;
-    const pageMarginInches = 0.5;
+    const ds = UnifiedDesignSystem;
+    
+    // Page setup using design system
+    const pageWidthInches = ds.page.widthInches;
+    const pageHeightInches = ds.page.heightInches;
+    const pageMarginInches = UnitConverter.ptToInches(ds.margins.page);
     const rightTabStop = convertInchesToTwip(
       pageWidthInches - pageMarginInches,
     );
 
-    // Helpers for Design Tokens
-    const cleanColor = (hex: string) => hex.replace("#", "");
-    const { primary, text, textLight, secondary } = DesignTokens.colors;
-
-    // Map PDF fonts to Word fonts
-    // Times-Roman -> Times New Roman
-    // Helvetica -> Arial
-    const bodyFont = "Times New Roman";
-    const headerFont = "Times New Roman";
+    // Use Arial font family from design system
+    const bodyFont = ds.fonts.primary.docx;
+    const headerFont = ds.fonts.primary.docx;
 
     const doc = new Document({
       sections: [
@@ -57,14 +55,14 @@ export class DocxService {
             // Header - Name
             new Paragraph({
               alignment: AlignmentType.CENTER,
-              spacing: { after: 60 },
+              spacing: { after: UnitConverter.ptToTwip(ds.spacing.tight) },
               children: [
                 new TextRun({
                   text: resume.contactInfo.name.toUpperCase(),
                   bold: true,
-                  size: 28, // 14pt
+                  size: UnitConverter.ptToHalfPoint(ds.fontSize.h1),
                   font: headerFont,
-                  color: cleanColor(primary), // Pro Max Primary
+                  color: getCleanColor(ds.colors.primary),
                 }),
               ],
             }),
@@ -76,7 +74,7 @@ export class DocxService {
             this.createLinksLine(resume.contactInfo, bodyFont),
 
             // Spacing
-            new Paragraph({ spacing: { after: 200 } }),
+            new Paragraph({ spacing: { after: UnitConverter.ptToTwip(ds.spacing.section) } }),
 
             // Professional Summary
             ...(resume.summary
@@ -132,10 +130,9 @@ export class DocxService {
     contact: GeneratedResume["contactInfo"],
     font: string,
   ): Paragraph {
+    const ds = UnifiedDesignSystem;
     const children: (TextRun | ExternalHyperlink)[] = [];
     const parts: any[] = [];
-    const { text, textLight } = DesignTokens.colors;
-    const cleanColor = (hex: string) => hex.replace("#", "");
 
     if (contact.email) {
       parts.push(
@@ -143,9 +140,9 @@ export class DocxService {
           children: [
             new TextRun({
               text: contact.email,
-              size: 19, // 9.5pt
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.contact),
               font: font,
-              color: cleanColor(text),
+              color: getCleanColor(ds.colors.text),
               underline: {},
             }),
           ],
@@ -158,9 +155,9 @@ export class DocxService {
       parts.push(
         new TextRun({
           text: contact.phone,
-          size: 19,
+          size: UnitConverter.ptToHalfPoint(ds.fontSize.contact),
           font: font,
-          color: cleanColor(text),
+          color: getCleanColor(ds.colors.text),
         }),
       );
     }
@@ -169,9 +166,9 @@ export class DocxService {
       parts.push(
         new TextRun({
           text: contact.location,
-          size: 19,
+          size: UnitConverter.ptToHalfPoint(ds.fontSize.contact),
           font: font,
-          color: cleanColor(text),
+          color: getCleanColor(ds.colors.text),
         }),
       );
     }
@@ -183,9 +180,9 @@ export class DocxService {
         children.push(
           new TextRun({
             text: "  |  ",
-            size: 19,
+            size: UnitConverter.ptToHalfPoint(ds.fontSize.contact),
             font: font,
-            color: cleanColor(textLight),
+            color: getCleanColor(ds.colors.textLight),
           }),
         );
       }
@@ -193,7 +190,7 @@ export class DocxService {
 
     return new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { after: 30 },
+      spacing: { after: UnitConverter.ptToTwip(ds.spacing.tight) },
       children: children,
     });
   }
@@ -202,10 +199,9 @@ export class DocxService {
     contact: GeneratedResume["contactInfo"],
     font: string,
   ): Paragraph {
+    const ds = UnifiedDesignSystem;
     const children: (TextRun | ExternalHyperlink)[] = [];
     const items: { text: string; url: string }[] = [];
-    const { primary, textLight } = DesignTokens.colors;
-    const cleanColor = (hex: string) => hex.replace("#", "");
 
     // Helper to strip protocol for display
     const formatUrl = (url: string) =>
@@ -245,9 +241,9 @@ export class DocxService {
           children: [
             new TextRun({
               text: item.text,
-              size: 19,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.contact),
               font: font,
-              color: cleanColor(primary),
+              color: getCleanColor(ds.colors.primary),
               underline: {},
             }),
           ],
@@ -259,9 +255,9 @@ export class DocxService {
         children.push(
           new TextRun({
             text: "  |  ",
-            size: 19,
+            size: UnitConverter.ptToHalfPoint(ds.fontSize.contact),
             font: font,
-            color: cleanColor(textLight),
+            color: getCleanColor(ds.colors.textLight),
           }),
         );
       }
@@ -269,32 +265,34 @@ export class DocxService {
 
     return new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { after: 30 },
+      spacing: { after: UnitConverter.ptToTwip(ds.spacing.tight) },
       children: children,
     });
   }
 
   private createSectionHeader(title: string, font: string): Paragraph {
-    const { text, primary } = DesignTokens.colors;
-    const cleanColor = (hex: string) => hex.replace("#", "");
+    const ds = UnifiedDesignSystem;
 
     return new Paragraph({
-      spacing: { before: 120, after: 60 },
+      spacing: { 
+        before: UnitConverter.ptToTwip(ds.spacing.section), 
+        after: UnitConverter.ptToTwip(ds.spacing.element) 
+      },
       border: {
         bottom: {
-          color: cleanColor(primary),
+          color: getCleanColor(ds.colors.primary),
           space: 1,
           style: BorderStyle.SINGLE,
-          size: 6,
+          size: ds.borders.sectionUnderline.width * 3, // Convert pt to eighth-points (1pt = 8 eighth-points)
         },
       },
       children: [
         new TextRun({
           text: title,
           bold: true,
-          size: 22, // 11pt
+          size: UnitConverter.ptToHalfPoint(ds.fontSize.h2),
           font: font,
-          color: cleanColor(text),
+          color: getCleanColor(ds.colors.text),
           allCaps: true,
           characterSpacing: 10, // Slight letter spacing
         }),
@@ -303,19 +301,18 @@ export class DocxService {
   }
 
   private createSummarySection(summary: string, font: string): Paragraph[] {
-    const { text } = DesignTokens.colors;
-    const cleanColor = (hex: string) => hex.replace("#", "");
+    const ds = UnifiedDesignSystem;
 
     return [
       this.createSectionHeader("PROFESSIONAL SUMMARY", font),
       new Paragraph({
-        spacing: { after: 60 },
+        spacing: { after: UnitConverter.ptToTwip(ds.spacing.element) },
         children: [
           new TextRun({
             text: summary,
-            size: 20, // 10pt
+            size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
             font: font,
-            color: cleanColor(text),
+            color: getCleanColor(ds.colors.text),
           }),
         ],
       }),
