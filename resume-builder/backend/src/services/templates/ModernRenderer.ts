@@ -4,6 +4,22 @@ import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
 import { UnifiedDesignSystem } from "../../../../shared/design-system";
 
 export class ModernRenderer extends BaseTemplateRenderer {
+  /**
+   * Helper to convert points to PDFKit line heights
+   * PDFKit moveDown(n) moves by n * current line height (~1.2 * font size)
+   */
+  private getLineHeight(doc: PDFKit.PDFDocument): number {
+    return (doc.currentFontSize() || 12) * 1.2;
+  }
+
+  /**
+   * Helper to move down by a specific point amount
+   */
+  private moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
+    const lineHeight = this.getLineHeight(doc);
+    doc.moveDown(points / lineHeight);
+  }
+
   render(
     doc: PDFKit.PDFDocument,
     resume: GeneratedResume,
@@ -27,7 +43,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
       .text(resume.contactInfo.name.toUpperCase(), { align: "center" });
 
     // Small spacing after name
-    doc.moveDown((ds.spacing.tight / 12) * fs);
+    this.moveDownPoints(doc, ds.spacing.tight * fs);
 
     // Contact Line
     this.renderContactLine(
@@ -39,7 +55,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     );
 
     // Spacing after contact
-    doc.moveDown((ds.spacing.element / 12) * fs);
+    this.moveDownPoints(doc, ds.spacing.element * fs);
 
     // Professional Summary
     if (resume.summary) {
@@ -50,9 +66,9 @@ export class ModernRenderer extends BaseTemplateRenderer {
         .fillColor(ds.colors.text)
         .text(resume.summary, {
           align: "justify",
-          lineGap: ds.spacing.minimal / 2,
+          lineGap: 2,
         });
-      doc.moveDown((ds.spacing.element / 12) * fs);
+      this.moveDownPoints(doc, ds.spacing.element * fs);
     }
 
     // Work Experience
@@ -60,7 +76,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
       this.drawModernHeader(doc, "WORK EXPERIENCE", fs);
       resume.experiences.forEach((exp) => {
         this.renderExperienceModern(doc, exp, fontBold, fontRegular, fs, ss);
-        doc.moveDown((ds.spacing.tight / 12) * ss);
+        this.moveDownPoints(doc, ds.spacing.tight * ss);
       });
     }
 
@@ -69,7 +85,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
       this.drawModernHeader(doc, "PROJECTS", fs);
       resume.projects.forEach((proj) => {
         this.renderProjectModern(doc, proj, fontBold, fontRegular, fs, ss);
-        doc.moveDown((ds.spacing.tight / 12) * ss);
+        this.moveDownPoints(doc, ds.spacing.tight * ss);
       });
     }
 
@@ -78,7 +94,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
       this.drawModernHeader(doc, "EDUCATION", fs);
       resume.education.forEach((edu) => {
         this.renderEducationModern(doc, edu, fontBold, fontRegular, fs, ss);
-        doc.moveDown((ds.spacing.tight / 12) * ss);
+        this.moveDownPoints(doc, ds.spacing.tight * ss);
       });
     }
 
@@ -91,7 +107,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
         .fillColor(ds.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "left",
-          lineGap: ds.spacing.minimal / 2,
+          lineGap: 2,
         });
     }
   }
@@ -117,7 +133,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
       .stroke();
 
     doc.fillColor(ds.colors.text); // Reset to standard text color
-    doc.moveDown((ds.spacing.element / 12) * fontScaleVal);
+    this.moveDownPoints(doc, ds.spacing.element * fontScaleVal);
   }
 
   private renderExperienceModern(
@@ -162,7 +178,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     exp.bullets.forEach((b: string) => {
       doc.text(`• ${b}`, {
         indent: ds.spacing.bulletIndent,
-        lineGap: ds.spacing.minimal / 2,
+        lineGap: 2,
       });
     });
   }
@@ -206,11 +222,11 @@ export class ModernRenderer extends BaseTemplateRenderer {
       proj.bullets.forEach((b: string) => {
         doc.text(`• ${b}`, {
           indent: ds.spacing.bulletIndent,
-          lineGap: ds.spacing.minimal / 2,
+          lineGap: 2,
         });
       });
     } else if (proj.description) {
-      doc.text(proj.description, { lineGap: ds.spacing.minimal / 2 });
+      doc.text(proj.description, { lineGap: 2 });
     }
   }
 
