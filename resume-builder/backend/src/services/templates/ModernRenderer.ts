@@ -1,7 +1,7 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
-import { UnifiedDesignSystem } from "../../../shared/design-system";
+import { UnifiedDesignSystem } from "../../../../shared/design-system";
 
 export class ModernRenderer extends BaseTemplateRenderer {
   render(

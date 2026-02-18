@@ -101,6 +101,7 @@ export class UnitConverter {
 
   /**
    * Create inline CSS style object with point-based values
+   * For use in React components (frontend only)
    */
   static createCssStyle(styles: {
     fontSize?: number;
@@ -113,8 +114,8 @@ export class UnitConverter {
     paddingBottom?: number;
     paddingLeft?: number;
     paddingRight?: number;
-  }): React.CSSProperties {
-    const cssProps: React.CSSProperties = {};
+  }): Record<string, string | number> {
+    const cssProps: Record<string, string | number> = {};
 
     if (styles.fontSize !== undefined) {
       cssProps.fontSize = `${styles.fontSize}pt`;
