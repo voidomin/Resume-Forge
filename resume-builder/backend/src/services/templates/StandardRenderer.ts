@@ -1,26 +1,33 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
-import { DesignTokens } from "./design-tokens";
+import { UnifiedDesignSystem } from "../../../../shared/design-system";
 
 export class StandardRenderer extends BaseTemplateRenderer {
+  /**
+   * Helper to move down by a specific point amount
+   */
+  private moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
+    const lineHeight = (doc.currentFontSize() || 12) * 1.2;
+    doc.moveDown(points / lineHeight);
+  }
+
   render(
     doc: PDFKit.PDFDocument,
     resume: GeneratedResume,
     fontScale: number = 1,
     spacingScale: number = 1,
   ): void {
-    const fontRegular = DesignTokens.fonts.serif;
-    const fontBold = DesignTokens.fonts.serifBold;
-    const { primary, secondary, text, textLight } = DesignTokens.colors;
+    const ds = UnifiedDesignSystem;
+    const fontRegular = ds.fonts.primary.pdf;
+    const fontBold = ds.fonts.primary.pdfBold;
 
-    // Adaptive sizes based on fontScale
-    // We clamp the minimum font size to 9pt to ensure readability
-    const baseFontSize = 10 * fontScale < 9 ? 9 : 10 * fontScale;
+    // Standard template uses adjusted spacing
+    const baseFontSize = ds.fontSize.body * fontScale;
     const headerFontSize = 16 * fontScale;
-    const sectionTitleSize = 11 * fontScale;
+    const sectionTitleSize = ds.fontSize.h2 * fontScale;
 
-    // Spacing multipliers
+    // Spacing in points (adjusted for Standard aesthetics)
     const lineGap = 1 * spacingScale; // Space between lines of text
     const sectionGap = 12 * spacingScale; // Space between major sections
     const itemGap = 8 * spacingScale; // Space between job items/projects
@@ -28,32 +35,32 @@ export class StandardRenderer extends BaseTemplateRenderer {
 
     // Section Header - Left Aligned with Line
     const drawHeader = (title: string) => {
-      doc.moveDown(0.2 * spacingScale); // Tiny clear space
+      this.moveDownPoints(doc, 2 * spacingScale);
       doc
         .font(fontBold)
         .fontSize(sectionTitleSize)
-        .fillColor(text) // Pro Max Text Color
+        .fillColor(ds.colors.text)
         .text(title.toUpperCase());
 
       const y = doc.y + 2 * spacingScale;
       doc
-        .strokeColor(primary) // Pro Max Primary Color for border
+        .strokeColor(ds.colors.primary)
         .lineWidth(0.5)
         .moveTo(36, y)
         .lineTo(559, y)
         .stroke();
 
-      doc.y = y + headerGap; // Apply dynamic gap
+      doc.y = y + headerGap;
     };
 
     // Header - Name
     doc
       .font(fontBold)
       .fontSize(headerFontSize)
-      .fillColor(text)
+      .fillColor(ds.colors.text)
       .text(resume.contactInfo.name.toUpperCase(), { align: "left" });
 
-    doc.moveDown(0.2 * spacingScale);
+    this.moveDownPoints(doc, 2 * spacingScale);
 
     // Contact Line
     this.renderContactLine(
@@ -65,15 +72,15 @@ export class StandardRenderer extends BaseTemplateRenderer {
       "left",
     );
 
-    doc.moveDown(0.5 * spacingScale);
+    this.moveDownPoints(doc, 5 * spacingScale);
 
     if (resume.summary) {
       drawHeader("PROFESSIONAL SUMMARY");
       doc
         .font(fontRegular)
         .fontSize(baseFontSize)
-        .fillColor(text)
-        .text(resume.summary, { align: "justify", lineGap: lineGap });
+        .fillColor(ds.colors.text)
+        .text(resume.summary, { align: "justify", lineGap: 1 });
       doc.y += sectionGap;
     }
 
@@ -87,16 +94,16 @@ export class StandardRenderer extends BaseTemplateRenderer {
         doc
           .font(fontBold)
           .fontSize(baseFontSize)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(exp.role, { continued: true, align: "left" });
 
         doc
           .font(fontRegular)
-          .fillColor(secondary)
+          .fillColor(ds.colors.secondary)
           .text("  |  ", { continued: true })
-          .fillColor(primary) // Company in Primary
+          .fillColor(ds.colors.primary)
           .text(exp.company, { continued: true })
-          .fillColor(textLight)
+          .fillColor(ds.colors.textLight)
           .text(exp.location ? `  |  ${exp.location}` : "", {
             continued: false,
             align: "left",
@@ -106,7 +113,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
         const dateWidth = doc.widthOfString(exp.dateRange);
         // Reset Y to start of line to draw date
         doc
-          .fillColor(textLight)
+          .fillColor(ds.colors.textLight)
           .text(exp.dateRange, 595 - 36 - dateWidth, startY, {
             align: "left",
           });
@@ -118,10 +125,10 @@ export class StandardRenderer extends BaseTemplateRenderer {
           doc
             .font(fontRegular)
             .fontSize(baseFontSize)
-            .fillColor(text)
+            .fillColor(ds.colors.text)
             .text(`•  ${b}`, 42, doc.y, {
               width: 510,
-              lineGap: lineGap,
+              lineGap: 1,
               align: "left",
             });
         });
@@ -139,15 +146,15 @@ export class StandardRenderer extends BaseTemplateRenderer {
         doc
           .font(fontBold)
           .fontSize(baseFontSize)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(proj.name, { continued: true, align: "left" });
 
         if (proj.link) {
           doc
             .font(fontRegular)
-            .fillColor(textLight)
+            .fillColor(ds.colors.textLight)
             .text("  |  ", { continued: true })
-            .fillColor(primary)
+            .fillColor(ds.colors.primary)
             .text(proj.link, {
               link: proj.link.startsWith("http")
                 ? proj.link
@@ -163,18 +170,18 @@ export class StandardRenderer extends BaseTemplateRenderer {
         if (proj.technologies) {
           doc
             .font(fontRegular)
-            .fontSize(baseFontSize - 1) // Slightly smaller
-            .fillColor(textLight)
-            .text(proj.technologies, { align: "left", oblique: true }); // Italic for techs
+            .fontSize(baseFontSize - 1)
+            .fillColor(ds.colors.textLight)
+            .text(proj.technologies, { align: "left", oblique: true });
         }
 
         doc
           .font(fontRegular)
           .fontSize(baseFontSize)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(proj.bullets ? "" : proj.description || "", {
             align: "left",
-            lineGap: lineGap,
+            lineGap: 1,
           });
 
         if (proj.bullets) {
@@ -182,10 +189,10 @@ export class StandardRenderer extends BaseTemplateRenderer {
             doc
               .font(fontRegular)
               .fontSize(baseFontSize)
-              .fillColor(text)
+              .fillColor(ds.colors.text)
               .text(`•  ${b}`, 42, doc.y, {
                 width: 510,
-                lineGap: lineGap,
+                lineGap: 1,
                 align: "left",
               });
           });
@@ -203,26 +210,26 @@ export class StandardRenderer extends BaseTemplateRenderer {
         doc
           .font(fontBold)
           .fontSize(baseFontSize)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(`${edu.degree} in ${edu.field}`, { continued: true });
 
         doc
           .font(fontRegular)
-          .fillColor(textLight)
+          .fillColor(ds.colors.textLight)
           .text("  |  ", { continued: true })
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(edu.institution);
 
         if (edu.dateRange) {
           const w = doc.widthOfString(edu.dateRange);
           doc
-            .fillColor(textLight)
+            .fillColor(ds.colors.textLight)
             .text(edu.dateRange, 595 - 36 - w, startY, { align: "left" });
           doc.y = startY + doc.currentLineHeight(false) + 2 * spacingScale;
         }
 
         if (edu.gpa) {
-          doc.fillColor(textLight).text(`CGPA: ${edu.gpa}`);
+          doc.fillColor(ds.colors.textLight).text(`CGPA: ${edu.gpa}`);
         }
         doc.y += itemGap;
       });
@@ -234,10 +241,10 @@ export class StandardRenderer extends BaseTemplateRenderer {
       doc
         .font(fontRegular)
         .fontSize(baseFontSize)
-        .fillColor(text)
+        .fillColor(ds.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "left",
-          lineGap: lineGap * 1.5, // slightly more breathing room for skills
+          lineGap: 1.5,
         });
     }
   }
