@@ -173,6 +173,11 @@ export interface GeneratedResume {
   modelUsed?: string;
   generationMethod?: "ai" | "fallback"; // Track if AI was used or fallback
   failureReason?: string; // Reason if fallback was used (e.g., "quota_exceeded", "all_models_failed")
+  optionalSectionsScores?: {
+    courseworkScore: number; // 0-100, include if ≥ 60
+    leadershipScore: number; // 0-100, include if ≥ 70
+    awardsScore: number; // 0-100, include if ≥ 75
+  };
   atsScore: number;
   atsScoreBreakdown?: {
     keywordMatch: number;
@@ -430,19 +435,36 @@ DO NOT simply take the first N items from each list. ANALYZE each item for relev
 Score the relevance of each optional section to the job description:
 
 1. **RELEVANT COURSEWORK**: Include ONLY if you find classes/topics in the candidate's coursework that directly relate to technologies, methodologies, or domains mentioned in the JD.
-   - Score calculation: Count matching keywords between coursework topics and JD (0-100)
-   - INCLUDE if score ≥ 60
+   - Score calculation: Count matching keywords between coursework topics and JD keywords
+   - Max points available: 100 (e.g., 15 points per matching keyword, capped at 100)
+   - INCLUDE in resume if score ≥ 60
    - If included: Show 2-3 most relevant courses focused on JD-matching topics
+   - OUTPUT: "courseworkScore" field in response with calculated score (0-100)
 
 2. **LEADERSHIP/EXTRACURRICULAR**: Include ONLY if the roles demonstrate skills or experience highly relevant to the target role (e.g., teamwork, leadership, domain expertise, project management).
-   - Score calculation: Keywords related to leadership, team, project, domain (0-100)
-   - INCLUDE if score ≥ 70
+   - Score calculation: Evaluate relevance of titles and descriptions against JD keywords (0-100)
+   - Keywords that boost score: "leader", "lead", "manage", "team", "organize", "direct", plus domain-specific keywords from JD
+   - INCLUDE in resume if score ≥ 70
    - If included: Select 1-2 most relevant roles, 2-3 bullets each describing impact and relevance
+   - OUTPUT: "leadershipScore" field in response with calculated score (0-100)
 
 3. **HONORS & AWARDS**: Include ONLY if awards are prestigious, domain-specific, or directly demonstrate competency in areas required by the job.
-   - Score calculation: Keywords related to recognition, achievement, expertise (0-100)
-   - INCLUDE if score ≥ 75
+   - Score calculation: Prestige weighting + domain relevance (0-100)
+   - High prestige: 20 pts base, +20 per matching skill/domain keyword
+   - Medium prestige: 15 pts base, +15 per matching skill/domain keyword
+   - Low prestige: 10 pts base, +10 per matching skill/domain keyword (capped at 100)
+   - INCLUDE in resume if score ≥ 75
    - If included: Show 2-3 most impressive or relevant awards
+   - OUTPUT: "awardsScore" field in response with calculated score (0-100)
+
+**SCORING CALCULATION EXAMPLE:**
+If JD mentions: "Python, Machine Learning, Data Analysis"
+- Coursework "Machine Learning Fundamentals" → 40 pts (direct match)
+- Coursework "Python Programming" → 30 pts (direct tech match)
+- Total courseworkScore: 70 (include if ≥ 60) ✓
+
+- Leadership "Team Lead" + "managed team for data project" → 50 pts (leadership keyword + some domain)
+- Total leadershipScore: 50 (exclude if < 70) ✗
 
 **DO NOT include optional sections unless they meet the score threshold. An empty optional section is worse than no section at all.**
 
@@ -562,7 +584,12 @@ Return ONLY valid JSON with this structure:
       "awardDate": "Date",
       "description": "Context/significance"
     }
-  ]
+  ],
+  "optionalSectionsScores": {
+    "courseworkScore": 65,
+    "leadershipScore": 72,
+    "awardsScore": 78
+  }
 }`;
 
     const generateWithFallback = async () => {
@@ -622,6 +649,29 @@ Return ONLY valid JSON with this structure:
       const parsed = JSON.parse(cleanJson);
       parsed.modelUsed = modelUsed;
       parsed.generationMethod = "ai"; // Mark as AI-generated
+
+      // Log optional sections relevance scores
+      if (parsed.optionalSectionsScores) {
+        const scores = parsed.optionalSectionsScores;
+        logger.warn(
+          `🎓 COURSEWORK SCORE: ${scores.courseworkScore}/100 (${
+            scores.courseworkScore >= 60 ? "INCLUDED" : "EXCLUDED"
+          })`,
+        );
+        logger.debug(
+          `📊 Leadership Score: ${scores.leadershipScore}/100 (${
+            scores.leadershipScore >= 70 ? "INCLUDED" : "EXCLUDED"
+          })`,
+        );
+        logger.debug(
+          `🏆 Awards Score: ${scores.awardsScore}/100 (${
+            scores.awardsScore >= 75 ? "INCLUDED" : "EXCLUDED"
+          })`,
+        );
+        logger.debug(
+          `Optional sections summary: Coursework=${parsed.coursework?.length || 0}, Leadership=${parsed.leadership?.length || 0}, Awards=${parsed.awards?.length || 0}`,
+        );
+      }
 
       if (!parsed.keywordAnalysis) {
         parsed.keywordAnalysis = {
