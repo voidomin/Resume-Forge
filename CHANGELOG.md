@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **[CRITICAL]** Fixed regenerate button using wrong job description (#REGENERATE-JD-BUG-001)
+  - Backend now preserves original job description instead of overwriting it
+  - Frontend properly resets state when navigating between resumes
+  - Added state validation guards to prevent mismatches
+  - Prevents data corruption and ensures regeneration uses correct job posting
 - **[CRITICAL]** Fixed visual inconsistencies between preview, PDF, and DOCX formats (#TEMPLATE-CONSISTENCY-001)
   - All templates now render identically across all three output formats
   - Fonts now consistent (Helvetica/Arial) across all formats

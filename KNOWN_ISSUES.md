@@ -41,6 +41,44 @@ If you encounter any bugs or issues:
 
 **Status:** None currently open
 
+### [RESOLVED] [Regenerate Button Using Wrong Job Description]
+
+**Issue ID:** #REGENERATE-JD-BUG-001  
+**Reported:** 2026-02-19  
+**Resolved:** 2026-02-19  
+**Priority:** High (P0)  
+**Status:** ✅ **RESOLVED** - Fixed in develop
+**Affected Version:** v1.0.0
+**Fixed In:** develop branch (pending v1.0.1 release)
+
+**Description:**
+When clicking the "Regenerate" button on a resume, the system was generating the resume using the most recent job description from any resume generation session, instead of using the original job description that was saved with that specific resume. This caused:
+- Wrong content regeneration (resume matched wrong job posting)
+- Data corruption (original job description was permanently overwritten)
+- Loss of original job description with no recovery option
+
+**Root Causes:**
+1. **Backend:** The regenerate endpoint was overwriting the `jobDescription` field in the database, corrupting the original data
+2. **Frontend:** React state management wasn't properly resetting when navigating between resumes, causing stale job descriptions to be sent
+
+**Resolution:**
+- **Backend Fix:** Modified regenerate endpoint to preserve original `jobDescription` field - only updates `generatedContent` and `atsScore`
+- **Frontend Fix 1:** Added state reset on navigation to prevent stale data
+- **Frontend Fix 2:** Implemented `useCallback` for proper dependency management
+- **Frontend Fix 3:** Added state validation guard to detect and prevent mismatches between URL and state
+
+**Files Changed:**
+- `backend/src/routes/resume.routes.ts` - Removed jobDescription overwrite in update
+- `frontend/src/pages/ResumeView.tsx` - Added useCallback, state reset, validation guards
+
+**Testing:**
+- ✅ Navigate between multiple resumes and verify correct JD is used
+- ✅ Use browser back/forward and verify state updates correctly
+- ✅ Rapid navigation doesn't cause race conditions
+- ✅ Original job description is preserved after regeneration
+
+---
+
 ### [RESOLVED] [Template Inconsistency: Preview vs Downloaded Files]
 
 **Issue ID:** #TEMPLATE-CONSISTENCY-001  
@@ -53,6 +91,7 @@ If you encounter any bugs or issues:
 
 **Resolution:**
 Created unified design system and proper spacing calculations across all template renderers:
+
 - Created `resume-builder/shared/design-system.ts` - single source of truth for all design tokens
 - Created `resume-builder/shared/unit-converters.ts` - proper unit conversion utilities
 - Updated all 4 PDF renderers (Modern, Standard, Executive, Minimalist) to use unified system
@@ -63,6 +102,7 @@ Created unified design system and proper spacing calculations across all templat
 All templates now render consistently across preview, PDF, and DOCX formats.
 
 **Testing Completed:**
+
 - ✅ Modern template: Preview = PDF = DOCX
 - ✅ Standard template: Preview = PDF = DOCX
 - ✅ Executive template: Preview = PDF = DOCX

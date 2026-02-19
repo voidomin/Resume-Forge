@@ -482,11 +482,11 @@ async function resumeRoutes(server: FastifyInstance) {
           jd,
         );
 
-        // Update resume
+        // Update resume (preserve original jobDescription)
         await prisma.resume.update({
           where: { id },
           data: {
-            jobDescription: jd,
+            // Don't overwrite jobDescription - keep the original
             generatedContent: JSON.stringify(generatedResume),
             atsScore: generatedResume.atsScore,
           },

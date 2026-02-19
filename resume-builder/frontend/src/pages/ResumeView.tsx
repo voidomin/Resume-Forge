@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import {
@@ -85,12 +85,9 @@ function ResumeView() {
   const [regenerating, setRegenerating] = useState(false);
   const [atsReport, setAtsReport] = useState<any>(null);
 
-  useEffect(() => {
-    fetchResume();
-  }, [id]);
-
-  const fetchResume = async () => {
+  const fetchResume = useCallback(async () => {
     try {
+      setLoading(true);
       const response = await api.get(`/resumes/${id}`);
       setResume(response.data.resume);
       setAtsReport(response.data.atsReport || null);
@@ -100,7 +97,15 @@ function ResumeView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    // Reset state immediately when id changes to prevent stale data
+    setResume(null);
+    setAtsReport(null);
+    setLoading(true);
+    fetchResume();
+  }, [id, fetchResume]);
 
   const handleExport = async (format: "pdf" | "docx") => {
     if (!id) return;
@@ -172,6 +177,13 @@ function ResumeView() {
 
   const handleRegenerate = async () => {
     if (!id || !resume?.jobDescription) return;
+
+    // Validate state matches URL to prevent using wrong job description
+    if (resume.id !== id) {
+      toast.error("State mismatch detected - refreshing...");
+      await fetchResume();
+      return;
+    }
 
     setRegenerating(true);
     try {
