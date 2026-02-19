@@ -10,10 +10,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Tracking for user feedback and bug reports from v1.0.0 deployment
+- Comprehensive testing guides (TESTING_GUIDE.md, TESTING_SUMMARY.md)
+- Unified design system (`resume-builder/shared/design-system.ts`)
+- Unit conversion utilities (`resume-builder/shared/unit-converters.ts`)
 
 ### Changed
 
+- Updated all 4 PDF renderers to use UnifiedDesignSystem
+- Updated DOCX service to use UnifiedDesignSystem
+- Improved spacing calculations in PDF generation
+
 ### Fixed
+
+- **[CRITICAL]** Fixed visual inconsistencies between preview, PDF, and DOCX formats (#TEMPLATE-CONSISTENCY-001)
+  - All templates now render identically across all three output formats
+  - Fonts now consistent (Helvetica/Arial) across all formats
+  - Spacing calculations now accurate using proper point-to-line-height conversion
+  - Applied fix to all 4 templates: Modern, Standard, Executive, Minimalist
 
 ### Security
 

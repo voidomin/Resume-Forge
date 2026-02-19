@@ -39,13 +39,34 @@ If you encounter any bugs or issues:
 
 ## High Priority Issues 🟠
 
-### [Template Inconsistency: Preview vs Downloaded Files]
+**Status:** None currently open
+
+### [RESOLVED] [Template Inconsistency: Preview vs Downloaded Files]
 
 **Issue ID:** #TEMPLATE-CONSISTENCY-001  
 **Reported:** 2026-02-18  
+**Resolved:** 2026-02-19
 **Priority:** High  
-**Status:** Open - Planning Phase  
+**Status:** ✅ **RESOLVED** - Merged to develop
 **Affected Version:** v1.0.0
+**Fixed In:** develop branch (pending v1.0.1 release)
+
+**Resolution:**
+Created unified design system and proper spacing calculations across all template renderers:
+- Created `resume-builder/shared/design-system.ts` - single source of truth for all design tokens
+- Created `resume-builder/shared/unit-converters.ts` - proper unit conversion utilities
+- Updated all 4 PDF renderers (Modern, Standard, Executive, Minimalist) to use unified system
+- Updated DOCX service to use unified system
+- Fixed spacing calculations with proper `moveDownPoints()` helper
+- Updated Modern template frontend component
+
+All templates now render consistently across preview, PDF, and DOCX formats.
+
+**Testing Completed:**
+- ✅ Modern template: Preview = PDF = DOCX
+- ✅ Standard template: Preview = PDF = DOCX
+- ✅ Executive template: Preview = PDF = DOCX
+- ✅ Minimalist template: Preview = PDF = DOCX
 
 **Description:**
 Significant visual inconsistencies exist between the frontend resume preview and the downloaded PDF/DOCX files. Users see one design and formatting in the browser preview, but the downloaded files have different fonts, spacing, sizes, and layouts. This affects **ALL templates** (Modern, Standard, Executive, Minimalist).
