@@ -67,6 +67,32 @@ interface Certification {
   link: string;
 }
 
+interface Coursework {
+  id?: string;
+  courseName: string;
+  topic: string;
+  institution: string;
+}
+
+interface Leadership {
+  id?: string;
+  title: string;
+  organization: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
+}
+
+interface Award {
+  id?: string;
+  awardName: string;
+  organization: string;
+  awardDate: string;
+  description: string;
+}
+
 interface ProfileData {
   firstName: string;
   lastName: string;
@@ -125,6 +151,29 @@ const INITIAL_CERTIFICATION: Certification = {
   link: "",
 };
 
+const INITIAL_COURSEWORK: Coursework = {
+  courseName: "",
+  topic: "",
+  institution: "",
+};
+
+const INITIAL_LEADERSHIP: Leadership = {
+  title: "",
+  organization: "",
+  location: "",
+  startDate: "",
+  endDate: "",
+  current: false,
+  description: "",
+};
+
+const INITIAL_AWARD: Award = {
+  awardName: "",
+  organization: "",
+  awardDate: "",
+  description: "",
+};
+
 function ProfileEdit() {
   const [activeTab, setActiveTab] = useState<
     | "personal"
@@ -133,6 +182,9 @@ function ProfileEdit() {
     | "skills"
     | "projects"
     | "certifications"
+    | "coursework"
+    | "leadership"
+    | "awards"
   >("personal");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -143,10 +195,16 @@ function ProfileEdit() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [certifications, setCertifications] = useState<Certification[]>([]);
+  const [coursework, setCoursework] = useState<Coursework[]>([]);
+  const [leadership, setLeadership] = useState<Leadership[]>([]);
+  const [awards, setAwards] = useState<Award[]>([]);
   const [newSkill, setNewSkill] = useState("");
   const [expandedExp, setExpandedExp] = useState<number | null>(null);
   const [expandedProject, setExpandedProject] = useState<number | null>(null);
   const [expandedCert, setExpandedCert] = useState<number | null>(null);
+  const [expandedCoursework, setExpandedCoursework] = useState<number | null>(null);
+  const [expandedLeadership, setExpandedLeadership] = useState<number | null>(null);
+  const [expandedAward, setExpandedAward] = useState<number | null>(null);
 
   // Resume upload states
   const [uploading, setUploading] = useState(false);
@@ -553,6 +611,9 @@ function ProfileEdit() {
     { id: "projects", label: "Projects", icon: Folder },
     { id: "certifications", label: "Certifications", icon: Award },
     { id: "skills", label: "Skills", icon: Code },
+    { id: "coursework", label: "Coursework", icon: GraduationCap },
+    { id: "leadership", label: "Leadership", icon: Briefcase },
+    { id: "awards", label: "Awards", icon: Award },
   ];
 
   return (
@@ -1765,6 +1826,515 @@ function ProfileEdit() {
                   <Save className="w-5 h-5 mr-2" />
                 )}
                 Save Skills
+              </button>
+            </div>
+          )}
+
+          {/* Coursework Tab */}
+          {activeTab === "coursework" && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Relevant Coursework
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Add coursework relevant to your target roles (will be included if matches job description)
+                </p>
+              </div>
+
+              {coursework.length === 0 ? (
+                <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                  <GraduationCap className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    No coursework yet
+                  </h3>
+                  <p className="text-gray-600">
+                    Add relevant courses you've taken
+                  </p>
+                </div>
+              ) : (
+                coursework.map((course, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() =>
+                        setExpandedCoursework(
+                          expandedCoursework === index ? null : index,
+                        )
+                      }
+                      className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
+                    >
+                      <div className="flex items-center space-x-3 text-left">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900">
+                            {course.courseName || "Untitled Course"}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {course.topic || "No topic"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            const newCoursework = coursework.filter(
+                              (_, i) => i !== index,
+                            );
+                            setCoursework(newCoursework);
+                          }}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        {expandedCoursework === index ? (
+                          <ChevronUp className="w-5 h-5 text-gray-600" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-600" />
+                        )}
+                      </div>
+                    </button>
+
+                    {expandedCoursework === index && (
+                      <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Course Name *
+                          </label>
+                          <input
+                            type="text"
+                            value={course.courseName}
+                            onChange={(e) => {
+                              const updated = [...coursework];
+                              updated[index].courseName = e.target.value;
+                              setCoursework(updated);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            placeholder="e.g., Machine Learning Fundamentals"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Topic/Subject *
+                          </label>
+                          <input
+                            type="text"
+                            value={course.topic}
+                            onChange={(e) => {
+                              const updated = [...coursework];
+                              updated[index].topic = e.target.value;
+                              setCoursework(updated);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            placeholder="e.g., AI, Algorithms, Web Development"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Institution
+                          </label>
+                          <input
+                            type="text"
+                            value={course.institution}
+                            onChange={(e) => {
+                              const updated = [...coursework];
+                              updated[index].institution = e.target.value;
+                              setCoursework(updated);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            placeholder="University/Platform name"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+
+              <button
+                onClick={() => setCoursework([...coursework, INITIAL_COURSEWORK])}
+                className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Coursework
+              </button>
+
+              <button
+                onClick={() => toast.success("Coursework will be saved with profile")}
+                disabled={saving}
+                className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {saving ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <Save className="w-5 h-5 mr-2" />
+                )}
+                Save Coursework
+              </button>
+            </div>
+          )}
+
+          {/* Leadership Tab */}
+          {activeTab === "leadership" && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Leadership & Extracurricular
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Add leadership roles and extracurricular activities (will be included if relevant to job)
+                </p>
+              </div>
+
+              {leadership.length === 0 ? (
+                <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                  <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    No leadership roles yet
+                  </h3>
+                  <p className="text-gray-600">
+                    Add leadership positions and extracurricular activities
+                  </p>
+                </div>
+              ) : (
+                leadership.map((role, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() =>
+                        setExpandedLeadership(
+                          expandedLeadership === index ? null : index,
+                        )
+                      }
+                      className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
+                    >
+                      <div className="flex items-center space-x-3 text-left">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900">
+                            {role.title || "Untitled Role"}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {role.organization || "No organization"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            const newLeadership = leadership.filter(
+                              (_, i) => i !== index,
+                            );
+                            setLeadership(newLeadership);
+                          }}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        {expandedLeadership === index ? (
+                          <ChevronUp className="w-5 h-5 text-gray-600" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-600" />
+                        )}
+                      </div>
+                    </button>
+
+                    {expandedLeadership === index && (
+                      <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Title *
+                            </label>
+                            <input
+                              type="text"
+                              value={role.title}
+                              onChange={(e) => {
+                                const updated = [...leadership];
+                                updated[index].title = e.target.value;
+                                setLeadership(updated);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              placeholder="e.g., President, Team Lead"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Organization *
+                            </label>
+                            <input
+                              type="text"
+                              value={role.organization}
+                              onChange={(e) => {
+                                const updated = [...leadership];
+                                updated[index].organization = e.target.value;
+                                setLeadership(updated);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              placeholder="Organization name"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Location
+                          </label>
+                          <input
+                            type="text"
+                            value={role.location}
+                            onChange={(e) => {
+                              const updated = [...leadership];
+                              updated[index].location = e.target.value;
+                              setLeadership(updated);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            placeholder="City, State"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Start Date
+                            </label>
+                            <input
+                              type="month"
+                              value={role.startDate}
+                              onChange={(e) => {
+                                const updated = [...leadership];
+                                updated[index].startDate = e.target.value;
+                                setLeadership(updated);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              End Date
+                            </label>
+                            <input
+                              type="month"
+                              value={role.endDate}
+                              disabled={role.current}
+                              onChange={(e) => {
+                                const updated = [...leadership];
+                                updated[index].endDate = e.target.value;
+                                setLeadership(updated);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:bg-gray-100"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`leadership-current-${index}`}
+                            checked={role.current}
+                            onChange={(e) => {
+                              const updated = [...leadership];
+                              updated[index].current = e.target.checked;
+                              setLeadership(updated);
+                            }}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                          />
+                          <label
+                            htmlFor={`leadership-current-${index}`}
+                            className="ml-2 text-sm font-medium text-gray-700"
+                          >
+                            Currently in this role
+                          </label>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Description
+                          </label>
+                          <textarea
+                            value={role.description}
+                            onChange={(e) => {
+                              const updated = [...leadership];
+                              updated[index].description = e.target.value;
+                              setLeadership(updated);
+                            }}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            placeholder="Describe your role, achievements, and impact"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+
+              <button
+                onClick={() => setLeadership([...leadership, INITIAL_LEADERSHIP])}
+                className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Leadership Role
+              </button>
+
+              <button
+                onClick={() => toast.success("Leadership will be saved with profile")}
+                disabled={saving}
+                className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {saving ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <Save className="w-5 h-5 mr-2" />
+                )}
+                Save Leadership
+              </button>
+            </div>
+          )}
+
+          {/* Awards Tab */}
+          {activeTab === "awards" && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Honors & Awards
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Add awards and honors (will be included if highly relevant to job description)
+                </p>
+              </div>
+
+              {awards.length === 0 ? (
+                <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                  <Award className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    No awards yet
+                  </h3>
+                  <p className="text-gray-600">
+                    Add awards, recognitions, and honors you've received
+                  </p>
+                </div>
+              ) : (
+                awards.map((award, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() =>
+                        setExpandedAward(expandedAward === index ? null : index)
+                      }
+                      className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
+                    >
+                      <div className="flex items-center space-x-3 text-left">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900">
+                            {award.awardName || "Untitled Award"}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {award.organization || "No organization"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            const newAwards = awards.filter((_, i) => i !== index);
+                            setAwards(newAwards);
+                          }}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        {expandedAward === index ? (
+                          <ChevronUp className="w-5 h-5 text-gray-600" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-600" />
+                        )}
+                      </div>
+                    </button>
+
+                    {expandedAward === index && (
+                      <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Award Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={award.awardName}
+                              onChange={(e) => {
+                                const updated = [...awards];
+                                updated[index].awardName = e.target.value;
+                                setAwards(updated);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              placeholder="e.g., Best Employee Award"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Organization *
+                            </label>
+                            <input
+                              type="text"
+                              value={award.organization}
+                              onChange={(e) => {
+                                const updated = [...awards];
+                                updated[index].organization = e.target.value;
+                                setAwards(updated);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                              placeholder="Organization name"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Date *
+                          </label>
+                          <input
+                            type="month"
+                            value={award.awardDate}
+                            onChange={(e) => {
+                              const updated = [...awards];
+                              updated[index].awardDate = e.target.value;
+                              setAwards(updated);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Description
+                          </label>
+                          <textarea
+                            value={award.description}
+                            onChange={(e) => {
+                              const updated = [...awards];
+                              updated[index].description = e.target.value;
+                              setAwards(updated);
+                            }}
+                            rows={2}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            placeholder="Describe the award and its significance"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+
+              <button
+                onClick={() => setAwards([...awards, INITIAL_AWARD])}
+                className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Award
+              </button>
+
+              <button
+                onClick={() => toast.success("Awards will be saved with profile")}
+                disabled={saving}
+                className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {saving ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <Save className="w-5 h-5 mr-2" />
+                )}
+                Save Awards
               </button>
             </div>
           )}
