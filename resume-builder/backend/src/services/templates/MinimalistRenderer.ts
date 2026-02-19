@@ -221,5 +221,74 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
           lineGap: 1.6,
         });
     }
+
+    // Optional Sections
+    if (resume.coursework?.length) {
+      drawHeader("RELEVANT COURSEWORK");
+      resume.coursework.forEach((course) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(course.courseName, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(
+            ` — ${course.topic}${
+              course.institution ? ` (${course.institution})` : ""
+            }`,
+          );
+      });
+    }
+
+    if (resume.leadership?.length) {
+      drawHeader("LEADERSHIP & EXTRACURRICULAR");
+      resume.leadership.forEach((role) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(role.title, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(` — ${role.organization}`);
+        if (role.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.small)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(role.description, { lineGap: 1 });
+        }
+      });
+    }
+
+    if (resume.awards?.length) {
+      drawHeader("HONORS & AWARDS");
+      resume.awards.forEach((award) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(award.awardName, { continued: true });
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.small)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(
+            ` — ${award.organization}${
+              award.awardDate ? ` (${award.awardDate})` : ""
+            }`,
+          );
+        if (award.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.small)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(award.description, { lineGap: 0.8 });
+        }
+      });
+    }
   }
 }

@@ -103,6 +103,32 @@ export class ModernRenderer extends BaseTemplateRenderer {
           lineGap: 2,
         });
     }
+
+    // Optional Sections (Coursework, Leadership, Awards)
+    // Coursework - after Education
+    if (resume.coursework?.length) {
+      this.drawModernHeader(doc, "RELEVANT COURSEWORK", ds);
+      resume.coursework.forEach((course) => {
+        this.renderCourseworkModern(doc, course, fontBold, fontRegular, ds);
+      });
+    }
+
+    // Leadership - as separate section
+    if (resume.leadership?.length) {
+      this.drawModernHeader(doc, "LEADERSHIP & EXTRACURRICULAR", ds);
+      resume.leadership.forEach((role) => {
+        this.renderLeadershipModern(doc, role, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.tight);
+      });
+    }
+
+    // Awards - after other achievements
+    if (resume.awards?.length) {
+      this.drawModernHeader(doc, "HONORS & AWARDS", ds);
+      resume.awards.forEach((award) => {
+        this.renderAwardModern(doc, award, fontBold, fontRegular, ds);
+      });
+    }
   }
 
   private drawModernHeader(
@@ -247,6 +273,111 @@ export class ModernRenderer extends BaseTemplateRenderer {
         .fontSize(ds.fontSize.body)
         .fillColor(UnifiedDesignSystem.colors.textLight)
         .text(`GPA: ${edu.gpa}`);
+    }
+  }
+
+  private renderCourseworkModern(
+    doc: PDFKit.PDFDocument,
+    course: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(course.courseName, { continued: true });
+
+    if (course.institution) {
+      doc
+        .font(fontRegular)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(` | ${course.institution}`, { continued: false });
+    } else {
+      doc.text("");
+    }
+
+    doc
+      .font(fontRegular)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(`Topic: ${course.topic}`, { oblique: true });
+  }
+
+  private renderLeadershipModern(
+    doc: PDFKit.PDFDocument,
+    role: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(role.title, { continued: true });
+
+    doc
+      .font(fontRegular)
+      .fillColor(UnifiedDesignSystem.colors.secondary)
+      .text(" | ", { continued: true })
+      .fillColor(UnifiedDesignSystem.colors.primary)
+      .text(role.organization, { continued: true });
+
+    doc
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(role.location ? ` | ${role.location}` : "", { continued: false });
+
+    doc.moveUp(1);
+    doc
+      .fontSize(ds.fontSize.small)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(role.dateRange || "N/A", { align: "right" });
+
+    if (role.description) {
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(`• ${role.description}`, {
+          indent: ds.spacing.bulletIndent,
+          lineGap: 2,
+        });
+    }
+  }
+
+  private renderAwardModern(
+    doc: PDFKit.PDFDocument,
+    award: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.primary)
+      .text(award.awardName, { continued: true });
+
+    doc
+      .font(fontRegular)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(` | ${award.organization}`, { continued: false });
+
+    doc.moveUp(1);
+    doc
+      .fontSize(ds.fontSize.small)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(award.awardDate, { align: "right" });
+
+    if (award.description) {
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(award.description, { oblique: true });
     }
   }
 }

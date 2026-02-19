@@ -202,8 +202,12 @@ function ProfileEdit() {
   const [expandedExp, setExpandedExp] = useState<number | null>(null);
   const [expandedProject, setExpandedProject] = useState<number | null>(null);
   const [expandedCert, setExpandedCert] = useState<number | null>(null);
-  const [expandedCoursework, setExpandedCoursework] = useState<number | null>(null);
-  const [expandedLeadership, setExpandedLeadership] = useState<number | null>(null);
+  const [expandedCoursework, setExpandedCoursework] = useState<number | null>(
+    null,
+  );
+  const [expandedLeadership, setExpandedLeadership] = useState<number | null>(
+    null,
+  );
   const [expandedAward, setExpandedAward] = useState<number | null>(null);
 
   // Resume upload states
@@ -1838,7 +1842,8 @@ function ProfileEdit() {
                   Relevant Coursework
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Add coursework relevant to your target roles (will be included if matches job description)
+                  Add coursework relevant to your target roles (will be included
+                  if matches job description)
                 </p>
               </div>
 
@@ -1854,7 +1859,10 @@ function ProfileEdit() {
                 </div>
               ) : (
                 coursework.map((course, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-lg overflow-hidden"
+                  >
                     <button
                       onClick={() =>
                         setExpandedCoursework(
@@ -1950,7 +1958,9 @@ function ProfileEdit() {
               )}
 
               <button
-                onClick={() => setCoursework([...coursework, INITIAL_COURSEWORK])}
+                onClick={() =>
+                  setCoursework([...coursework, INITIAL_COURSEWORK])
+                }
                 className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
               >
                 <Plus className="w-5 h-5 mr-2" />
@@ -1958,7 +1968,9 @@ function ProfileEdit() {
               </button>
 
               <button
-                onClick={() => toast.success("Coursework will be saved with profile")}
+                onClick={() =>
+                  toast.success("Coursework will be saved with profile")
+                }
                 disabled={saving}
                 className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
@@ -1980,7 +1992,8 @@ function ProfileEdit() {
                   Leadership & Extracurricular
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Add leadership roles and extracurricular activities (will be included if relevant to job)
+                  Add leadership roles and extracurricular activities (will be
+                  included if relevant to job)
                 </p>
               </div>
 
@@ -1996,7 +2009,10 @@ function ProfileEdit() {
                 </div>
               ) : (
                 leadership.map((role, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-lg overflow-hidden"
+                  >
                     <button
                       onClick={() =>
                         setExpandedLeadership(
@@ -2162,7 +2178,9 @@ function ProfileEdit() {
               )}
 
               <button
-                onClick={() => setLeadership([...leadership, INITIAL_LEADERSHIP])}
+                onClick={() =>
+                  setLeadership([...leadership, INITIAL_LEADERSHIP])
+                }
                 className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
               >
                 <Plus className="w-5 h-5 mr-2" />
@@ -2170,7 +2188,9 @@ function ProfileEdit() {
               </button>
 
               <button
-                onClick={() => toast.success("Leadership will be saved with profile")}
+                onClick={() =>
+                  toast.success("Leadership will be saved with profile")
+                }
                 disabled={saving}
                 className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
@@ -2192,7 +2212,8 @@ function ProfileEdit() {
                   Honors & Awards
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Add awards and honors (will be included if highly relevant to job description)
+                  Add awards and honors (will be included if highly relevant to
+                  job description)
                 </p>
               </div>
 
@@ -2208,7 +2229,10 @@ function ProfileEdit() {
                 </div>
               ) : (
                 awards.map((award, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-lg overflow-hidden"
+                  >
                     <button
                       onClick={() =>
                         setExpandedAward(expandedAward === index ? null : index)
@@ -2228,7 +2252,9 @@ function ProfileEdit() {
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => {
-                            const newAwards = awards.filter((_, i) => i !== index);
+                            const newAwards = awards.filter(
+                              (_, i) => i !== index,
+                            );
                             setAwards(newAwards);
                           }}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -2325,7 +2351,9 @@ function ProfileEdit() {
               </button>
 
               <button
-                onClick={() => toast.success("Awards will be saved with profile")}
+                onClick={() =>
+                  toast.success("Awards will be saved with profile")
+                }
                 disabled={saving}
                 className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
               >

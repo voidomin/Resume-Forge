@@ -219,5 +219,85 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
           lineGap: 1.5,
         });
     }
+
+    // Optional Sections
+    if (resume.coursework?.length) {
+      drawHeader("RELEVANT COURSEWORK");
+      resume.coursework.forEach((course) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(`${course.courseName}`, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(
+            ` | ${course.topic}${
+              course.institution ? ` (${course.institution})` : ""
+            }`,
+          );
+      });
+      doc.y += ds.spacing.section;
+    }
+
+    if (resume.leadership?.length) {
+      drawHeader("LEADERSHIP & EXTRACURRICULAR");
+      resume.leadership.forEach((role) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(role.title, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.secondary)
+          .text(" | ", { continued: true })
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(role.organization);
+        if (role.location) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(role.location);
+        }
+        if (role.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(role.description, { lineGap: 1 });
+        }
+        doc.y += ds.spacing.tight;
+      });
+      doc.y += ds.spacing.section;
+    }
+
+    if (resume.awards?.length) {
+      drawHeader("HONORS & AWARDS");
+      resume.awards.forEach((award) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(award.awardName, { continued: true });
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(
+            ` | ${award.organization}${
+              award.awardDate ? ` (${award.awardDate})` : ""
+            }`,
+          );
+        if (award.description) {
+          doc
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(award.description, { oblique: true });
+        }
+        doc.y += ds.spacing.tight;
+      });
+    }
   }
 }
