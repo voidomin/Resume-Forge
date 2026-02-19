@@ -1,110 +1,103 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
-import { UnifiedDesignSystem } from "../../../../shared/design-system";
+import {
+  UnifiedDesignSystem,
+  dynamicSizingEngine,
+} from "../../../../shared/design-system";
 
 export class ModernRenderer extends BaseTemplateRenderer {
-  /**
-   * Helper to convert points to PDFKit line heights
-   * PDFKit moveDown(n) moves by n * current line height (~1.2 * font size)
-   */
-  private getLineHeight(doc: PDFKit.PDFDocument): number {
-    return (doc.currentFontSize() || 12) * 1.2;
-  }
-
-  /**
-   * Helper to move down by a specific point amount
-   */
-  private moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
-    const lineHeight = this.getLineHeight(doc);
-    doc.moveDown(points / lineHeight);
-  }
-
   render(
     doc: PDFKit.PDFDocument,
     resume: GeneratedResume,
     fontScale: number = 1,
     spacingScale: number = 1,
   ): void {
-    // Use Unified Design System
-    const ds = UnifiedDesignSystem;
-    const fontRegular = ds.fonts.primary.pdf;
-    const fontBold = ds.fonts.primary.pdfBold;
+    // Get scaled design system values based on document scale
+    const scale = (doc as any).__scale || fontScale;
+    const ds = dynamicSizingEngine.getScaledDesignSystem(scale);
+    const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
+    const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
 
-    // Apply scaling factors
-    const fs = fontScale;
-    const ss = spacingScale;
+    // Apply scaled margins
+    const scaledMargin = dynamicSizingEngine.getScaledMargin(scale);
+    doc.page.margins = {
+      top: scaledMargin,
+      bottom: scaledMargin,
+      left: scaledMargin,
+      right: scaledMargin,
+    };
 
     // Header - Name
     doc
       .font(fontBold)
-      .fontSize(ds.fontSize.h1 * fs)
-      .fillColor(ds.colors.primary)
+      .fontSize(ds.fontSize.h1)
+      .fillColor(UnifiedDesignSystem.colors.primary)
       .text(resume.contactInfo.name.toUpperCase(), { align: "center" });
 
     // Small spacing after name
-    this.moveDownPoints(doc, ds.spacing.tight * fs);
+    this.moveDownPoints(doc, ds.spacing.tight);
 
     // Contact Line
     this.renderContactLine(
       doc,
       resume,
       fontRegular,
-      ds.fontSize.contact * fs,
+      ds.fontSize.contact,
       false,
     );
 
     // Spacing after contact
-    this.moveDownPoints(doc, ds.spacing.element * fs);
+    this.moveDownPoints(doc, ds.spacing.element);
 
     // Professional Summary
     if (resume.summary) {
-      this.drawModernHeader(doc, "PROFESSIONAL SUMMARY", fs);
+      this.drawModernHeader(doc, "PROFESSIONAL SUMMARY", ds);
       doc
         .font(fontRegular)
-        .fontSize(ds.fontSize.body * fs)
-        .fillColor(ds.colors.text)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.summary, {
           align: "justify",
           lineGap: 2,
         });
-      this.moveDownPoints(doc, ds.spacing.element * fs);
+      this.moveDownPoints(doc, ds.spacing.element);
     }
 
     // Work Experience
     if (resume.experiences?.length) {
-      this.drawModernHeader(doc, "WORK EXPERIENCE", fs);
+      this.drawModernHeader(doc, "WORK EXPERIENCE", ds);
       resume.experiences.forEach((exp) => {
-        this.renderExperienceModern(doc, exp, fontBold, fontRegular, fs, ss);
-        this.moveDownPoints(doc, ds.spacing.tight * ss);
+        this.renderExperienceModern(doc, exp, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.tight);
       });
     }
 
     // Projects
     if (resume.projects?.length) {
-      this.drawModernHeader(doc, "PROJECTS", fs);
+      this.drawModernHeader(doc, "PROJECTS", ds);
       resume.projects.forEach((proj) => {
-        this.renderProjectModern(doc, proj, fontBold, fontRegular, fs, ss);
-        this.moveDownPoints(doc, ds.spacing.tight * ss);
+        this.renderProjectModern(doc, proj, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.tight);
       });
     }
 
     // Education
     if (resume.education?.length) {
-      this.drawModernHeader(doc, "EDUCATION", fs);
+      this.drawModernHeader(doc, "EDUCATION", ds);
       resume.education.forEach((edu) => {
-        this.renderEducationModern(doc, edu, fontBold, fontRegular, fs, ss);
-        this.moveDownPoints(doc, ds.spacing.tight * ss);
+        this.renderEducationModern(doc, edu, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.tight);
       });
     }
 
     // Skills
     if (resume.skills?.length) {
-      this.drawModernHeader(doc, "SKILLS", fs);
+      this.drawModernHeader(doc, "SKILLS", ds);
       doc
         .font(fontRegular)
-        .fontSize(ds.fontSize.body * fs)
-        .fillColor(ds.colors.text)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "left",
           lineGap: 2,
@@ -115,25 +108,26 @@ export class ModernRenderer extends BaseTemplateRenderer {
   private drawModernHeader(
     doc: PDFKit.PDFDocument,
     title: string,
-    fontScaleVal: number,
+    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
   ) {
-    const ds = UnifiedDesignSystem;
+    const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
+
     doc
-      .font(ds.fonts.primary.pdfBold)
-      .fontSize(ds.fontSize.h2 * fontScaleVal)
-      .fillColor(ds.colors.primary)
+      .font(fontBold)
+      .fontSize(ds.fontSize.h2)
+      .fillColor(UnifiedDesignSystem.colors.primary)
       .text(title.toUpperCase());
 
     // Underline with design system border width
     doc
-      .strokeColor(ds.colors.primary)
-      .lineWidth(ds.borders.sectionUnderline.width)
+      .strokeColor(UnifiedDesignSystem.colors.primary)
+      .lineWidth(UnifiedDesignSystem.borders.sectionUnderline.width)
       .moveTo(doc.x, doc.y + 2)
       .lineTo(doc.page.width - doc.page.margins.right, doc.y + 2)
       .stroke();
 
-    doc.fillColor(ds.colors.text); // Reset to standard text color
-    this.moveDownPoints(doc, ds.spacing.element * fontScaleVal);
+    doc.fillColor(UnifiedDesignSystem.colors.text); // Reset to standard text color
+    this.moveDownPoints(doc, ds.spacing.element);
   }
 
   private renderExperienceModern(
@@ -141,40 +135,37 @@ export class ModernRenderer extends BaseTemplateRenderer {
     exp: any,
     fontBold: string,
     fontRegular: string,
-    fontScaleVal: number,
-    spacingScaleVal: number,
+    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
   ) {
-    const ds = UnifiedDesignSystem;
-
     doc
       .font(fontBold)
-      .fontSize(ds.fontSize.h3 * fontScaleVal)
-      .fillColor(ds.colors.text)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.text)
       .text(exp.role, { continued: true });
 
     doc
       .font(fontRegular)
-      .fillColor(ds.colors.secondary)
+      .fillColor(UnifiedDesignSystem.colors.secondary)
       .text(" | ", { continued: true })
-      .fillColor(ds.colors.primary)
+      .fillColor(UnifiedDesignSystem.colors.primary)
       .text(exp.company, { continued: true });
 
     doc
-      .fillColor(ds.colors.textLight)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
       .text(exp.location ? ` | ${exp.location}` : "", {
         continued: false,
       });
 
     doc.moveUp(1);
     doc
-      .fontSize(ds.fontSize.small * fontScaleVal)
-      .fillColor(ds.colors.textLight)
+      .fontSize(ds.fontSize.small)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
       .text(exp.dateRange, { align: "right" });
 
     doc
       .font(fontRegular)
-      .fontSize(ds.fontSize.body * fontScaleVal)
-      .fillColor(ds.colors.text);
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.text);
     exp.bullets.forEach((b: string) => {
       doc.text(`• ${b}`, {
         indent: ds.spacing.bulletIndent,
@@ -188,36 +179,33 @@ export class ModernRenderer extends BaseTemplateRenderer {
     proj: any,
     fontBold: string,
     fontRegular: string,
-    fontScaleVal: number,
-    spacingScaleVal: number,
+    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
   ) {
-    const ds = UnifiedDesignSystem;
-
     doc
       .font(fontBold)
-      .fontSize(ds.fontSize.h3 * fontScaleVal)
-      .fillColor(ds.colors.text)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.text)
       .text(proj.name, { continued: true });
     if (proj.link) {
       doc
         .font(fontRegular)
-        .fillColor(ds.colors.textLight)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
         .text(` | `, { continued: true })
-        .fillColor(ds.colors.primary)
+        .fillColor(UnifiedDesignSystem.colors.primary)
         .text(proj.link, { link: proj.link, continued: false })
-        .fillColor(ds.colors.text);
+        .fillColor(UnifiedDesignSystem.colors.text);
     } else {
       doc.text("");
     }
 
-    doc.font(fontRegular).fontSize(ds.fontSize.body * fontScaleVal);
+    doc.font(fontRegular).fontSize(ds.fontSize.body);
     if (proj.technologies) {
       doc
-        .fillColor(ds.colors.secondary)
+        .fillColor(UnifiedDesignSystem.colors.secondary)
         .text(`Stack: ${proj.technologies}`, { oblique: true });
     }
 
-    doc.fillColor(ds.colors.text);
+    doc.fillColor(UnifiedDesignSystem.colors.text);
     if (proj.bullets) {
       proj.bullets.forEach((b: string) => {
         doc.text(`• ${b}`, {
@@ -235,32 +223,29 @@ export class ModernRenderer extends BaseTemplateRenderer {
     edu: any,
     fontBold: string,
     fontRegular: string,
-    fontScaleVal: number,
-    spacingScaleVal: number,
+    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
   ) {
-    const ds = UnifiedDesignSystem;
-
     doc
       .font(fontBold)
-      .fontSize(ds.fontSize.h3 * fontScaleVal)
-      .fillColor(ds.colors.primary)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.primary)
       .text(edu.institution, { continued: true });
     doc
       .font(fontRegular)
-      .fontSize(ds.fontSize.body * fontScaleVal)
-      .fillColor(ds.colors.textLight)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
       .text(` | ${edu.degree} in ${edu.field}`, { continued: false });
 
     doc.moveUp(1);
     doc
-      .fontSize(ds.fontSize.small * fontScaleVal)
-      .fillColor(ds.colors.textLight)
+      .fontSize(ds.fontSize.small)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
       .text(edu.dateRange, { align: "right" });
 
     if (edu.gpa) {
       doc
-        .fontSize(ds.fontSize.body * fontScaleVal)
-        .fillColor(ds.colors.textLight)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
         .text(`GPA: ${edu.gpa}`);
     }
   }

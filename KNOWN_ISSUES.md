@@ -55,19 +55,23 @@ If you encounter any bugs or issues:
 When generating resumes, the AI was selecting the first 2-3 items from the profile (projects, experiences, skills, certifications) instead of selecting the most relevant items based on the job description.
 
 **Root Causes:**
+
 1. **Database ordering:** Projects, skills, and certifications had no explicit ordering, so they arrived in random/insertion order
 2. **Weak AI prompt:** Instructions said "Max 2 projects" without emphasizing relevance selection
 
 **Resolution:**
+
 - **Backend Fix 1:** Added database ordering (`createdAt DESC`) for skills, projects, and certifications
 - **Backend Fix 2:** Strengthened AI prompt with explicit "SELECT MOST RELEVANT" instructions for all sections
 - **Backend Fix 3:** Added prominent "CRITICAL SELECTION RULE" header to prompt emphasizing intelligent selection over taking first N items
 
 **Files Changed:**
+
 - `backend/src/routes/resume.routes.ts` - Added orderBy for skills, projects, certifications (2 locations)
 - `backend/src/services/gemini.service.ts` - Strengthened prompt with relevance emphasis
 
 **Impact:**
+
 - AI now intelligently selects most relevant experiences, projects, skills, and certifications
 - Resumes better match job descriptions
 - Higher ATS scores
@@ -229,6 +233,79 @@ Currently, users should download and review the actual PDF/DOCX files before usi
 ---
 
 ## Medium Priority Issues 🟡
+
+### [Resume Content Occasionally Overflows to Second Page]
+
+**Issue ID:** #PAGINATION-OVERFLOW-001  
+**Reported:** 2026-02-19  
+**Priority:** Medium  
+**Status:** Open  
+**Affected Version:** v1.0.0 and develop
+
+**Description:**
+Sometimes resume content overflows to a second page by 2-3 lines, even though the AI is instructed to keep content within one A4 page. This happens inconsistently across different templates and content volumes.
+
+**Impact:**
+
+- Resumes intended to be one page become two pages
+- Reduces professional appearance
+- User has to manually edit content to fit
+- Not meeting the core "one-page guarantee" promise
+
+**Possible Root Causes:**
+
+1. AI prompt heuristic ("15-18 bullet points") may not accurately predict rendered height
+2. Different templates have different spacing, but AI uses same bullet count rule
+3. No feedback loop - AI doesn't know actual rendered size
+4. Font rendering differences between preview and actual height calculations
+5. Margin/padding accumulation across sections
+
+**Reproduction:**
+
+- Generate resumes with varying content amounts
+- Sometimes fits perfectly, sometimes overflows by 2-3 lines
+- More likely with maximum content (3 experiences, 2 projects, all sections filled)
+
+**Potential Solutions:**
+
+**Short-term (Workaround):**
+
+- Reduce AI bullet point limit from 15-18 to 12-15 (more conservative)
+- Make AI more aggressive about trimming content
+- Add template-specific bullet count limits
+
+**Medium-term (Better):**
+
+- Implement content height calculation before rendering
+- Add iterative refinement: if content > 1 page, regenerate with less
+- Create template-specific AI instructions (Executive can fit less than Minimalist)
+
+**Long-term (Best):**
+
+- Real-time WYSIWYG editor with live height feedback
+- Allow users to toggle sections on/off
+- Dynamic content fitting algorithm
+- Preview shows exactly what will be in PDF (pixel-perfect)
+
+**Workaround for Users:**
+
+- Use template selector to try different templates (some fit better)
+- Manually remove less relevant bullet points
+- Use "Regenerate" to get a shorter version
+- Choose templates with tighter spacing (Minimalist)
+
+**Next Steps:**
+
+1. Gather more data on which templates/content combinations overflow
+2. Analyze typical overflow amount (2-3 lines, 5-10 lines?)
+3. Consider adjusting AI prompt to be more conservative
+4. Plan for v1.1.0 enhancement
+
+**Assignee:** To be assigned  
+**Target Version:** v1.1.0  
+**Estimated Effort:** 1-2 weeks
+
+---
 
 ### [Missing "Forgot Password" Feature]
 

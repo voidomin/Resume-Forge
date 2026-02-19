@@ -1,87 +1,82 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
-import { UnifiedDesignSystem } from "../../../../shared/design-system";
+import {
+  UnifiedDesignSystem,
+  dynamicSizingEngine,
+} from "../../../../shared/design-system";
 
 export class StandardRenderer extends BaseTemplateRenderer {
-  /**
-   * Helper to move down by a specific point amount
-   */
-  private moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
-    const lineHeight = (doc.currentFontSize() || 12) * 1.2;
-    doc.moveDown(points / lineHeight);
-  }
-
   render(
     doc: PDFKit.PDFDocument,
     resume: GeneratedResume,
     fontScale: number = 1,
     spacingScale: number = 1,
   ): void {
-    const ds = UnifiedDesignSystem;
-    const fontRegular = ds.fonts.primary.pdf;
-    const fontBold = ds.fonts.primary.pdfBold;
+    // Get scaled design system values
+    const scale = (doc as any).__scale || fontScale;
+    const ds = dynamicSizingEngine.getScaledDesignSystem(scale);
+    const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
+    const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
 
-    // Standard template uses adjusted spacing
-    const baseFontSize = ds.fontSize.body * fontScale;
-    const headerFontSize = 16 * fontScale;
-    const sectionTitleSize = ds.fontSize.h2 * fontScale;
-
-    // Spacing in points (adjusted for Standard aesthetics)
-    const lineGap = 1 * spacingScale; // Space between lines of text
-    const sectionGap = 12 * spacingScale; // Space between major sections
-    const itemGap = 8 * spacingScale; // Space between job items/projects
-    const headerGap = 5 * spacingScale; // Space after section headers
+    // Apply scaled margins
+    const scaledMargin = dynamicSizingEngine.getScaledMargin(scale);
+    doc.page.margins = {
+      top: scaledMargin,
+      bottom: scaledMargin,
+      left: scaledMargin,
+      right: scaledMargin,
+    };
 
     // Section Header - Left Aligned with Line
     const drawHeader = (title: string) => {
-      this.moveDownPoints(doc, 2 * spacingScale);
+      this.moveDownPoints(doc, 2);
       doc
         .font(fontBold)
-        .fontSize(sectionTitleSize)
-        .fillColor(ds.colors.text)
+        .fontSize(ds.fontSize.h2)
+        .fillColor(UnifiedDesignSystem.colors.text)
         .text(title.toUpperCase());
 
-      const y = doc.y + 2 * spacingScale;
+      const y = doc.y + 2;
       doc
-        .strokeColor(ds.colors.primary)
+        .strokeColor(UnifiedDesignSystem.colors.primary)
         .lineWidth(0.5)
-        .moveTo(36, y)
-        .lineTo(559, y)
+        .moveTo(scaledMargin, y)
+        .lineTo(595 - scaledMargin, y)
         .stroke();
 
-      doc.y = y + headerGap;
+      doc.y = y + ds.spacing.element;
     };
 
     // Header - Name
     doc
       .font(fontBold)
-      .fontSize(headerFontSize)
-      .fillColor(ds.colors.text)
+      .fontSize(ds.fontSize.h1)
+      .fillColor(UnifiedDesignSystem.colors.text)
       .text(resume.contactInfo.name.toUpperCase(), { align: "left" });
 
-    this.moveDownPoints(doc, 2 * spacingScale);
+    this.moveDownPoints(doc, 2);
 
     // Contact Line
     this.renderContactLine(
       doc,
       resume,
       fontRegular,
-      baseFontSize,
+      ds.fontSize.body,
       false,
       "left",
     );
 
-    this.moveDownPoints(doc, 5 * spacingScale);
+    this.moveDownPoints(doc, 5);
 
     if (resume.summary) {
       drawHeader("PROFESSIONAL SUMMARY");
       doc
         .font(fontRegular)
-        .fontSize(baseFontSize)
-        .fillColor(ds.colors.text)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.summary, { align: "justify", lineGap: 1 });
-      doc.y += sectionGap;
+      doc.y += ds.spacing.section;
     }
 
     if (resume.experiences?.length) {
@@ -93,17 +88,17 @@ export class StandardRenderer extends BaseTemplateRenderer {
         // Role (Left)
         doc
           .font(fontBold)
-          .fontSize(baseFontSize)
-          .fillColor(ds.colors.text)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
           .text(exp.role, { continued: true, align: "left" });
 
         doc
           .font(fontRegular)
-          .fillColor(ds.colors.secondary)
+          .fillColor(UnifiedDesignSystem.colors.secondary)
           .text("  |  ", { continued: true })
-          .fillColor(ds.colors.primary)
+          .fillColor(UnifiedDesignSystem.colors.primary)
           .text(exp.company, { continued: true })
-          .fillColor(ds.colors.textLight)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
           .text(exp.location ? `  |  ${exp.location}` : "", {
             continued: false,
             align: "left",
@@ -111,31 +106,28 @@ export class StandardRenderer extends BaseTemplateRenderer {
 
         // Date (Right Aligned)
         const dateWidth = doc.widthOfString(exp.dateRange);
-        // Reset Y to start of line to draw date
         doc
-          .fillColor(ds.colors.textLight)
-          .text(exp.dateRange, 595 - 36 - dateWidth, startY, {
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(exp.dateRange, 595 - scaledMargin - dateWidth, startY, {
             align: "left",
           });
 
-        // Move back to below the line
-        doc.y = startY + doc.currentLineHeight(false) + 2 * spacingScale;
+        doc.y = startY + doc.currentLineHeight(false) + 2;
 
         exp.bullets.forEach((b: string) => {
           doc
             .font(fontRegular)
-            .fontSize(baseFontSize)
-            .fillColor(ds.colors.text)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
             .text(`•  ${b}`, 42, doc.y, {
-              width: 510,
+              width: 595 - scaledMargin * 2 - 16,
               lineGap: 1,
               align: "left",
             });
         });
-        doc.y += itemGap;
+        doc.y += ds.spacing.element;
       });
-      // Adjust last item gap to section gap
-      doc.y = doc.y - itemGap + sectionGap;
+      doc.y = doc.y - ds.spacing.element + ds.spacing.section;
     }
 
     if (resume.projects?.length) {
@@ -145,16 +137,16 @@ export class StandardRenderer extends BaseTemplateRenderer {
 
         doc
           .font(fontBold)
-          .fontSize(baseFontSize)
-          .fillColor(ds.colors.text)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
           .text(proj.name, { continued: true, align: "left" });
 
         if (proj.link) {
           doc
             .font(fontRegular)
-            .fillColor(ds.colors.textLight)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
             .text("  |  ", { continued: true })
-            .fillColor(ds.colors.primary)
+            .fillColor(UnifiedDesignSystem.colors.primary)
             .text(proj.link, {
               link: proj.link.startsWith("http")
                 ? proj.link
@@ -164,21 +156,21 @@ export class StandardRenderer extends BaseTemplateRenderer {
               continued: false,
             });
         } else {
-          doc.text(""); // Clear continued state
+          doc.text("");
         }
 
         if (proj.technologies) {
           doc
             .font(fontRegular)
-            .fontSize(baseFontSize - 1)
-            .fillColor(ds.colors.textLight)
+            .fontSize(ds.fontSize.body - 1)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
             .text(proj.technologies, { align: "left", oblique: true });
         }
 
         doc
           .font(fontRegular)
-          .fontSize(baseFontSize)
-          .fillColor(ds.colors.text)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
           .text(proj.bullets ? "" : proj.description || "", {
             align: "left",
             lineGap: 1,
@@ -188,18 +180,18 @@ export class StandardRenderer extends BaseTemplateRenderer {
           proj.bullets.forEach((b: string) => {
             doc
               .font(fontRegular)
-              .fontSize(baseFontSize)
-              .fillColor(ds.colors.text)
+              .fontSize(ds.fontSize.body)
+              .fillColor(UnifiedDesignSystem.colors.text)
               .text(`•  ${b}`, 42, doc.y, {
-                width: 510,
+                width: 595 - scaledMargin * 2 - 16,
                 lineGap: 1,
                 align: "left",
               });
           });
         }
-        doc.y += itemGap;
+        doc.y += ds.spacing.element;
       });
-      doc.y = doc.y - itemGap + sectionGap;
+      doc.y = doc.y - ds.spacing.element + ds.spacing.section;
     }
 
     if (resume.education?.length) {
@@ -209,39 +201,43 @@ export class StandardRenderer extends BaseTemplateRenderer {
 
         doc
           .font(fontBold)
-          .fontSize(baseFontSize)
-          .fillColor(ds.colors.text)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
           .text(`${edu.degree} in ${edu.field}`, { continued: true });
 
         doc
           .font(fontRegular)
-          .fillColor(ds.colors.textLight)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
           .text("  |  ", { continued: true })
-          .fillColor(ds.colors.text)
+          .fillColor(UnifiedDesignSystem.colors.text)
           .text(edu.institution);
 
         if (edu.dateRange) {
           const w = doc.widthOfString(edu.dateRange);
           doc
-            .fillColor(ds.colors.textLight)
-            .text(edu.dateRange, 595 - 36 - w, startY, { align: "left" });
-          doc.y = startY + doc.currentLineHeight(false) + 2 * spacingScale;
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(edu.dateRange, 595 - scaledMargin - w, startY, {
+              align: "left",
+            });
+          doc.y = startY + doc.currentLineHeight(false) + 2;
         }
 
         if (edu.gpa) {
-          doc.fillColor(ds.colors.textLight).text(`CGPA: ${edu.gpa}`);
+          doc
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(`CGPA: ${edu.gpa}`);
         }
-        doc.y += itemGap;
+        doc.y += ds.spacing.element;
       });
-      doc.y = doc.y - itemGap + sectionGap;
+      doc.y = doc.y - ds.spacing.element + ds.spacing.section;
     }
 
     if (resume.skills?.length) {
       drawHeader("SKILLS");
       doc
         .font(fontRegular)
-        .fontSize(baseFontSize)
-        .fillColor(ds.colors.text)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "left",
           lineGap: 1.5,

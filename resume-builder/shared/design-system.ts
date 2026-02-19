@@ -132,6 +132,117 @@ export function getCleanColor(hexColor: string): string {
 }
 
 /**
+ * Dynamic Scaling Engine for responsive content fitting
+ *
+ * Ensures resumes fit on one page while respecting minimum thresholds
+ * Min font: 7pt, Min spacing: 2pt, Min margins: 24pt
+ */
+export class DynamicSizingEngine {
+  private readonly MIN_FONT_SIZE = 7;
+  private readonly MIN_SPACING = 2;
+  private readonly MIN_MARGIN = 24;
+  private readonly MAX_SCALE = 1.15;
+  private readonly MIN_SCALE = 0.65;
+
+  /**
+   * Calculate optimal scale factor based on content height vs available space
+   * Returns scale factor (1.0 = normal, 0.8 = 20% compressed)
+   */
+  calculateScale(
+    contentHeight: number,
+    pageHeight: number,
+    margins: number,
+  ): number {
+    const availableHeight = pageHeight - margins * 2;
+    if (contentHeight <= availableHeight) {
+      return 1; // Perfect fit, no scaling needed
+    }
+
+    // Need to compress: calculate how much
+    const requiredScale = availableHeight / contentHeight;
+    return Math.max(this.MIN_SCALE, Math.min(this.MAX_SCALE, requiredScale));
+  }
+
+  /**
+   * Apply scaling to design system values
+   * All values scale proportionally: fonts, spacing, margins
+   */
+  getScaledDesignSystem(scale: number): {
+    fontSize: Record<string, number>;
+    spacing: Record<string, number>;
+    margins: Record<string, number>;
+  } {
+    const ds = UnifiedDesignSystem;
+
+    // Scale all font sizes, enforce minimum
+    const fontSize: Record<string, number> = {};
+    for (const [key, value] of Object.entries(ds.fontSize)) {
+      fontSize[key] = Math.max(this.MIN_FONT_SIZE, value * scale);
+    }
+
+    // Scale all spacing, enforce minimum
+    const spacing: Record<string, number> = {};
+    for (const [key, value] of Object.entries(ds.spacing)) {
+      if (typeof value === "number") {
+        spacing[key] = Math.max(this.MIN_SPACING, value * scale);
+      } else {
+        spacing[key] = value; // Pass through non-numeric values like line multiplier
+      }
+    }
+
+    // Scale margins, enforce minimum
+    const margins: Record<string, number> = {};
+    for (const [key, value] of Object.entries(ds.margins)) {
+      if (typeof value === "number") {
+        margins[key] = Math.max(this.MIN_MARGIN, value * scale);
+      } else {
+        margins[key] = value;
+      }
+    }
+
+    return { fontSize, spacing, margins };
+  }
+
+  /**
+   * Get effective margin value from scaled margins
+   */
+  getScaledMargin(
+    scale: number,
+    marginType:
+      | "page"
+      | "pageTop"
+      | "pageRight"
+      | "pageBottom"
+      | "pageLeft" = "page",
+  ): number {
+    const scaledMargins = this.getScaledDesignSystem(scale).margins;
+    return scaledMargins[marginType] as number;
+  }
+
+  /**
+   * Get effective font size from scaled values
+   */
+  getScaledFontSize(scale: number, fontSize: FontSize): number {
+    const scaledFonts = this.getScaledDesignSystem(scale).fontSize;
+    return scaledFonts[fontSize] as number;
+  }
+
+  /**
+   * Get effective spacing from scaled values
+   */
+  getScaledSpacing(scale: number, spacing: Spacing): number {
+    const scaledSpacing = this.getScaledDesignSystem(scale).spacing;
+    const value = scaledSpacing[spacing];
+    return typeof value === "number" ? value : 1.3; // Default line multiplier
+  }
+}
+
+/**
+ * Singleton instance
+ */
+export const dynamicSizingEngine = new DynamicSizingEngine();
+
+/**
  * Type exports for TypeScript
  */
 export type DesignSystem = typeof UnifiedDesignSystem;

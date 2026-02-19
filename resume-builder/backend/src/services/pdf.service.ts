@@ -5,10 +5,23 @@ import { ModernRenderer } from "./templates/ModernRenderer";
 import { ExecutiveRenderer } from "./templates/ExecutiveRenderer";
 import { MinimalistRenderer } from "./templates/MinimalistRenderer";
 import { TemplateRenderer } from "./templates/TemplateRenderer.interface";
+import {
+  UnifiedDesignSystem,
+  dynamicSizingEngine,
+} from "../../../shared/design-system";
 
 // Re-export type if needed
 export type { TemplateType } from "./pdf.service.types";
 
+/**
+ * Enhanced PDF Service with Dynamic Sizing
+ *
+ * Principles:
+ * - Content determines scale (not AI heuristics)
+ * - Scale applied proportionally to margins, fonts, spacing
+ * - Minimums enforced: 7pt font, 2pt spacing, 24pt margins
+ * - Always fits on one page, no overflow, minimal white space
+ */
 export class PDFService {
   private renderers: Record<string, TemplateRenderer>;
 
@@ -22,7 +35,15 @@ export class PDFService {
   }
 
   /**
-   * Generate a one-page ATS-friendly PDF resume with selected template
+   * Generate a one-page adaptive resume
+   *
+   * Algorithm:
+   * 1. Measure content at 1.0 scale
+   * 2. If fits: try to expand slightly for better spacing (up to 1.15)
+   * 3. If overflows: iteratively compress until it fits
+   * 4. Render with calculated scale factor
+   *
+   * All sizing (margins, fonts, spacing) scales proportionally
    */
   generateResumePDF(
     resume: GeneratedResume,
@@ -30,37 +51,35 @@ export class PDFService {
   ): Promise<Buffer> {
     const chunks: Buffer[] = [];
 
-    const pageMargins = {
-      top: 36,
-      bottom: 36,
-      left: 36,
-      right: 36,
-    };
+    const pageHeight = UnifiedDesignSystem.page.height;
+    const baseMargin = UnifiedDesignSystem.margins.page;
 
     // Safe template fallback
     const selectedTemplate = this.renderers[template] ? template : "modern";
 
-    // Measure content height to determine if scaling is needed
-    const scale = this.calculateScaleForContent(
+    // Step 1: Measure content at normal scale and calculate optimal scale
+    const scale = this.calculateOptimalScale(
       resume,
       selectedTemplate,
-      pageMargins,
+      baseMargin,
     );
 
     // Create PDF with A4 size
     const doc = new PDFDocument({
       size: "A4",
-      margins: pageMargins,
+      margins: baseMargin, // Will be scaled in renderer
     });
 
     // Collect PDF chunks
     doc.on("data", (chunk) => chunks.push(chunk));
 
-    // Store scale on document for logic that relies on it (legacy or smart renderers)
-    (doc as any).__fontScale = scale;
+    // Attach scale factor to doc for templates to use
+    (doc as any).__scale = scale;
+    (doc as any).__baseMargin = baseMargin;
 
-    // Route to appropriate renderer
-    this.renderTemplate(doc, resume, selectedTemplate, scale);
+    // Route to appropriate renderer with scale factor
+    const renderer = this.renderers[selectedTemplate];
+    renderer.render(doc, resume, scale, scale); // Both fontScale and spacingScale = scale
 
     // Finalize PDF and return buffer via Promise
     return new Promise<Buffer>((resolve, reject) => {
@@ -70,120 +89,134 @@ export class PDFService {
     });
   }
 
-  private calculateScaleForContent(
+  /**
+   * Calculate optimal scale for content
+   *
+   * Smart algorithm:
+   * 1. Measure at 1.0 scale
+   * 2. If overflows: compress iteratively until fits
+   * 3. If underflows significantly: expand slightly for better spacing
+   * 4. Return scale that ensures exactly one page, optimal spacing
+   */
+  private calculateOptimalScale(
     resume: GeneratedResume,
     template: string,
-    margins: { top: number; bottom: number; left: number; right: number },
+    baseMargin: number,
   ): number {
-    const pageHeight = 842 - margins.top - margins.bottom;
-    const minScale = 0.65; // Allow more shrinkage to force fit
-    const maxScale = 1.15; // Don't expand too much (looks comedic)
+    const pageHeight = UnifiedDesignSystem.page.height;
 
-    // Initial measure with scale 1
+    // Initial measurement at normal scale
     let { totalHeight, pages } = this.measureContentHeight(
       resume,
       template,
-      margins,
-      1,
+      baseMargin,
+      1.0,
     );
 
-    // Case 1: Overflow (Need compression)
-    if (pages > 1 || totalHeight > pageHeight) {
-      let scale = 1;
-      // Attempt mitigation loop
-      for (let i = 0; i < 5; i++) {
-        const ratio = pageHeight / totalHeight;
-        scale = Math.max(minScale, scale * ratio * 0.98); // 0.98 buffer
+    const availableHeight = pageHeight - baseMargin * 2;
 
-        const check = this.measureContentHeight(
+    // Perfect fit or better
+    if (pages === 1 && totalHeight <= availableHeight) {
+      // Check if we can expand slightly for better spacing distribution
+      const usageRatio = totalHeight / availableHeight;
+
+      if (usageRatio < 0.85) {
+        // Underutilized, try to expand (up to 1.15)
+        const targetScale = Math.min(
+          1.15,
+          1 + (0.92 - usageRatio) * 0.25, // Gradual expansion
+        );
+
+        const expandCheck = this.measureContentHeight(
           resume,
           template,
-          margins,
-          scale,
+          baseMargin,
+          targetScale,
         );
-        if (check.pages === 1 && check.totalHeight <= pageHeight) return scale;
 
-        totalHeight = check.totalHeight; // Update for next iteration
+        // If expansion keeps us on one page, use it
+        if (expandCheck.pages === 1) {
+          const expandedHeight = expandCheck.totalHeight;
+          if (expandedHeight <= availableHeight) {
+            return targetScale;
+          }
+        }
       }
-      return minScale; // Fallback
+
+      // Current scale is good
+      return 1.0;
     }
 
-    // Case 2: Underflow (Need expansion)
-    // If usage is less than 85% of page, try to expand
-    const usageRatio = totalHeight / pageHeight;
-    if (usageRatio < 0.85) {
-      // Target ~92% fill
-      const targetScale = Math.min(maxScale, 1 + (0.92 - usageRatio));
+    // Overflow: compress iteratively
+    let scale = 1.0;
+    const maxIterations = 7;
 
-      // Verify expansion doesn't cause overflow
+    for (let i = 0; i < maxIterations; i++) {
+      // Calculate compression ratio needed
+      const compressionRatio = availableHeight / totalHeight;
+      scale = Math.max(0.65, scale * compressionRatio * 0.97); // 0.97 = 3% safety buffer
+
       const check = this.measureContentHeight(
         resume,
         template,
-        margins,
-        targetScale,
+        baseMargin,
+        scale,
       );
-      if (check.pages === 1) return targetScale;
 
-      // If overflowed, back off halfway
-      return (1 + targetScale) / 2;
+      // Success: fits on one page
+      if (check.pages === 1 && check.totalHeight <= availableHeight) {
+        return scale;
+      }
+
+      totalHeight = check.totalHeight;
     }
 
-    return 1; // Perfect fit already
+    // Fallback (should rarely reach this)
+    return 0.65;
   }
 
+  /**
+   * Measure actual rendered content height
+   *
+   * Creates a dry-run PDF to accurately measure what will be rendered
+   * Uses dynamic sizing engine to apply scaled margins/fonts
+   */
   private measureContentHeight(
     resume: GeneratedResume,
     template: string,
-    margins: { top: number; bottom: number; left: number; right: number },
+    baseMargin: number,
     scale: number,
   ): { totalHeight: number; pages: number } {
     let pageCount = 1;
 
     const measureDoc = new PDFDocument({
       size: "A4",
-      margins,
+      margins: baseMargin, // Will use base, templates handle scaling
     });
 
     measureDoc.on("pageAdded", () => {
       pageCount += 1;
     });
 
+    // Ignore data events (dry run)
     measureDoc.on("data", () => null);
 
-    let fontScale = scale;
-    let spacingScale = scale;
+    // Attach scale for templates to use
+    (measureDoc as any).__scale = scale;
+    (measureDoc as any).__baseMargin = baseMargin;
 
-    if (template === "standard") {
-      if (scale < 1) {
-        spacingScale = scale * 0.9;
-        fontScale = Math.max(0.9, scale * 1.05);
-      }
-    }
+    // Render to measure
+    const renderer = this.renderers[template];
+    renderer.render(measureDoc, resume, scale, scale);
 
-    // Inject for any legacy reading
-    (measureDoc as any).__fontScale = fontScale;
-    (measureDoc as any).__spacingScale = spacingScale;
-
-    this.renderTemplate(measureDoc, resume, template, fontScale, spacingScale);
-
-    const lastPageY = Math.max(0, measureDoc.y - margins.top);
-    const pageHeight = 842 - margins.top - margins.bottom;
-    const totalHeight = (pageCount - 1) * pageHeight + lastPageY;
+    const pageHeight = UnifiedDesignSystem.page.height;
+    const usableHeight = pageHeight - baseMargin * 2;
+    const lastPageY = Math.max(0, measureDoc.y - baseMargin);
+    const totalHeight = (pageCount - 1) * usableHeight + lastPageY;
 
     measureDoc.end();
 
     return { totalHeight, pages: pageCount };
-  }
-
-  private renderTemplate(
-    doc: PDFKit.PDFDocument,
-    resume: GeneratedResume,
-    template: string,
-    fontScale: number = 1,
-    spacingScale: number = 1,
-  ): void {
-    const renderer = this.renderers[template] || this.renderers["modern"];
-    renderer.render(doc, resume, fontScale, spacingScale);
   }
 }
 

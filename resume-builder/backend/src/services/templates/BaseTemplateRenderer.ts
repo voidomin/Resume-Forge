@@ -1,6 +1,10 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { TemplateRenderer } from "./TemplateRenderer.interface";
+import {
+  UnifiedDesignSystem,
+  dynamicSizingEngine,
+} from "../../../../shared/design-system";
 
 export abstract class BaseTemplateRenderer implements TemplateRenderer {
   abstract render(
@@ -9,6 +13,31 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
     fontScale?: number,
     spacingScale?: number,
   ): void;
+
+  /**
+   * Get scaled margin values from design system
+   * Uses the scale factor attached to the document
+   */
+  protected getScaledMargin(doc: PDFKit.PDFDocument): number {
+    const scale = (doc as any).__scale || 1;
+    return dynamicSizingEngine.getScaledMargin(scale, "page");
+  }
+
+  /**
+   * Get all scaled design system values (fonts, spacing, margins)
+   */
+  protected getScaledDesignSystem(doc: PDFKit.PDFDocument) {
+    const scale = (doc as any).__scale || 1;
+    return dynamicSizingEngine.getScaledDesignSystem(scale);
+  }
+
+  /**
+   * Helper to move down by exact points, accounting for line height
+   */
+  protected moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
+    const lineHeight = (doc.currentFontSize() || 12) * 1.2;
+    doc.moveDown(points / lineHeight);
+  }
 
   protected renderContactLine(
     doc: PDFKit.PDFDocument,
