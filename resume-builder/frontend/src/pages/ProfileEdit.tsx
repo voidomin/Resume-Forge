@@ -338,6 +338,29 @@ function ProfileEdit() {
             link: c.link || "",
           })),
         );
+        // Load optional sections
+        setCoursework(
+          (data.coursework || []).map((cw: any) => ({
+            ...cw,
+            institution: cw.institution || "",
+          })),
+        );
+        setLeadership(
+          (data.leadership || []).map((l: any) => ({
+            ...l,
+            location: l.location || "",
+            startDate: l.startDate || "",
+            endDate: l.endDate || "",
+            current: l.current || false,
+            description: l.description || "",
+          })),
+        );
+        setAwards(
+          (data.awards || []).map((a: any) => ({
+            ...a,
+            description: a.description || "",
+          })),
+        );
       }
     } catch (error) {
       console.error("Failed to fetch profile:", error);
@@ -476,6 +499,89 @@ function ProfileEdit() {
       toast.success("Skills saved!");
     } catch (error) {
       toast.error("Failed to save skills");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- Coursework Helpers ---
+  const saveCoursework = async () => {
+    setSaving(true);
+    try {
+      // First delete all existing coursework for this profile
+      for (const cw of coursework) {
+        if (cw.id) {
+          await api.delete(`/profile/coursework/${cw.id}`);
+        }
+      }
+      // Then add all coursework entries
+      for (const cw of coursework) {
+        await api.post("/profile/coursework", {
+          courseName: cw.courseName,
+          topic: cw.topic,
+          institution: cw.institution,
+        });
+      }
+      toast.success("Coursework saved!");
+    } catch (error) {
+      toast.error("Failed to save coursework");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- Leadership Helpers ---
+  const saveLeadership = async () => {
+    setSaving(true);
+    try {
+      // First delete all existing leadership for this profile
+      for (const l of leadership) {
+        if (l.id) {
+          await api.delete(`/profile/leadership/${l.id}`);
+        }
+      }
+      // Then add all leadership entries
+      for (const l of leadership) {
+        await api.post("/profile/leadership", {
+          title: l.title,
+          organization: l.organization,
+          location: l.location,
+          startDate: l.startDate,
+          endDate: l.endDate,
+          current: l.current,
+          description: l.description,
+        });
+      }
+      toast.success("Leadership roles saved!");
+    } catch (error) {
+      toast.error("Failed to save leadership roles");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- Awards Helpers ---
+  const saveAwards = async () => {
+    setSaving(true);
+    try {
+      // First delete all existing awards for this profile
+      for (const a of awards) {
+        if (a.id) {
+          await api.delete(`/profile/awards/${a.id}`);
+        }
+      }
+      // Then add all award entries
+      for (const a of awards) {
+        await api.post("/profile/awards", {
+          awardName: a.awardName,
+          organization: a.organization,
+          awardDate: a.awardDate,
+          description: a.description,
+        });
+      }
+      toast.success("Awards saved!");
+    } catch (error) {
+      toast.error("Failed to save awards");
     } finally {
       setSaving(false);
     }
@@ -1968,9 +2074,7 @@ function ProfileEdit() {
               </button>
 
               <button
-                onClick={() =>
-                  toast.success("Coursework will be saved with profile")
-                }
+                onClick={saveCoursework}
                 disabled={saving}
                 className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
@@ -2188,9 +2292,7 @@ function ProfileEdit() {
               </button>
 
               <button
-                onClick={() =>
-                  toast.success("Leadership will be saved with profile")
-                }
+                onClick={saveLeadership}
                 disabled={saving}
                 className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
@@ -2351,9 +2453,7 @@ function ProfileEdit() {
               </button>
 
               <button
-                onClick={() =>
-                  toast.success("Awards will be saved with profile")
-                }
+                onClick={saveAwards}
                 disabled={saving}
                 className="flex items-center justify-center w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
