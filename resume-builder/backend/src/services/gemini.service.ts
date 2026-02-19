@@ -320,15 +320,23 @@ ${jobDescription}
 INSTRUCTIONS:
 **GOAL: Create a PROFESSIONAL, ONE A4 PAGE RESUME tailored to this job.**
 
+**CRITICAL SELECTION RULE:**
+The candidate has provided ALL their experiences, projects, skills, and certifications.
+You MUST analyze the job description and SELECT ONLY the items that are MOST RELEVANT to this specific role.
+
+DO NOT simply take the first N items from each list. ANALYZE each item for relevance to the job requirements and select accordingly.
+
 **CRITICAL - SINGLE PAGE ENFORCEMENT:**
-1. **CONTENT VOLUME**: If the candidate has many experiences, you MUST limit them to the 3 most relevant ones and use NO MORE THAN 3 bullets per role to ensure it fits on one page.
-2. **PROFESSIONAL SUMMARY**: Max 3 sentences.
+1. **CONTENT VOLUME**: If the candidate has many experiences, you MUST SELECT the 3 MOST RELEVANT ones based on the job requirements and use NO MORE THAN 3 bullets per role to ensure it fits on one page.
+2. **PROFESSIONAL SUMMARY**: Max 3 sentences. Tailor to emphasize skills and experience that match the job description.
 3. **WORK EXPERIENCE**: 
+   - SELECT the most relevant work experiences that demonstrate the required skills
    - Each bullet must be 1 line if possible. Use the **XYZ Formula**.
    - Incorporate these keywords: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
-4. **SKILLS**: Group into max 5 categories with 4-5 skills each.
-5. **PROJECTS**: Max 2 projects with 2 bullets each.
-6. **EDUCATION**: Concise 1-line per degree.
+4. **SKILLS**: SELECT and group ONLY the skills most relevant to the job description. Prioritize required skills from the JD: ${jobAnalysis.requiredSkills.slice(0, 10).join(", ")}. Group into max 5 categories with 4-5 skills each.
+5. **PROJECTS**: SELECT the 2 MOST RELEVANT projects that best demonstrate the required skills and technologies mentioned in the job description. Include 2 bullets each highlighting achievements with metrics.
+6. **EDUCATION**: Concise 1-line per degree. Include ALL degrees.
+7. **CERTIFICATIONS**: If the candidate has certifications, include ONLY those directly relevant to the job description (max 3). Certifications that demonstrate required skills or industry knowledge should be prioritized.
 
 **PAGE FIT HEURISTIC:**
 - Total bullet points across all sections should not exceed 15-18 to guarantee layout stability on a single A4 page.

@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **[HIGH]** Fixed AI selecting first items instead of most relevant (#AI-SELECTION-RELEVANCE-001)
+  - Added database ordering for skills, projects, and certifications (most recent first)
+  - Strengthened AI prompt with explicit relevance selection instructions
+  - Added "CRITICAL SELECTION RULE" to emphasize intelligent item selection
+  - AI now analyzes all items and selects based on job description match
 - **[CRITICAL]** Fixed regenerate button using wrong job description (#REGENERATE-JD-BUG-001)
   - Backend now preserves original job description instead of overwriting it
   - Frontend properly resets state when navigating between resumes

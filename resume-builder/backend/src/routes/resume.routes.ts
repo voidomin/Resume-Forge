@@ -49,9 +49,9 @@ async function resumeRoutes(server: FastifyInstance) {
           include: {
             experiences: { orderBy: { startDate: "desc" } },
             education: { orderBy: { endDate: "desc" } },
-            skills: true,
-            projects: true,
-            certifications: true,
+            skills: { orderBy: { createdAt: "desc" } },
+            projects: { orderBy: { createdAt: "desc" } },
+            certifications: { orderBy: { createdAt: "desc" } },
           },
         });
 
@@ -424,9 +424,9 @@ async function resumeRoutes(server: FastifyInstance) {
           include: {
             experiences: { orderBy: { startDate: "desc" } },
             education: { orderBy: { endDate: "desc" } },
-            skills: true,
-            projects: true,
-            certifications: true,
+            skills: { orderBy: { createdAt: "desc" } },
+            projects: { orderBy: { createdAt: "desc" } },
+            certifications: { orderBy: { createdAt: "desc" } },
           },
         });
 

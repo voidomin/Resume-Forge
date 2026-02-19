@@ -41,6 +41,40 @@ If you encounter any bugs or issues:
 
 **Status:** None currently open
 
+### [RESOLVED] [AI Selecting First Items Instead of Most Relevant]
+
+**Issue ID:** #AI-SELECTION-RELEVANCE-001  
+**Reported:** 2026-02-19  
+**Resolved:** 2026-02-19  
+**Priority:** High  
+**Status:** ✅ **RESOLVED** - Fixed in develop
+**Affected Version:** v1.0.0
+**Fixed In:** develop branch (pending v1.0.1 release)
+
+**Description:**
+When generating resumes, the AI was selecting the first 2-3 items from the profile (projects, experiences, skills, certifications) instead of selecting the most relevant items based on the job description.
+
+**Root Causes:**
+1. **Database ordering:** Projects, skills, and certifications had no explicit ordering, so they arrived in random/insertion order
+2. **Weak AI prompt:** Instructions said "Max 2 projects" without emphasizing relevance selection
+
+**Resolution:**
+- **Backend Fix 1:** Added database ordering (`createdAt DESC`) for skills, projects, and certifications
+- **Backend Fix 2:** Strengthened AI prompt with explicit "SELECT MOST RELEVANT" instructions for all sections
+- **Backend Fix 3:** Added prominent "CRITICAL SELECTION RULE" header to prompt emphasizing intelligent selection over taking first N items
+
+**Files Changed:**
+- `backend/src/routes/resume.routes.ts` - Added orderBy for skills, projects, certifications (2 locations)
+- `backend/src/services/gemini.service.ts` - Strengthened prompt with relevance emphasis
+
+**Impact:**
+- AI now intelligently selects most relevant experiences, projects, skills, and certifications
+- Resumes better match job descriptions
+- Higher ATS scores
+- Better user experience
+
+---
+
 ### [RESOLVED] [Regenerate Button Using Wrong Job Description]
 
 **Issue ID:** #REGENERATE-JD-BUG-001  
