@@ -4,30 +4,9 @@ import mammoth from "mammoth";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-// Dynamically load pdf-parse to handle ESM/CJS export differences.
-// Dynamically load pdf-parse to handle ESM/CJS export differences.
-let PDFParseClass: any = null;
-
-const getPdfParse = async () => {
-  if (PDFParseClass) {
-    return PDFParseClass;
-  }
-
-  try {
-    const mod = await import("pdf-parse");
-    if (mod.PDFParse) {
-      PDFParseClass = mod.PDFParse;
-    } else if (mod.default && mod.default.PDFParse) {
-      PDFParseClass = mod.default.PDFParse;
-    } else {
-      throw new Error("Could not find PDFParse class in export");
-    }
-    return PDFParseClass;
-  } catch (error) {
-    logger.error("Failed to import pdf-parse", error);
-    throw new Error("Failed to load PDF parser library");
-  }
-};
+// pdf-parse exposes a PDFParse class in this build.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { PDFParse } = require("pdf-parse");
 
 // API timeout configuration (30 seconds)
 const API_TIMEOUT_MS = 30000;
@@ -122,10 +101,9 @@ class ResumeParserService {
    */
   async parsePDF(buffer: Buffer): Promise<string> {
     try {
-      const PDFParse = await getPdfParse();
       const parser = new PDFParse({ data: buffer });
       const data = await parser.getText();
-      return data.text;
+      return data.text || "";
     } catch (error) {
       logger.error("PDF parsing error:", error);
       throw new Error("Failed to parse PDF file");
