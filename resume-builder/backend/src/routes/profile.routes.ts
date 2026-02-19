@@ -895,7 +895,9 @@ async function profileRoutes(server: FastifyInstance) {
           },
         });
 
-        return reply.status(201).send({ coursework, message: "Coursework added" });
+        return reply
+          .status(201)
+          .send({ coursework, message: "Coursework added" });
       } catch (error) {
         request.log.error(error);
         return reply.status(500).send({ error: "Failed to add coursework" });
@@ -1003,7 +1005,9 @@ async function profileRoutes(server: FastifyInstance) {
           .send({ leadership, message: "Leadership role added" });
       } catch (error) {
         request.log.error(error);
-        return reply.status(500).send({ error: "Failed to add leadership role" });
+        return reply
+          .status(500)
+          .send({ error: "Failed to add leadership role" });
       }
     },
   );
@@ -1060,7 +1064,9 @@ async function profileRoutes(server: FastifyInstance) {
         return reply.send({ message: "Leadership role deleted" });
       } catch (error) {
         request.log.error(error);
-        return reply.status(500).send({ error: "Failed to delete leadership role" });
+        return reply
+          .status(500)
+          .send({ error: "Failed to delete leadership role" });
       }
     },
   );

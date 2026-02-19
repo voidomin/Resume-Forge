@@ -52,6 +52,9 @@ async function resumeRoutes(server: FastifyInstance) {
             skills: { orderBy: { createdAt: "desc" } },
             projects: { orderBy: { createdAt: "desc" } },
             certifications: { orderBy: { createdAt: "desc" } },
+            coursework: { orderBy: { createdAt: "desc" } },
+            leadership: { orderBy: { startDate: "desc" } },
+            awards: { orderBy: { awardDate: "desc" } },
           },
         });
 
@@ -104,6 +107,26 @@ async function resumeRoutes(server: FastifyInstance) {
             name: c.name,
             issuer: c.issuer,
             date: c.date || undefined,
+          })),
+          coursework: profile.coursework?.map((cw) => ({
+            courseName: cw.courseName,
+            topic: cw.topic,
+            institution: cw.institution || undefined,
+          })),
+          leadership: profile.leadership?.map((l) => ({
+            title: l.title,
+            organization: l.organization,
+            location: l.location || undefined,
+            startDate: l.startDate || undefined,
+            endDate: l.endDate || undefined,
+            current: l.current || false,
+            description: l.description || undefined,
+          })),
+          awards: profile.awards?.map((a) => ({
+            awardName: a.awardName,
+            organization: a.organization,
+            awardDate: a.awardDate,
+            description: a.description || undefined,
           })),
         };
 
@@ -427,6 +450,9 @@ async function resumeRoutes(server: FastifyInstance) {
             skills: { orderBy: { createdAt: "desc" } },
             projects: { orderBy: { createdAt: "desc" } },
             certifications: { orderBy: { createdAt: "desc" } },
+            coursework: { orderBy: { createdAt: "desc" } },
+            leadership: { orderBy: { startDate: "desc" } },
+            awards: { orderBy: { awardDate: "desc" } },
           },
         });
 
@@ -474,6 +500,26 @@ async function resumeRoutes(server: FastifyInstance) {
             name: c.name,
             issuer: c.issuer,
             date: c.date || undefined,
+          })),
+          coursework: profile.coursework?.map((cw) => ({
+            courseName: cw.courseName,
+            topic: cw.topic,
+            institution: cw.institution || undefined,
+          })),
+          leadership: profile.leadership?.map((l) => ({
+            title: l.title,
+            organization: l.organization,
+            location: l.location || undefined,
+            startDate: l.startDate || undefined,
+            endDate: l.endDate || undefined,
+            current: l.current || false,
+            description: l.description || undefined,
+          })),
+          awards: profile.awards?.map((a) => ({
+            awardName: a.awardName,
+            organization: a.organization,
+            awardDate: a.awardDate,
+            description: a.description || undefined,
           })),
         };
 

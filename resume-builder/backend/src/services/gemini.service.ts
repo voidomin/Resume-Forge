@@ -348,6 +348,50 @@ Date: ${c.date || "N/A"}
     .join("\n") || "None provided"
 }
 
+OPTIONAL SECTIONS:
+
+RELEVANT COURSEWORK:
+${
+  profile.coursework
+    ?.map(
+      (c) => `
+Course: ${c.courseName}
+Topic: ${c.topic}
+Institution: ${c.institution || "N/A"}
+`,
+    )
+    .join("\n") || "None provided"
+}
+
+LEADERSHIP/EXTRACURRICULAR:
+${
+  profile.leadership
+    ?.map(
+      (l) => `
+Title: ${l.title}
+Organization: ${l.organization}
+Location: ${l.location || "N/A"}
+Dates: ${l.startDate || "N/A"} - ${l.current ? "Present" : l.endDate || "N/A"}
+Description: ${l.description || "N/A"}
+`,
+    )
+    .join("\n") || "None provided"
+}
+
+HONORS & AWARDS:
+${
+  profile.awards
+    ?.map(
+      (a) => `
+Award: ${a.awardName}
+Organization: ${a.organization}
+Date: ${a.awardDate}
+Description: ${a.description || "N/A"}
+`,
+    )
+    .join("\n") || "None provided"
+}
+
 TARGET JOB:
 Title: ${jobAnalysis.roleTitle}
 Required Skills: ${jobAnalysis.requiredSkills.join(", ")}
@@ -382,7 +426,27 @@ DO NOT simply take the first N items from each list. ANALYZE each item for relev
 - Total bullet points across all sections should not exceed 15-18 to guarantee layout stability on a single A4 page.
 - Do NOT hallucinate content to "fill space" unless the candidate has almost no history. Prioritize white space over overflow.
 
-**CALCULATE ATS SCORE**: 
+**OPTIONAL SECTIONS INCLUSION LOGIC (IMPORTANT):**
+Score the relevance of each optional section to the job description:
+
+1. **RELEVANT COURSEWORK**: Include ONLY if you find classes/topics in the candidate's coursework that directly relate to technologies, methodologies, or domains mentioned in the JD.
+   - Score calculation: Count matching keywords between coursework topics and JD (0-100)
+   - INCLUDE if score ≥ 60
+   - If included: Show 2-3 most relevant courses focused on JD-matching topics
+
+2. **LEADERSHIP/EXTRACURRICULAR**: Include ONLY if the roles demonstrate skills or experience highly relevant to the target role (e.g., teamwork, leadership, domain expertise, project management).
+   - Score calculation: Keywords related to leadership, team, project, domain (0-100)
+   - INCLUDE if score ≥ 70
+   - If included: Select 1-2 most relevant roles, 2-3 bullets each describing impact and relevance
+
+3. **HONORS & AWARDS**: Include ONLY if awards are prestigious, domain-specific, or directly demonstrate competency in areas required by the job.
+   - Score calculation: Keywords related to recognition, achievement, expertise (0-100)
+   - INCLUDE if score ≥ 75
+   - If included: Show 2-3 most impressive or relevant awards
+
+**DO NOT include optional sections unless they meet the score threshold. An empty optional section is worse than no section at all.**
+
+**CALCULATE ATS SCORE**:
 - Compare the candidate's original profile against the JD.
 - Base score on: Keyword match (40%), Skills match (30%), Experience relevance (30%).
 - Return a Realistic score (0-100).
@@ -474,7 +538,31 @@ Return ONLY valid JSON with this structure:
     "missingKeywords": ["AWS", "Docker", "CI/CD"],
     "totalJobKeywords": 12,
     "matchPercentage": 67
-  }
+  },
+  "coursework": [
+    {
+      "courseName": "Course Name",
+      "topic": "Topic/Subject",
+      "institution": "School/University"
+    }
+  ],
+  "leadership": [
+    {
+      "title": "Role Title",
+      "organization": "Organization Name",
+      "location": "City, State",
+      "dateRange": "Month Year - Month Year or Present",
+      "description": "Description of role and impact"
+    }
+  ],
+  "awards": [
+    {
+      "awardName": "Award Name",
+      "organization": "Organization",
+      "awardDate": "Date",
+      "description": "Context/significance"
+    }
+  ]
 }`;
 
     const generateWithFallback = async () => {
@@ -607,6 +695,24 @@ Return ONLY valid JSON with this structure:
         name: c.name,
         issuer: c.issuer,
         date: c.date,
+      })),
+      coursework: profile.coursework?.slice(0, 3).map((cw) => ({
+        courseName: cw.courseName,
+        topic: cw.topic,
+        institution: cw.institution,
+      })),
+      leadership: profile.leadership?.slice(0, 2).map((l) => ({
+        title: l.title,
+        organization: l.organization,
+        location: l.location,
+        dateRange: `${l.startDate || "N/A"} - ${l.current ? "Present" : l.endDate || "N/A"}`,
+        description: l.description,
+      })),
+      awards: profile.awards?.slice(0, 3).map((a) => ({
+        awardName: a.awardName,
+        organization: a.organization,
+        awardDate: a.awardDate,
+        description: a.description,
       })),
       atsScore: 70,
       keywords: [],
