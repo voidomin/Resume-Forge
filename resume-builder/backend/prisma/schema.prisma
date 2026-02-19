@@ -39,13 +39,14 @@ model Profile {
   experiences  Experience[]
   education    Education[]
   skills       Skill[]
+  projects     Project[]
+  certifications Certification[]
+  coursework   Coursework[]
+  leadership   Leadership[]
+  awards       Award[]
   
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
-  
-  // Relations
-  projects     Project[]
-  certifications Certification[]
 }
 
 model Experience {
@@ -125,4 +126,42 @@ model Certification {
   link      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Coursework {
+  id          String   @id @default(uuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  courseName  String
+  topic       String
+  institution String?  // Optional: where the course was taken
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Leadership {
+  id            String   @id @default(uuid())
+  profileId     String
+  profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title         String   // President, Volunteer, etc.
+  organization  String
+  location      String?
+  startDate     String?
+  endDate       String?
+  current       Boolean  @default(false)
+  description   String?  // Optional: achievements/impact
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Award {
+  id            String   @id @default(uuid())
+  profileId     String
+  profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  awardName     String
+  organization  String
+  awardDate     String
+  description   String?  // Optional: significance/context
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
