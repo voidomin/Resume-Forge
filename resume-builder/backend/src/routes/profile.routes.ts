@@ -858,6 +858,307 @@ async function profileRoutes(server: FastifyInstance) {
       }
     },
   );
+
+  // ==================== COURSEWORK ROUTES ====================
+
+  interface CourseworkBody {
+    courseName: string;
+    topic: string;
+    institution?: string;
+  }
+
+  // Add coursework
+  server.post<{ Body: CourseworkBody }>(
+    "/coursework",
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{ Body: CourseworkBody }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { userId } = (request as any).user;
+        const data = request.body;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (!profile) {
+          return reply
+            .status(404)
+            .send({ error: "Profile not found. Create a profile first." });
+        }
+
+        const coursework = await prisma.coursework.create({
+          data: {
+            profileId: profile.id,
+            courseName: data.courseName,
+            topic: data.topic,
+            institution: data.institution,
+          },
+        });
+
+        return reply.status(201).send({ coursework, message: "Coursework added" });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to add coursework" });
+      }
+    },
+  );
+
+  // Update coursework
+  server.put<{ Body: CourseworkBody; Params: { id: string } }>(
+    "/coursework/:id",
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{
+        Body: CourseworkBody;
+        Params: { id: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = request.params;
+        const data = request.body;
+
+        const coursework = await prisma.coursework.update({
+          where: { id },
+          data: {
+            courseName: data.courseName,
+            topic: data.topic,
+            institution: data.institution,
+          },
+        });
+
+        return reply.send({ coursework, message: "Coursework updated" });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to update coursework" });
+      }
+    },
+  );
+
+  // Delete coursework
+  server.delete<{ Params: { id: string } }>(
+    "/coursework/:id",
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{ Params: { id: string } }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = request.params;
+        await prisma.coursework.delete({ where: { id } });
+        return reply.send({ message: "Coursework deleted" });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to delete coursework" });
+      }
+    },
+  );
+
+  // ==================== LEADERSHIP ROUTES ====================
+
+  interface LeadershipBody {
+    title: string;
+    organization: string;
+    location?: string;
+    startDate?: string;
+    endDate?: string;
+    current: boolean;
+    description?: string;
+  }
+
+  // Add leadership
+  server.post<{ Body: LeadershipBody }>(
+    "/leadership",
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{ Body: LeadershipBody }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { userId } = (request as any).user;
+        const data = request.body;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (!profile) {
+          return reply
+            .status(404)
+            .send({ error: "Profile not found. Create a profile first." });
+        }
+
+        const leadership = await prisma.leadership.create({
+          data: {
+            profileId: profile.id,
+            title: data.title,
+            organization: data.organization,
+            location: data.location,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            current: data.current,
+            description: data.description,
+          },
+        });
+
+        return reply
+          .status(201)
+          .send({ leadership, message: "Leadership role added" });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to add leadership role" });
+      }
+    },
+  );
+
+  // Update leadership
+  server.put<{ Body: LeadershipBody; Params: { id: string } }>(
+    "/leadership/:id",
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{
+        Body: LeadershipBody;
+        Params: { id: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = request.params;
+        const data = request.body;
+
+        const leadership = await prisma.leadership.update({
+          where: { id },
+          data: {
+            title: data.title,
+            organization: data.organization,
+            location: data.location,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            current: data.current,
+            description: data.description,
+          },
+        });
+
+        return reply.send({ leadership, message: "Leadership role updated" });
+      } catch (error) {
+        request.log.error(error);
+        return reply
+          .status(500)
+          .send({ error: "Failed to update leadership role" });
+      }
+    },
+  );
+
+  // Delete leadership
+  server.delete<{ Params: { id: string } }>(
+    "/leadership/:id",
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{ Params: { id: string } }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = request.params;
+        await prisma.leadership.delete({ where: { id } });
+        return reply.send({ message: "Leadership role deleted" });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to delete leadership role" });
+      }
+    },
+  );
+
+  // ==================== AWARDS ROUTES ====================
+
+  interface AwardBody {
+    awardName: string;
+    organization: string;
+    awardDate: string;
+    description?: string;
+  }
+
+  // Add award
+  server.post<{ Body: AwardBody }>(
+    "/awards",
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{ Body: AwardBody }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { userId } = (request as any).user;
+        const data = request.body;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (!profile) {
+          return reply
+            .status(404)
+            .send({ error: "Profile not found. Create a profile first." });
+        }
+
+        const award = await prisma.award.create({
+          data: {
+            profileId: profile.id,
+            awardName: data.awardName,
+            organization: data.organization,
+            awardDate: data.awardDate,
+            description: data.description,
+          },
+        });
+
+        return reply.status(201).send({ award, message: "Award added" });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to add award" });
+      }
+    },
+  );
+
+  // Update award
+  server.put<{ Body: AwardBody; Params: { id: string } }>(
+    "/awards/:id",
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{ Body: AwardBody; Params: { id: string } }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = request.params;
+        const data = request.body;
+
+        const award = await prisma.award.update({
+          where: { id },
+          data: {
+            awardName: data.awardName,
+            organization: data.organization,
+            awardDate: data.awardDate,
+            description: data.description,
+          },
+        });
+
+        return reply.send({ award, message: "Award updated" });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to update award" });
+      }
+    },
+  );
+
+  // Delete award
+  server.delete<{ Params: { id: string } }>(
+    "/awards/:id",
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{ Params: { id: string } }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = request.params;
+        await prisma.award.delete({ where: { id } });
+        return reply.send({ message: "Award deleted" });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to delete award" });
+      }
+    },
+  );
 }
 
 export default profileRoutes;
