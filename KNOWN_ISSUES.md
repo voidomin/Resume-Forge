@@ -51,6 +51,7 @@ If you encounter any bugs or issues:
 Significant visual inconsistencies exist between the frontend resume preview and the downloaded PDF/DOCX files. Users see one design and formatting in the browser preview, but the downloaded files have different fonts, spacing, sizes, and layouts. This affects **ALL templates** (Modern, Standard, Executive, Minimalist).
 
 **Steps to Reproduce:**
+
 1. Create or view any resume
 2. Observe the preview in browser
 3. Download as PDF
@@ -58,12 +59,14 @@ Significant visual inconsistencies exist between the frontend resume preview and
 5. Compare all three versions
 
 **Expected Behavior:**
+
 - Frontend preview should match PDF download exactly
 - PDF and DOCX downloads should have identical layouts
 - Font sizes, spacing, and positioning should be consistent
 - What You See Is What You Get (WYSIWYG)
 
 **Actual Behavior:**
+
 - Different fonts: Frontend uses Inter/Arial, PDF uses Helvetica, DOCX uses Times New Roman
 - Different font sizes: Frontend uses pt units, PDF uses scaled values, DOCX uses half-points
 - Different spacing: CSS pixels vs PDFKit moveDown() vs DOCX twips
@@ -71,6 +74,7 @@ Significant visual inconsistencies exist between the frontend resume preview and
 - Text wraps at different points causing layout shifts
 
 **Root Causes:**
+
 1. **Font inconsistencies** across rendering engines
 2. **Font size unit differences** (pt vs scaled pt vs half-points)
 3. **Spacing system differences** (pixels vs document points vs twips)
@@ -79,11 +83,13 @@ Significant visual inconsistencies exist between the frontend resume preview and
 6. **Different scaling algorithms** for content overflow
 
 **Environment:**
+
 - All browsers
 - All devices
 - All templates affected
 
 **Impact:**
+
 - User confusion and frustration
 - Loss of trust in preview accuracy
 - Potential resume formatting issues for job applications
@@ -93,6 +99,7 @@ Significant visual inconsistencies exist between the frontend resume preview and
 See [TEMPLATE_CONSISTENCY_FIX_PLAN.md](TEMPLATE_CONSISTENCY_FIX_PLAN.md) for comprehensive solution.
 
 **Key Solutions:**
+
 1. Create unified design system shared across frontend/backend
 2. Standardize font to Arial/Helvetica across all formats
 3. Convert all measurements to consistent pt-based system
@@ -101,10 +108,11 @@ See [TEMPLATE_CONSISTENCY_FIX_PLAN.md](TEMPLATE_CONSISTENCY_FIX_PLAN.md) for com
 6. Create template consistency validation tests
 
 **Quick Wins:**
-- Phase 1: Standardize fonts to Arial/Helvetica ✅  
-- Phase 2: Fix font size units (all use base pt) ✅  
-- Phase 3: Align spacing values ✅  
-- Phase 4: Add basic consistency tests ✅  
+
+- Phase 1: Standardize fonts to Arial/Helvetica ✅
+- Phase 2: Fix font size units (all use base pt) ✅
+- Phase 3: Align spacing values ✅
+- Phase 4: Add basic consistency tests ✅
 
 **Workaround:**
 Currently, users should download and review the actual PDF/DOCX files before using them for applications, rather than relying solely on the preview.
@@ -113,6 +121,7 @@ Currently, users should download and review the actual PDF/DOCX files before usi
 **Target Version:** v1.1.0  
 **Estimated Effort:** 2-3 weeks  
 **Related Files:**
+
 - Frontend: `resume-builder/frontend/src/components/Resume/templates/*.tsx`
 - Backend PDF: `resume-builder/backend/src/services/templates/*.ts`
 - Backend DOCX: `resume-builder/backend/src/services/docx.service.ts`
@@ -133,11 +142,13 @@ Currently, users should download and review the actual PDF/DOCX files before usi
 Users have no way to recover their account if they forget their password. The login page does not have a "Forgot Password" link or functionality.
 
 **Steps to Reproduce:**
+
 1. Go to login page
 2. Look for "Forgot Password" option
 3. Option does not exist
 
 **Expected Behavior:**
+
 - "Forgot Password" link on login page
 - Password reset flow via email
 - Secure token-based password reset
@@ -146,10 +157,12 @@ Users have no way to recover their account if they forget their password. The lo
 No password recovery mechanism exists. Users who forget their password cannot access their account.
 
 **Environment:**
+
 - All browsers
 - All devices
 
 **Implementation Requirements:**
+
 - Email service integration (e.g., SendGrid, AWS SES, Resend)
 - Password reset token generation and validation
 - Reset password form

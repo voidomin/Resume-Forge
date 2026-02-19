@@ -1,25 +1,33 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
-import { DesignTokens } from "./design-tokens";
+import { UnifiedDesignSystem } from "../../../../shared/design-system";
 
 export class ExecutiveRenderer extends BaseTemplateRenderer {
+  /**
+   * Helper to move down by a specific point amount
+   */
+  private moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
+    const lineHeight = (doc.currentFontSize() || 12) * 1.2;
+    doc.moveDown(points / lineHeight);
+  }
+
   render(
     doc: PDFKit.PDFDocument,
     resume: GeneratedResume,
     fontScale: number = 1,
     spacingScale: number = 1,
   ): void {
-    const fontRegular = DesignTokens.fonts.serif;
-    const fontBold = DesignTokens.fonts.serifBold;
-    const { primary, secondary, text, textLight } = DesignTokens.colors;
+    const ds = UnifiedDesignSystem;
+    const fontRegular = ds.fonts.primary.pdf;
+    const fontBold = ds.fonts.primary.pdfBold;
 
-    // Adaptive sizes
-    const baseFontSize = 10 * fontScale < 9 ? 9 : 10 * fontScale;
+    // Executive template uses larger fonts for emphasis
+    const baseFontSize = ds.fontSize.body * fontScale;
     const headerFontSize = 24 * fontScale;
-    const sectionTitleSize = 12 * fontScale;
+    const sectionTitleSize = ds.fontSize.h2 * fontScale;
 
-    // Spacing
+    // Spacing in points (adjusted for Executive aesthetics)
     const lineGap = 1.5 * spacingScale;
     const sectionGap = 14 * spacingScale;
     const itemGap = 10 * spacingScale;
@@ -27,18 +35,18 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
 
     // Helper: Section Headers (Centered, Uppercase, Primary Color)
     const drawHeader = (title: string) => {
-      doc.moveDown(0.5 * spacingScale);
+      this.moveDownPoints(doc, 5 * spacingScale);
       doc
         .font(fontBold)
         .fontSize(sectionTitleSize)
-        .fillColor(primary) // Executive Deep Blue
+        .fillColor(ds.colors.primary)
         .text(title.toUpperCase(), { align: "center", characterSpacing: 1 });
 
       const y = doc.y + 2 * spacingScale;
       doc
-        .strokeColor(secondary) // Subtle separation
+        .strokeColor(ds.colors.secondary)
         .lineWidth(0.5)
-        .moveTo(100, y) // Centered line
+        .moveTo(100, y)
         .lineTo(495, y)
         .stroke();
 
@@ -49,13 +57,13 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
     doc
       .font(fontBold)
       .fontSize(headerFontSize)
-      .fillColor(primary)
+      .fillColor(ds.colors.primary)
       .text(resume.contactInfo.name.toUpperCase(), {
         align: "center",
         characterSpacing: 1,
       });
 
-    doc.moveDown(0.3 * spacingScale);
+    this.moveDownPoints(doc, 3 * spacingScale);
 
     // 2. Contact Line
     this.renderContactLine(
@@ -67,7 +75,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
       "center",
     );
 
-    doc.moveDown(0.8 * spacingScale);
+    this.moveDownPoints(doc, 8 * spacingScale);
 
     // 3. Summary
     if (resume.summary) {
@@ -75,12 +83,12 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
       doc
         .font(fontRegular)
         .fontSize(baseFontSize)
-        .fillColor(text)
-        .text(resume.summary, { align: "justify", lineGap: lineGap });
+        .fillColor(ds.colors.text)
+        .text(resume.summary, { align: "justify", lineGap: 1.5 });
       doc.y += sectionGap;
     }
 
-    // 4. Experience (Executive creates emphasis here)
+    // 4. Experience
     if (resume.experiences?.length) {
       drawHeader("WORK EXPERIENCE");
       resume.experiences.forEach((exp) => {
@@ -88,16 +96,16 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         doc
           .font(fontBold)
           .fontSize(baseFontSize + 1)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(exp.role.toUpperCase(), { continued: true });
 
         doc
           .font(fontRegular)
-          .fillColor(textLight)
+          .fillColor(ds.colors.textLight)
           .text(" | ", { continued: true })
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(exp.company, { continued: true })
-          .fillColor(textLight)
+          .fillColor(ds.colors.textLight)
           .text(exp.location ? ` | ${exp.location}` : "", { continued: false });
 
         // Date
@@ -105,22 +113,21 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         doc
           .font(fontBold)
           .fontSize(baseFontSize)
-          .fillColor(primary)
+          .fillColor(ds.colors.primary)
           .text(exp.dateRange, { align: "right" });
 
-        doc.moveDown(0.5 * spacingScale);
+        this.moveDownPoints(doc, 5 * spacingScale);
 
         // Bullets
         exp.bullets.forEach((b: string) => {
           doc
             .font(fontRegular)
             .fontSize(baseFontSize)
-            .fillColor(text)
+            .fillColor(ds.colors.text)
             .text(`▪  ${b}`, 50, doc.y, {
-              // Square bullet for executive
               width: 500,
               align: "left",
-              lineGap: lineGap,
+              lineGap: 1.5,
             });
         });
         doc.y += itemGap;
@@ -135,14 +142,14 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         doc
           .font(fontBold)
           .fontSize(baseFontSize + 1)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(proj.name, { continued: true });
 
         if (proj.link) {
           doc
             .font(fontRegular)
             .fontSize(baseFontSize)
-            .fillColor(primary) // Link in Primary
+            .fillColor(ds.colors.primary)
             .text(`  [${proj.link}]`, { link: proj.link, continued: false });
         } else {
           doc.text("");
@@ -153,7 +160,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
           doc
             .font(fontRegular)
             .fontSize(baseFontSize)
-            .fillColor(text)
+            .fillColor(ds.colors.text)
             .text(proj.description);
         }
 
@@ -162,11 +169,11 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
             doc
               .font(fontRegular)
               .fontSize(baseFontSize)
-              .fillColor(text)
+              .fillColor(ds.colors.text)
               .text(`▪  ${b}`, 50, doc.y, {
                 width: 500,
                 align: "left",
-                lineGap: lineGap,
+                lineGap: 1.5,
               });
           });
         }
@@ -182,21 +189,21 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         doc
           .font(fontBold)
           .fontSize(baseFontSize)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(edu.institution, { continued: true });
 
         doc
           .font(fontRegular)
-          .fillColor(textLight)
+          .fillColor(ds.colors.textLight)
           .text(`  |  ${edu.dateRange}`, { align: "right" });
 
         doc
           .font(fontRegular)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(`${edu.degree} in ${edu.field}`);
 
         if (edu.gpa) {
-          doc.fillColor(textLight).text(`GPA: ${edu.gpa}`);
+          doc.fillColor(ds.colors.textLight).text(`GPA: ${edu.gpa}`);
         }
         doc.y += itemGap;
       });
@@ -209,10 +216,10 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
       doc
         .font(fontRegular)
         .fontSize(baseFontSize)
-        .fillColor(text)
+        .fillColor(ds.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "center",
-          lineGap: lineGap * 1.5,
+          lineGap: 1.5,
         });
     }
   }

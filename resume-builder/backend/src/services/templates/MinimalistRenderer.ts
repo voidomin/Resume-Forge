@@ -1,23 +1,31 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
-import { DesignTokens } from "./design-tokens";
+import { UnifiedDesignSystem } from "../../../../shared/design-system";
 
 export class MinimalistRenderer extends BaseTemplateRenderer {
+  /**
+   * Helper to move down by a specific point amount
+   */
+  private moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
+    const lineHeight = (doc.currentFontSize() || 12) * 1.2;
+    doc.moveDown(points / lineHeight);
+  }
+
   render(
     doc: PDFKit.PDFDocument,
     resume: GeneratedResume,
     fontScale: number = 1,
     spacingScale: number = 1,
   ): void {
-    const fontRegular = DesignTokens.fonts.sans;
-    const fontBold = DesignTokens.fonts.sansBold;
-    const { primary, secondary, text, textLight } = DesignTokens.colors;
+    const ds = UnifiedDesignSystem;
+    const fontRegular = ds.fonts.primary.pdf;
+    const fontBold = ds.fonts.primary.pdfBold;
 
-    // Airy Minimalist Design
-    const baseFontSize = 10 * fontScale < 9 ? 9 : 10 * fontScale;
-    const headerFontSize = 20 * fontScale; // Smaller than Executive, larger than body
-    const sectionTitleSize = 10 * fontScale;
+    // Minimalist template uses clean, airy layout
+    const baseFontSize = ds.fontSize.body * fontScale;
+    const headerFontSize = 20 * fontScale;
+    const sectionTitleSize = ds.fontSize.body * fontScale;
 
     const lineGap = 1.6 * spacingScale; // More leading for clean look
     const sectionGap = 18 * spacingScale; // Large gaps between sections
@@ -25,23 +33,22 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
 
     // Helper: Section Headers (Uppercase, Tracking, TextLight Color)
     const drawHeader = (title: string) => {
-      doc.moveDown(0.2 * spacingScale);
+      this.moveDownPoints(doc, 2 * spacingScale);
       doc
         .font(fontBold)
         .fontSize(sectionTitleSize)
-        .fillColor(textLight) // Distinctive feature of Minimalist: muted headers
+        .fillColor(ds.colors.textLight)
         .text(title.toUpperCase(), { characterSpacing: 2 });
 
       const y = doc.y + 2 * spacingScale;
-      // No border for Minimalist in Pro Max, or very subtle short line.
       doc
-        .strokeColor(secondary)
+        .strokeColor(ds.colors.secondary)
         .opacity(0.3)
         .lineWidth(0.5)
         .moveTo(36, y)
         .lineTo(100, y) // Short underline
         .stroke()
-        .opacity(1); // Reset opacity
+        .opacity(1);
 
       doc.y = y + 8 * spacingScale;
     };
@@ -50,10 +57,10 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
     doc
       .font(fontBold)
       .fontSize(headerFontSize)
-      .fillColor(text)
-      .text(resume.contactInfo.name, { align: "left", characterSpacing: -0.5 }); // Tight styling
+      .fillColor(ds.colors.text)
+      .text(resume.contactInfo.name, { align: "left", characterSpacing: -0.5 });
 
-    doc.moveDown(0.4 * spacingScale);
+    this.moveDownPoints(doc, 4 * spacingScale);
 
     // 2. Contact (Left aligned, wrapped)
     this.renderContactLine(
@@ -65,7 +72,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       "left",
     );
 
-    doc.moveDown(1.5 * spacingScale);
+    this.moveDownPoints(doc, 15 * spacingScale);
 
     // 3. Summary
     if (resume.summary) {
@@ -73,8 +80,8 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       doc
         .font(fontRegular)
         .fontSize(baseFontSize)
-        .fillColor(text)
-        .text(resume.summary, { align: "left", lineGap: lineGap });
+        .fillColor(ds.colors.text)
+        .text(resume.summary, { align: "left", lineGap: 1.6 });
       doc.y += sectionGap;
     }
 
@@ -86,28 +93,32 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         doc
           .font(fontBold)
           .fontSize(baseFontSize + 1)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(exp.role);
 
-        doc.moveDown(0.2 * spacingScale);
+        this.moveDownPoints(doc, 2 * spacingScale);
 
-        // Company | Location | Date (Single line secondary)
+        // Company | Location | Date
         doc
           .font(fontRegular)
           .fontSize(baseFontSize - 1)
-          .fillColor(textLight)
+          .fillColor(ds.colors.textLight)
           .text(
             `${exp.company} ${exp.location ? " | " + exp.location : ""} | ${exp.dateRange}`,
           );
 
-        doc.moveDown(0.5 * spacingScale);
+        this.moveDownPoints(doc, 5 * spacingScale);
 
-        // Bullets (Clean indentation)
+        // Bullets
         exp.bullets.forEach((b: string) => {
-          doc.font(fontRegular).fontSize(baseFontSize).fillColor(text).text(b, {
-            indent: 10,
-            lineGap: lineGap,
-          });
+          doc
+            .font(fontRegular)
+            .fontSize(baseFontSize)
+            .fillColor(ds.colors.text)
+            .text(b, {
+              indent: 10,
+              lineGap: 1.6,
+            });
         });
         doc.y += itemGap;
       });
@@ -121,36 +132,36 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         doc
           .font(fontBold)
           .fontSize(baseFontSize + 1)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(proj.name, { continued: true });
 
         if (proj.technologies) {
           doc
             .font(fontRegular)
             .fontSize(baseFontSize - 1)
-            .fillColor(textLight)
+            .fillColor(ds.colors.textLight)
             .text(`  ${proj.technologies}`, { continued: false });
         } else {
           doc.text("");
         }
 
-        doc.moveDown(0.2 * spacingScale);
+        this.moveDownPoints(doc, 2 * spacingScale);
 
         if (proj.link) {
           doc
             .font(fontRegular)
             .fontSize(baseFontSize - 1)
-            .fillColor(primary)
+            .fillColor(ds.colors.primary)
             .text(proj.link, { link: proj.link });
-          doc.moveDown(0.2 * spacingScale);
+          this.moveDownPoints(doc, 2 * spacingScale);
         }
 
         if (proj.description) {
           doc
             .font(fontRegular)
             .fontSize(baseFontSize)
-            .fillColor(text)
-            .text(proj.description, { lineGap: lineGap });
+            .fillColor(ds.colors.text)
+            .text(proj.description, { lineGap: 1.6 });
         }
 
         if (proj.bullets) {
@@ -158,10 +169,10 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
             doc
               .font(fontRegular)
               .fontSize(baseFontSize)
-              .fillColor(text)
+              .fillColor(ds.colors.text)
               .text(b, {
                 indent: 10,
-                lineGap: lineGap,
+                lineGap: 1.6,
               });
           });
         }
@@ -178,23 +189,22 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         doc
           .font(fontBold)
           .fontSize(baseFontSize)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(edu.institution, { continued: true });
 
-        // Date right? Or inline for minimalist? Inline is cleaner.
         doc
           .font(fontRegular)
-          .fillColor(textLight)
+          .fillColor(ds.colors.textLight)
           .text(`  |  ${edu.dateRange}`, { continued: false });
 
         // Degree
         doc
           .font(fontRegular)
-          .fillColor(text)
+          .fillColor(ds.colors.text)
           .text(`${edu.degree} in ${edu.field}`);
 
         if (edu.gpa) {
-          doc.fillColor(textLight).text(`GPA: ${edu.gpa}`);
+          doc.fillColor(ds.colors.textLight).text(`GPA: ${edu.gpa}`);
         }
         doc.y += itemGap;
       });
@@ -207,9 +217,9 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       doc
         .font(fontRegular)
         .fontSize(baseFontSize)
-        .fillColor(text)
+        .fillColor(ds.colors.text)
         .text(resume.skills.join(", "), {
-          lineGap: lineGap,
+          lineGap: 1.6,
         });
     }
   }
