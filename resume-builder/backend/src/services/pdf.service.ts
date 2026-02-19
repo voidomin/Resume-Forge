@@ -67,7 +67,12 @@ export class PDFService {
     // Create PDF with A4 size
     const doc = new PDFDocument({
       size: "A4",
-      margins: baseMargin, // Will be scaled in renderer
+      margins: {
+        top: baseMargin,
+        left: baseMargin,
+        bottom: baseMargin,
+        right: baseMargin,
+      },
     });
 
     // Collect PDF chunks
@@ -191,7 +196,12 @@ export class PDFService {
 
     const measureDoc = new PDFDocument({
       size: "A4",
-      margins: baseMargin, // Will use base, templates handle scaling
+      margins: {
+        top: baseMargin,
+        left: baseMargin,
+        bottom: baseMargin,
+        right: baseMargin,
+      },
     });
 
     measureDoc.on("pageAdded", () => {
