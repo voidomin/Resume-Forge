@@ -1,9 +1,11 @@
 import { Fragment } from "react";
 import { TemplateProps } from "../../../types/resume";
+import { UnifiedDesignSystem } from "@shared/design-system";
 
 export function MinimalistTemplate({ resume }: TemplateProps) {
+  const ds = UnifiedDesignSystem;
   const borderStyle = "none";
-  const linkColor = "var(--color-primary)";
+  const linkColor = ds.colors.primary;
 
   const formatUrl = (url: string) => {
     return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
@@ -56,42 +58,38 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
   ].filter(Boolean);
 
   const sectionHeaderStyle = {
-    fontSize: "9pt",
+    fontSize: `${ds.fontSize.contact}pt`,
     fontWeight: "700" as const,
     textTransform: "uppercase" as const,
     borderBottom: borderStyle,
-    paddingBottom: "2px",
-    marginTop: "16px",
-    marginBottom: "12px",
+    paddingBottom: `${ds.spacing.minimal}pt`,
+    marginTop: `${ds.spacing.section + 4}pt`,
+    marginBottom: `${ds.spacing.section}pt`,
     textAlign: "left" as const,
-    color: "var(--color-text-light)",
-    letterSpacing: "1px", // Modern minimalist
+    color: ds.colors.textLight,
+    letterSpacing: "1px",
   };
-
-  const fontFamily = "var(--font-sans)";
-  const fontSize = "9pt";
-  const lineHeight = "1.4"; // Airy
 
   return (
     <div
       style={{
-        fontFamily,
-        fontSize,
-        lineHeight,
-        color: "var(--color-text)",
+        fontFamily: ds.fonts.primary.web,
+        fontSize: `${ds.fontSize.contact}pt`,
+        lineHeight: "1.4",
+        color: ds.colors.text,
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: "left", marginBottom: "20px" }}>
+      <div style={{ textAlign: "left", marginBottom: `${ds.spacing.section + 8}pt` }}>
         <h1
           style={{
             fontSize: "24pt",
             fontWeight: "700",
             letterSpacing: "-1px",
-            textTransform: "none", // Minimalist often is lowercase or normal case
+            textTransform: "none",
             margin: 0,
-            marginBottom: "8px",
-            color: "var(--color-text)",
+            marginBottom: `${ds.spacing.element}pt`,
+            color: ds.colors.text,
           }}
         >
           {resume.contactInfo.name}
@@ -100,12 +98,12 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
         {/* Contact Line */}
         <div
           style={{
-            fontSize: "9pt",
+            fontSize: `${ds.fontSize.contact}pt`,
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "flex-start",
-            gap: "12px",
-            color: "var(--color-text-light)",
+            gap: `${ds.spacing.section}px`,
+            color: ds.colors.textLight,
           }}
         >
           {contactParts.map((part, index) => (
@@ -128,14 +126,14 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
 
       {/* Professional Summary */}
       {resume.summary && (
-        <section style={{ marginBottom: "16px" }}>
+        <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>About</h2>
           <p
             style={{
               margin: 0,
               textAlign: "left",
-              fontSize: "9.5pt",
-              maxWidth: "600px", // Reading width
+              fontSize: `${ds.fontSize.body}pt`,
+              maxWidth: "600px",
             }}
           >
             {resume.summary}
@@ -145,20 +143,20 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
 
       {/* Experience */}
       {resume.experiences && resume.experiences.length > 0 && (
-        <section style={{ marginBottom: "16px" }}>
+        <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Experience</h2>
           {resume.experiences.map((exp, index) => (
-            <div key={index} style={{ marginBottom: "16px" }}>
+            <div key={index} style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
               <div
                 style={{
-                  marginBottom: "4px",
+                  marginBottom: `${ds.spacing.tight}pt`,
                 }}
               >
                 <span
                   style={{
                     fontWeight: "700",
-                    fontSize: "10pt",
-                    color: "var(--color-text)",
+                    fontSize: `${ds.fontSize.body}pt`,
+                    color: ds.colors.text,
                     display: "block",
                   }}
                 >
@@ -168,8 +166,8 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
-                    fontSize: "9pt",
-                    color: "var(--color-text-light)",
+                    fontSize: `${ds.fontSize.contact}pt`,
+                    color: ds.colors.textLight,
                   }}
                 >
                   <span>
@@ -181,17 +179,17 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
               </div>
               <ul
                 style={{
-                  margin: "6px 0 0 0",
+                  margin: `${ds.spacing.tight}pt 0 0 0`,
                   paddingLeft: "14px",
-                  listStyleType: "none", // Minimalist often removes bullets
+                  listStyleType: "none",
                 }}
               >
                 {exp.bullets.map((bullet, bIndex) => (
                   <li
                     key={bIndex}
                     style={{
-                      marginBottom: "4px",
-                      fontSize: "9.5pt",
+                      marginBottom: `${ds.spacing.tight}pt`,
+                      fontSize: `${ds.fontSize.body}pt`,
                       paddingLeft: "0",
                       position: "relative",
                     }}
@@ -200,7 +198,7 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
                       style={{
                         position: "absolute",
                         left: "-12px",
-                        color: "var(--color-accent)",
+                        color: ds.colors.primary,
                       }}
                     >
                       •
@@ -216,20 +214,20 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
 
       {/* Projects */}
       {resume.projects && resume.projects.length > 0 && (
-        <section style={{ marginBottom: "16px" }}>
+        <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Projects</h2>
           {resume.projects.map((proj, index) => (
-            <div key={index} style={{ marginBottom: "12px" }}>
-              <div style={{ marginBottom: "2px" }}>
-                <span style={{ fontWeight: "700", fontSize: "10pt" }}>
+            <div key={index} style={{ marginBottom: `${ds.spacing.section}pt` }}>
+              <div style={{ marginBottom: `${ds.spacing.minimal}pt` }}>
+                <span style={{ fontWeight: "700", fontSize: `${ds.fontSize.body}pt` }}>
                   {proj.name}
                 </span>
                 {proj.technologies && (
                   <span
                     style={{
-                      fontSize: "9pt",
-                      color: "var(--color-text-light)",
-                      marginLeft: "8px",
+                      fontSize: `${ds.fontSize.contact}pt`,
+                      color: ds.colors.textLight,
+                      marginLeft: `${ds.spacing.element}pt`,
                     }}
                   >
                     {proj.technologies}
@@ -238,9 +236,9 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
               </div>
               <p
                 style={{
-                  fontSize: "9.5pt",
-                  margin: "4px 0",
-                  color: "var(--color-text)",
+                  fontSize: `${ds.fontSize.body}pt`,
+                  margin: `${ds.spacing.tight}pt 0`,
+                  color: ds.colors.text,
                 }}
               >
                 {proj.description}
@@ -249,7 +247,7 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
               {proj.bullets && (
                 <ul
                   style={{
-                    margin: "4px 0 0 0",
+                    margin: `${ds.spacing.tight}pt 0 0 0`,
                     paddingLeft: "14px",
                     listStyle: "none",
                   }}
@@ -258,8 +256,8 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
                     <li
                       key={i}
                       style={{
-                        fontSize: "9pt",
-                        marginBottom: "2px",
+                        fontSize: `${ds.fontSize.contact}pt`,
+                        marginBottom: `${ds.spacing.minimal}pt`,
                         position: "relative",
                       }}
                     >
@@ -267,7 +265,7 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
                         style={{
                           position: "absolute",
                           left: "-12px",
-                          color: "var(--color-accent)",
+                          color: ds.colors.primary,
                         }}
                       >
                         •
@@ -284,22 +282,22 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
 
       {/* Education */}
       {resume.education && resume.education.length > 0 && (
-        <section style={{ marginBottom: "16px" }}>
+        <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Education</h2>
           {resume.education.map((edu, index) => (
-            <div key={index} style={{ marginBottom: "8px" }}>
+            <div key={index} style={{ marginBottom: `${ds.spacing.element}pt` }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ fontWeight: "700" }}>{edu.institution}</span>
                 <span
-                  style={{ color: "var(--color-text-light)", fontSize: "9pt" }}
+                  style={{ color: ds.colors.textLight, fontSize: `${ds.fontSize.contact}pt` }}
                 >
                   {edu.dateRange}
                 </span>
               </div>
-              <div style={{ fontSize: "9.5pt" }}>
+              <div style={{ fontSize: `${ds.fontSize.body}pt` }}>
                 {edu.degree} in {edu.field}
                 {edu.gpa && (
-                  <span style={{ color: "var(--color-text-light)" }}>
+                  <span style={{ color: ds.colors.textLight }}>
                     {" "}
                     (GPA: {edu.gpa})
                   </span>
@@ -315,7 +313,7 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
         Object.keys(resume.skillsCategories).length > 0 && (
           <section>
             <h2 style={sectionHeaderStyle}>Skills</h2>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "24px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: `${ds.spacing.section * 2}pt` }}>
               {Object.entries(resume.skillsCategories).map(
                 ([cat, items]) =>
                   items &&
@@ -323,16 +321,16 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
                     <div key={cat} style={{ minWidth: "120px" }}>
                       <div
                         style={{
-                          fontSize: "8.5pt",
+                          fontSize: `${ds.fontSize.small}pt`,
                           fontWeight: "700",
                           textTransform: "uppercase",
-                          color: "var(--color-text-light)",
-                          marginBottom: "4px",
+                          color: ds.colors.textLight,
+                          marginBottom: `${ds.spacing.tight}pt`,
                         }}
                       >
                         {cat}
                       </div>
-                      <div style={{ fontSize: "9.5pt" }}>
+                      <div style={{ fontSize: `${ds.fontSize.body}pt` }}>
                         {items.join(", ")}
                       </div>
                     </div>
@@ -344,7 +342,7 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
       {!resume.skillsCategories && resume.skills && (
         <section>
           <h2 style={sectionHeaderStyle}>Skills</h2>
-          <p style={{ fontSize: "9.5pt" }}>{resume.skills.join(", ")}</p>
+          <p style={{ fontSize: `${ds.fontSize.body}pt` }}>{resume.skills.join(", ")}</p>
         </section>
       )}
     </div>

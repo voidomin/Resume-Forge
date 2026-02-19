@@ -1,9 +1,11 @@
 import { Fragment } from "react";
 import { TemplateProps } from "../../../types/resume";
+import { UnifiedDesignSystem } from "@shared/design-system";
 
 export function StandardTemplate({ resume }: TemplateProps) {
-  const borderStyle = "1px solid var(--color-secondary)";
-  const linkColor = "var(--color-primary)";
+  const ds = UnifiedDesignSystem;
+  const borderStyle = `1px solid ${ds.colors.secondary}`;
+  const linkColor = ds.colors.primary;
 
   const formatUrl = (url: string) => {
     return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
@@ -57,38 +59,38 @@ export function StandardTemplate({ resume }: TemplateProps) {
   ].filter(Boolean);
 
   const sectionHeaderStyle = {
-    fontSize: "11pt",
+    fontSize: `${ds.fontSize.h2}pt`,
     fontWeight: "700" as const,
     textTransform: "uppercase" as const,
     borderBottom: borderStyle,
     paddingBottom: "3px",
-    marginTop: "14px",
-    marginBottom: "8px",
+    marginTop: `${ds.spacing.section}pt`,
+    marginBottom: `${ds.spacing.element}pt`,
     textAlign: "left" as const,
-    color: "var(--color-text)",
+    color: ds.colors.text,
     letterSpacing: "0.5px",
   };
 
   return (
     <div
       style={{
-        fontFamily: "var(--font-serif)",
-        fontSize: "10pt",
-        lineHeight: "1.3",
-        color: "var(--color-text)",
+        fontFamily: ds.fonts.primary.web,
+        fontSize: `${ds.fontSize.body}pt`,
+        lineHeight: ds.spacing.line.toString(),
+        color: ds.colors.text,
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: "center", marginBottom: "12px" }}>
+      <div style={{ textAlign: "center", marginBottom: `${ds.spacing.section}pt` }}>
         <h1
           style={{
             fontSize: "22pt",
             fontWeight: "700",
             textTransform: "uppercase",
             margin: 0,
-            marginBottom: "4px",
-            color: "var(--color-text)",
-            borderBottom: "2px solid var(--color-primary)",
+            marginBottom: `${ds.spacing.tight}pt`,
+            color: ds.colors.text,
+            borderBottom: `2px solid ${ds.colors.primary}`,
             display: "inline-block",
             paddingBottom: "2px",
           }}
@@ -99,20 +101,20 @@ export function StandardTemplate({ resume }: TemplateProps) {
         {/* Contact Line */}
         <div
           style={{
-            fontSize: "9.5pt",
+            fontSize: `${ds.fontSize.contact}pt`,
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "center",
-            gap: "8px",
-            marginTop: "6px",
-            color: "var(--color-text-light)",
+            gap: `${ds.spacing.element}px`,
+            marginTop: `${ds.spacing.tight}pt`,
+            color: ds.colors.textLight,
           }}
         >
           {contactParts.map((part, index) => (
             <Fragment key={index}>
               {part}
               {index < contactParts.length - 1 && (
-                <span style={{ color: "var(--color-secondary)", opacity: 0.5 }}>
+                <span style={{ color: ds.colors.secondary, opacity: 0.5 }}>
                   •
                 </span>
               )}
@@ -123,13 +125,13 @@ export function StandardTemplate({ resume }: TemplateProps) {
 
       {/* Professional Summary */}
       {resume.summary && (
-        <section style={{ marginBottom: "12px" }}>
+        <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Professional Summary</h2>
           <p
             style={{
               margin: 0,
               textAlign: "justify",
-              fontSize: "10pt",
+              fontSize: `${ds.fontSize.body}pt`,
             }}
           >
             {resume.summary}
@@ -139,32 +141,32 @@ export function StandardTemplate({ resume }: TemplateProps) {
 
       {/* Work Experience */}
       {resume.experiences && resume.experiences.length > 0 && (
-        <section style={{ marginBottom: "12px" }}>
+        <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Work Experience</h2>
           {resume.experiences.map((exp, index) => (
-            <div key={index} style={{ marginBottom: "10px" }}>
+            <div key={index} style={{ marginBottom: `${ds.spacing.element}pt` }}>
               <div
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "baseline",
-                  marginBottom: "2px",
+                  marginBottom: `${ds.spacing.minimal}pt`,
                 }}
               >
                 <div>
-                  <span style={{ fontWeight: "700", fontSize: "11pt" }}>
+                  <span style={{ fontWeight: "700", fontSize: `${ds.fontSize.h3}pt` }}>
                     {exp.role}
                   </span>
-                  <span style={{ color: "var(--color-secondary)" }}> at </span>
+                  <span style={{ color: ds.colors.secondary }}> at </span>
                   <span
-                    style={{ fontWeight: "600", color: "var(--color-primary)" }}
+                    style={{ fontWeight: "600", color: ds.colors.primary }}
                   >
                     {exp.company}
                   </span>
                   {exp.location && (
                     <span
                       style={{
-                        color: "var(--color-text-light)",
+                        color: ds.colors.textLight,
                         fontStyle: "italic",
                       }}
                     >
@@ -174,9 +176,9 @@ export function StandardTemplate({ resume }: TemplateProps) {
                 </div>
                 <span
                   style={{
-                    fontSize: "9.5pt",
+                    fontSize: `${ds.fontSize.small}pt`,
                     fontWeight: "600",
-                    color: "var(--color-text-light)",
+                    color: ds.colors.textLight,
                   }}
                 >
                   {exp.dateRange}
@@ -184,8 +186,8 @@ export function StandardTemplate({ resume }: TemplateProps) {
               </div>
               <ul
                 style={{
-                  margin: "4px 0 0 0",
-                  paddingLeft: "16px",
+                  margin: `${ds.spacing.tight}pt 0 0 0`,
+                  paddingLeft: `${ds.spacing.bulletIndent}pt`,
                   listStyleType: "circle",
                 }}
               >
@@ -193,9 +195,9 @@ export function StandardTemplate({ resume }: TemplateProps) {
                   <li
                     key={bIndex}
                     style={{
-                      marginBottom: "2px",
-                      fontSize: "10pt",
-                      paddingLeft: "4px",
+                      marginBottom: `${ds.spacing.minimal}pt`,
+                      fontSize: `${ds.fontSize.body}pt`,
+                      paddingLeft: `${ds.spacing.tight}pt`,
                     }}
                   >
                     {bullet}
@@ -209,20 +211,20 @@ export function StandardTemplate({ resume }: TemplateProps) {
 
       {/* Projects */}
       {resume.projects && resume.projects.length > 0 && (
-        <section style={{ marginBottom: "12px" }}>
+        <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Projects</h2>
           {resume.projects.map((proj, index) => (
-            <div key={index} style={{ marginBottom: "8px" }}>
-              <div style={{ marginBottom: "2px" }}>
-                <span style={{ fontWeight: "700", fontSize: "11pt" }}>
+            <div key={index} style={{ marginBottom: `${ds.spacing.element}pt` }}>
+              <div style={{ marginBottom: `${ds.spacing.minimal}pt` }}>
+                <span style={{ fontWeight: "700", fontSize: `${ds.fontSize.h3}pt` }}>
                   {proj.name}
                 </span>
                 {proj.technologies && (
                   <span
                     style={{
-                      fontSize: "9.5pt",
-                      color: "var(--color-text-light)",
-                      marginLeft: "6px",
+                      fontSize: `${ds.fontSize.small}pt`,
+                      color: ds.colors.textLight,
+                      marginLeft: `${ds.spacing.tight}pt`,
                     }}
                   >
                     [{proj.technologies}]
@@ -231,8 +233,8 @@ export function StandardTemplate({ resume }: TemplateProps) {
               </div>
               <ul
                 style={{
-                  margin: "4px 0 0 0",
-                  paddingLeft: "16px",
+                  margin: `${ds.spacing.tight}pt 0 0 0`,
+                  paddingLeft: `${ds.spacing.bulletIndent}pt`,
                   listStyleType: "circle",
                 }}
               >
@@ -241,9 +243,9 @@ export function StandardTemplate({ resume }: TemplateProps) {
                       <li
                         key={bIndex}
                         style={{
-                          fontSize: "10pt",
-                          marginBottom: "2px",
-                          paddingLeft: "4px",
+                          fontSize: `${ds.fontSize.body}pt`,
+                          marginBottom: `${ds.spacing.minimal}pt`,
+                          paddingLeft: `${ds.spacing.tight}pt`,
                         }}
                       >
                         {bullet}
@@ -252,9 +254,9 @@ export function StandardTemplate({ resume }: TemplateProps) {
                   : proj.description && (
                       <li
                         style={{
-                          fontSize: "10pt",
-                          marginBottom: "2px",
-                          paddingLeft: "4px",
+                          fontSize: `${ds.fontSize.body}pt`,
+                          marginBottom: `${ds.spacing.minimal}pt`,
+                          paddingLeft: `${ds.spacing.tight}pt`,
                         }}
                       >
                         {proj.description}
@@ -268,10 +270,10 @@ export function StandardTemplate({ resume }: TemplateProps) {
 
       {/* Education */}
       {resume.education && resume.education.length > 0 && (
-        <section style={{ marginBottom: "12px" }}>
+        <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Education</h2>
           {resume.education.map((edu, index) => (
-            <div key={index} style={{ marginBottom: "6px" }}>
+            <div key={index} style={{ marginBottom: `${ds.spacing.tight}pt` }}>
               <div
                 style={{
                   display: "flex",
@@ -280,25 +282,25 @@ export function StandardTemplate({ resume }: TemplateProps) {
                 }}
               >
                 <div>
-                  <span style={{ fontWeight: "700", fontSize: "11pt" }}>
+                  <span style={{ fontWeight: "700", fontSize: `${ds.fontSize.h3}pt` }}>
                     {edu.institution}
                   </span>
                 </div>
                 <span
                   style={{
-                    fontSize: "9.5pt",
-                    color: "var(--color-text-light)",
+                    fontSize: `${ds.fontSize.small}pt`,
+                    color: ds.colors.textLight,
                   }}
                 >
                   {edu.dateRange}
                 </span>
               </div>
-              <div style={{ fontSize: "10pt" }}>
+              <div style={{ fontSize: `${ds.fontSize.body}pt` }}>
                 <span style={{ fontWeight: "500" }}>
                   {edu.degree} in {edu.field}
                 </span>
                 {edu.gpa && (
-                  <span style={{ color: "var(--color-text-light)" }}>
+                  <span style={{ color: ds.colors.textLight }}>
                     {" "}
                     | GPA: {edu.gpa}
                   </span>
@@ -314,14 +316,14 @@ export function StandardTemplate({ resume }: TemplateProps) {
       Object.keys(resume.skillsCategories).length > 0 ? (
         <section style={{ marginBottom: "0" }}>
           <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: `${ds.spacing.tight}pt` }}>
             {Object.entries(resume.skillsCategories).map(
               ([category, skills]) =>
                 skills &&
                 skills.length > 0 && (
                   <div
                     key={category}
-                    style={{ fontSize: "10pt", marginBottom: "2px" }}
+                    style={{ fontSize: `${ds.fontSize.body}pt`, marginBottom: `${ds.spacing.minimal}pt` }}
                   >
                     <span style={{ fontWeight: "700" }}>{category}:</span>{" "}
                     {skills.join(", ")}
@@ -335,7 +337,7 @@ export function StandardTemplate({ resume }: TemplateProps) {
         resume.skills.length > 0 && (
           <section style={{ marginBottom: "0" }}>
             <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-            <p style={{ margin: 0, fontSize: "10pt" }}>
+            <p style={{ margin: 0, fontSize: `${ds.fontSize.body}pt` }}>
               {resume.skills.join("  •  ")}
             </p>
           </section>
@@ -344,17 +346,17 @@ export function StandardTemplate({ resume }: TemplateProps) {
 
       {/* Certifications */}
       {resume.certifications && resume.certifications.length > 0 && (
-        <section style={{ marginTop: "12px", marginBottom: "0" }}>
+        <section style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}>
           <h2 style={sectionHeaderStyle}>Certifications</h2>
           {resume.certifications.map((cert, index) => (
-            <div key={index} style={{ fontSize: "10pt", marginBottom: "1px" }}>
+            <div key={index} style={{ fontSize: `${ds.fontSize.body}pt`, marginBottom: "1px" }}>
               <span style={{ fontWeight: "700" }}>{cert.name}</span>
-              <span style={{ color: "var(--color-text-light)" }}>
+              <span style={{ color: ds.colors.textLight }}>
                 {" "}
                 – {cert.issuer}
               </span>
               {cert.date && (
-                <span style={{ color: "var(--color-text-light)" }}>
+                <span style={{ color: ds.colors.textLight }}>
                   {" "}
                   ({cert.date})
                 </span>
