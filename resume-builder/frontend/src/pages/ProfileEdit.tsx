@@ -715,15 +715,30 @@ function ProfileEdit() {
   }
 
   const tabs = [
-    { id: "personal", label: "Personal Info", icon: User },
-    { id: "experience", label: "Experience", icon: Briefcase },
-    { id: "education", label: "Education", icon: GraduationCap },
-    { id: "projects", label: "Projects", icon: Folder },
-    { id: "certifications", label: "Certifications", icon: Award },
-    { id: "skills", label: "Skills", icon: Code },
-    { id: "coursework", label: "Coursework", icon: GraduationCap },
-    { id: "leadership", label: "Leadership", icon: Briefcase },
-    { id: "awards", label: "Awards", icon: Award },
+    { id: "personal", label: "Personal Info", icon: User, optional: false },
+    { id: "experience", label: "Experience", icon: Briefcase, optional: false },
+    {
+      id: "education",
+      label: "Education",
+      icon: GraduationCap,
+      optional: false,
+    },
+    { id: "projects", label: "Projects", icon: Folder, optional: false },
+    {
+      id: "certifications",
+      label: "Certifications",
+      icon: Award,
+      optional: false,
+    },
+    { id: "skills", label: "Skills", icon: Code, optional: false },
+    {
+      id: "coursework",
+      label: "Coursework",
+      icon: GraduationCap,
+      optional: true,
+    },
+    { id: "leadership", label: "Leadership", icon: Briefcase, optional: true },
+    { id: "awards", label: "Awards", icon: Award, optional: true },
   ];
 
   return (
@@ -974,12 +989,12 @@ function ProfileEdit() {
 
       {/* Tabs */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex-1 flex items-center justify-center px-4 py-4 font-medium transition-colors ${
+              className={`flex items-center justify-center px-4 py-4 font-medium transition-colors whitespace-nowrap min-w-fit ${
                 activeTab === tab.id
                   ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
                   : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -987,6 +1002,11 @@ function ProfileEdit() {
             >
               <tab.icon className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">{tab.label}</span>
+              {tab.optional && (
+                <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                  Optional
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -1944,12 +1964,21 @@ function ProfileEdit() {
           {activeTab === "coursework" && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Relevant Coursework
-                </h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Relevant Coursework
+                  </h3>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
+                    Optional
+                  </span>
+                </div>
                 <p className="text-sm text-gray-600 mb-4">
                   Add coursework relevant to your target roles (will be included
-                  if matches job description)
+                  if score ≥ 60/100)
+                </p>
+                <p className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+                  💡 <strong>AI Scoring:</strong> Courses are scored 0-100 based
+                  on relevance to job description. Only included if score ≥ 60.
                 </p>
               </div>
 
@@ -2092,12 +2121,21 @@ function ProfileEdit() {
           {activeTab === "leadership" && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Leadership & Extracurricular
-                </h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Leadership & Extracurricular
+                  </h3>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
+                    Optional
+                  </span>
+                </div>
                 <p className="text-sm text-gray-600 mb-4">
-                  Add leadership roles and extracurricular activities (will be
-                  included if relevant to job)
+                  Add leadership roles and extracurricular activities
+                </p>
+                <p className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+                  💡 <strong>AI Scoring:</strong> Leadership roles are scored
+                  0-100 based on relevance to job description. Only included if
+                  score ≥ 70.
                 </p>
               </div>
 
@@ -2310,12 +2348,20 @@ function ProfileEdit() {
           {activeTab === "awards" && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Honors & Awards
-                </h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Honors & Awards
+                  </h3>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
+                    Optional
+                  </span>
+                </div>
                 <p className="text-sm text-gray-600 mb-4">
-                  Add awards and honors (will be included if highly relevant to
-                  job description)
+                  Add awards and honors
+                </p>
+                <p className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+                  💡 <strong>AI Scoring:</strong> Awards are scored 0-100 based
+                  on relevance to job description. Only included if score ≥ 75.
                 </p>
               </div>
 
