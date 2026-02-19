@@ -763,6 +763,15 @@ async function profileRoutes(server: FastifyInstance) {
         await prisma.certification.deleteMany({
           where: { profileId: profile.id },
         });
+        await prisma.coursework.deleteMany({
+          where: { profileId: profile.id },
+        });
+        await prisma.leadership.deleteMany({
+          where: { profileId: profile.id },
+        });
+        await prisma.award.deleteMany({
+          where: { profileId: profile.id },
+        });
 
         // Add experiences
         if (data.experiences && Array.isArray(data.experiences)) {
@@ -838,6 +847,53 @@ async function profileRoutes(server: FastifyInstance) {
                 issuer: cert.issuer,
                 date: cert.date,
                 link: cert.link,
+              },
+            });
+          }
+        }
+
+        // Add coursework
+        if (data.coursework && Array.isArray(data.coursework)) {
+          for (const cw of data.coursework) {
+            await prisma.coursework.create({
+              data: {
+                profileId: profile.id,
+                courseName: cw.courseName,
+                topic: cw.topic,
+                institution: cw.institution || "",
+              },
+            });
+          }
+        }
+
+        // Add leadership
+        if (data.leadership && Array.isArray(data.leadership)) {
+          for (const lead of data.leadership) {
+            await prisma.leadership.create({
+              data: {
+                profileId: profile.id,
+                title: lead.title,
+                organization: lead.organization,
+                location: lead.location,
+                startDate: lead.startDate,
+                endDate: lead.endDate,
+                current: lead.current || false,
+                description: lead.description,
+              },
+            });
+          }
+        }
+
+        // Add awards
+        if (data.awards && Array.isArray(data.awards)) {
+          for (const award of data.awards) {
+            await prisma.award.create({
+              data: {
+                profileId: profile.id,
+                awardName: award.awardName,
+                organization: award.organization,
+                awardDate: award.awardDate,
+                description: award.description,
               },
             });
           }

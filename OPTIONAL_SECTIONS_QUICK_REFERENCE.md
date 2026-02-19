@@ -1,6 +1,7 @@
 # Optional Sections - Quick Reference & Testing Checklist
 
 ## Quick Links
+
 - 🔗 Frontend: http://localhost:5175
 - 🔗 Backend: http://localhost:3000
 - 📚 Full Testing Guide: [OPTIONAL_SECTIONS_TESTING.md](OPTIONAL_SECTIONS_TESTING.md)
@@ -11,12 +12,15 @@
 ## 5-Minute Feature Overview
 
 ### What Was Built
+
 Three new resume sections with AI relevance scoring:
+
 - **Coursework**: Relevant courses (score ≥ 60)
 - **Leadership**: Leadership roles (score ≥ 70)
 - **Awards**: Honors and awards (score ≥ 75)
 
 ### Key Enhancements
+
 ✅ **Scoring**: Explicit AI scoring logic with transparency logging
 ✅ **Backend**: New API endpoints for create/read/update/delete operations
 ✅ **Frontend**: New UI tabs with save/load functionality
@@ -28,6 +32,7 @@ Three new resume sections with AI relevance scoring:
 ## API Quick Reference
 
 ### Coursework Endpoints
+
 ```bash
 # Add coursework
 POST /profile/coursework
@@ -42,6 +47,7 @@ DELETE /profile/coursework/{id}
 ```
 
 ### Leadership Endpoints
+
 ```bash
 # Add leadership role
 POST /profile/leadership
@@ -52,6 +58,7 @@ DELETE /profile/leadership/{id}
 ```
 
 ### Awards Endpoints
+
 ```bash
 # Add award
 POST /profile/awards
@@ -66,6 +73,7 @@ DELETE /profile/awards/{id}
 ## Frontend Quick Test
 
 ### Path to Test Optional Sections
+
 1. Go to http://localhost:5175
 2. Login with test account
 3. Click "Profile" → "Edit Profile"
@@ -73,6 +81,7 @@ DELETE /profile/awards/{id}
 5. Try adding entries and clicking Save
 
 ### Expected Behavior
+
 - ✅ UI responds to clicks
 - ✅ Save button shows spinner
 - ✅ Success toast appears
@@ -83,12 +92,14 @@ DELETE /profile/awards/{id}
 ## Backend Scoring Logs
 
 ### Where to Find Logs
+
 ```bash
 # Watch backend console (already running on port 3000)
 [Look for messages like these when generating resume]
 ```
 
 ### Score Log Format
+
 ```
 🎓 COURSEWORK SCORE: 65/100 (INCLUDED)
 📊 Leadership Score: 72/100 (INCLUDED)
@@ -97,6 +108,7 @@ Optional sections summary: Coursework=3, Leadership=2, Awards=1
 ```
 
 ### Log Levels
+
 - 🎓 Coursework: **WARN** level (highly visible)
 - 📊 Leadership: **DEBUG** level (development)
 - 🏆 Awards: **DEBUG** level (development)
@@ -106,6 +118,7 @@ Optional sections summary: Coursework=3, Leadership=2, Awards=1
 ## Testing Checklist
 
 ### ✅ Pre-Test Checks
+
 - [ ] Backend running on port 3000
 - [ ] Frontend running on port 5175
 - [ ] PostgreSQL running in Docker
@@ -113,6 +126,7 @@ Optional sections summary: Coursework=3, Leadership=2, Awards=1
 - [ ] User is logged in
 
 ### ✅ Coursework Testing
+
 - [ ] Click "Coursework" tab
 - [ ] Click "Add Coursework" button
 - [ ] Fill in: Course Name, Topic, Institution
@@ -123,6 +137,7 @@ Optional sections summary: Coursework=3, Leadership=2, Awards=1
 - [ ] Re-save - works
 
 ### ✅ Leadership Testing
+
 - [ ] Click "Leadership" tab
 - [ ] Click "Add Leadership Role"
 - [ ] Fill in all fields
@@ -133,6 +148,7 @@ Optional sections summary: Coursework=3, Leadership=2, Awards=1
 - [ ] Re-save works
 
 ### ✅ Awards Testing
+
 - [ ] Click "Awards" tab
 - [ ] Click "Add Award"
 - [ ] Fill in all fields
@@ -142,6 +158,7 @@ Optional sections summary: Coursework=3, Leadership=2, Awards=1
 - [ ] Re-save works
 
 ### ✅ Resume Generation Testing
+
 - [ ] Add some coursework, leadership, awards to profile
 - [ ] Go to Resume Generator
 - [ ] Paste a job description
@@ -152,6 +169,7 @@ Optional sections summary: Coursework=3, Leadership=2, Awards=1
 - [ ] Verify scoring meets thresholds
 
 ### ✅ Error Handling Testing
+
 - [ ] Try to add entry with missing fields (should error)
 - [ ] Try invalid dates (should error)
 - [ ] Check error toast appears
@@ -161,11 +179,11 @@ Optional sections summary: Coursework=3, Leadership=2, Awards=1
 
 ## Scoring Thresholds Reference
 
-| Section | Threshold | Emoji | Log Level |
-|---------|-----------|-------|-----------|
-| Coursework | ≥ 60 | 🎓 | WARN |
-| Leadership | ≥ 70 | 📊 | DEBUG |
-| Awards | ≥ 75 | 🏆 | DEBUG |
+| Section    | Threshold | Emoji | Log Level |
+| ---------- | --------- | ----- | --------- |
+| Coursework | ≥ 60      | 🎓    | WARN      |
+| Leadership | ≥ 70      | 📊    | DEBUG     |
+| Awards     | ≥ 75      | 🏆    | DEBUG     |
 
 **Scores Below Threshold**: Section excluded from resume
 
@@ -174,12 +192,15 @@ Optional sections summary: Coursework=3, Leadership=2, Awards=1
 ## Code Files Modified
 
 ### Backend
+
 - `resume-builder/backend/src/services/gemini.service.ts` (Scoring + Logging)
 
-### Frontend  
+### Frontend
+
 - `resume-builder/frontend/src/pages/ProfileEdit.tsx` (Save/Load + UI)
 
 ### Documentation
+
 - `OPTIONAL_SECTIONS_TESTING.md` (7 test scenarios)
 - `OPTIONAL_SECTIONS_SESSION_SUMMARY.md` (Session overview)
 - `OPTIONAL_SECTIONS_QUICK_REFERENCE.md` (This file!)
@@ -199,25 +220,33 @@ afbb6af - docs: add comprehensive testing and session summary documentation
 ## Common Issues & Solutions
 
 ### Issue: "Save" button not responding
-**Solution**: 
+
+**Solution**:
+
 - Check backend console for errors
 - Verify authentication token is valid
 - Check browser console (F12) for network errors
 
 ### Issue: Data not persisting after refresh
+
 **Solution**:
+
 - Verify database connection (check logs)
 - Check Network tab in DevTools for failed requests
 - Verify POST/DELETE operations succeeded
 
 ### Issue: No score logs appearing
+
 **Solution**:
+
 - When generating resume, add optional sections to profile first
 - Check backend console log level (may be DEBUG)
 - Verify Gemini API responses include scores
 
 ### Issue: Scores showing 0/100
+
 **Solution**:
+
 - Job description may not match profiles
 - Check Gemini API connectivity
 - Verify optional sections data is complete
@@ -227,6 +256,7 @@ afbb6af - docs: add comprehensive testing and session summary documentation
 ## Debug Commands
 
 ### Check if services running
+
 ```bash
 # Backend
 curl http://localhost:3000/health
@@ -236,6 +266,7 @@ curl http://localhost:5175
 ```
 
 ### View database tables
+
 ```bash
 # Connect to PostgreSQL and run
 SELECT * FROM "Coursework" LIMIT 5;
@@ -244,6 +275,7 @@ SELECT * FROM "Award" LIMIT 5;
 ```
 
 ### Test API endpoint
+
 ```bash
 curl -X POST http://localhost:3000/profile/coursework \
   -H "Authorization: Bearer <TOKEN>" \

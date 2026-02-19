@@ -92,6 +92,26 @@ export interface ParsedProfile {
     date?: string;
     link?: string;
   }[];
+  coursework?: {
+    courseName: string;
+    topic: string;
+    institution: string;
+  }[];
+  leadership?: {
+    title: string;
+    organization: string;
+    location?: string;
+    startDate?: string;
+    endDate?: string;
+    current?: boolean;
+    description?: string;
+  }[];
+  awards?: {
+    awardName: string;
+    organization: string;
+    awardDate?: string;
+    description?: string;
+  }[];
 }
 
 class ResumeParserService {
@@ -196,6 +216,32 @@ Extract and return a JSON object with the following structure. Be thorough and e
       "date": "string (year or date)",
       "link": "string (url or null)"
     }
+  ],
+  "coursework": [
+    {
+      "courseName": "string (course/class name)",
+      "topic": "string (subject area or category)",
+      "institution": "string (school/university where taken)"
+    }
+  ],
+  "leadership": [
+    {
+      "title": "string (leadership role/title)",
+      "organization": "string (company/organization name)",
+      "location": "string or null (location)",
+      "startDate": "string or null (e.g. 'Jan 2020')",
+      "endDate": "string or null (null if current)",
+      "current": boolean,
+      "description": "string or null (brief accomplishments/responsibilities)"
+    }
+  ],
+  "awards": [
+    {
+      "awardName": "string (award/honor name)",
+      "organization": "string (organization giving award)",
+      "awardDate": "string or null (date received)",
+      "description": "string or null (why awarded)"
+    }
   ]
 }
 
@@ -203,10 +249,16 @@ IMPORTANT:
 - Extract ALL work experiences, not just recent ones
 - Extract ALL education entries
 - Extract ALL skills, projects, and certifications
+- Extract coursework, leadership roles, and awards if present in resume
 - For bullet points in experiences, keep them as-is with quantifiable metrics if present
 - If the resume has a summary/objective section, include it
 - Parse dates intelligently (handle various formats)
 - Return ONLY valid JSON, no markdown formatting
+
+OPTIONAL SECTIONS:
+- Coursework: Look for "Courses", "Relevant Coursework", "Coursework" sections
+- Leadership: Look for "Leadership", "Volunteer", "Board" sections or leadership-related job titles
+- Awards: Look for "Awards", "Honors", "Recognition" sections
 
 Return the JSON object:`;
 
