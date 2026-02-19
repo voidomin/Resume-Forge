@@ -135,12 +135,12 @@ export function getCleanColor(hexColor: string): string {
  * Dynamic Scaling Engine for responsive content fitting
  *
  * Ensures resumes fit on one page while respecting minimum thresholds
- * Min font: 7pt, Min spacing: 2pt, Min margins: 24pt
+ * Min font: 11pt, Min spacing: 2pt, Min margins: 28pt
  */
 export class DynamicSizingEngine {
-  private readonly MIN_FONT_SIZE = 7;
+  private readonly MIN_FONT_SIZE = 11;
   private readonly MIN_SPACING = 2;
-  private readonly MIN_MARGIN = 24;
+  private readonly MIN_MARGIN = 28;
   private readonly MAX_SCALE = 1.15;
   private readonly MIN_SCALE = 0.65;
 
