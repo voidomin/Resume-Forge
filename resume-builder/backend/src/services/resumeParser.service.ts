@@ -359,35 +359,38 @@ Return the JSON object:`;
           date: cert.date || undefined,
           link: cert.link || undefined,
         })),
-        ...(parsed.coursework &&
-          parsed.coursework.length > 0 && {
-            coursework: parsed.coursework.map((cw: any) => ({
-              courseName: cw.courseName || "",
-              topic: cw.topic || "",
-              institution: cw.institution || "",
-            })),
-          }),
-        ...(parsed.leadership &&
-          parsed.leadership.length > 0 && {
-            leadership: parsed.leadership.map((lead: any) => ({
-              title: lead.title || "",
-              organization: lead.organization || "",
-              location: lead.location || undefined,
-              startDate: lead.startDate || undefined,
-              endDate: lead.endDate || undefined,
-              current: lead.current || false,
-              description: lead.description || undefined,
-            })),
-          }),
-        ...(parsed.awards &&
-          parsed.awards.length > 0 && {
-            awards: parsed.awards.map((award: any) => ({
-              awardName: award.awardName || "",
-              organization: award.organization || "",
-              awardDate: award.awardDate || undefined,
-              description: award.description || undefined,
-            })),
-          }),
+        ...(parsed.coursework && parsed.coursework.length > 0
+          ? {
+              coursework: parsed.coursework.map((cw: any) => ({
+                courseName: cw.courseName || "",
+                topic: cw.topic || "",
+                institution: cw.institution || "",
+              })),
+            }
+          : {}),
+        ...(parsed.leadership && parsed.leadership.length > 0
+          ? {
+              leadership: parsed.leadership.map((lead: any) => ({
+                title: lead.title || "",
+                organization: lead.organization || "",
+                location: lead.location || undefined,
+                startDate: lead.startDate || undefined,
+                endDate: lead.endDate || undefined,
+                current: lead.current || false,
+                description: lead.description || undefined,
+              })),
+            }
+          : {}),
+        ...(parsed.awards && parsed.awards.length > 0
+          ? {
+              awards: parsed.awards.map((award: any) => ({
+                awardName: award.awardName || "",
+                organization: award.organization || "",
+                awardDate: award.awardDate || undefined,
+                description: award.description || undefined,
+              })),
+            }
+          : {}),
       };
     } catch (error: any) {
       console.error("AI extraction error details:", error);
