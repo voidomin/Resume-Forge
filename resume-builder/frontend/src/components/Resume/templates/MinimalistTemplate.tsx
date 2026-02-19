@@ -80,7 +80,12 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: "left", marginBottom: `${ds.spacing.section + 8}pt` }}>
+      <div
+        style={{
+          textAlign: "left",
+          marginBottom: `${ds.spacing.section + 8}pt`,
+        }}
+      >
         <h1
           style={{
             fontSize: "24pt",
@@ -146,7 +151,10 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Experience</h2>
           {resume.experiences.map((exp, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.section + 4}pt` }}
+            >
               <div
                 style={{
                   marginBottom: `${ds.spacing.tight}pt`,
@@ -217,9 +225,17 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Projects</h2>
           {resume.projects.map((proj, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.section}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.section}pt` }}
+            >
               <div style={{ marginBottom: `${ds.spacing.minimal}pt` }}>
-                <span style={{ fontWeight: "700", fontSize: `${ds.fontSize.body}pt` }}>
+                <span
+                  style={{
+                    fontWeight: "700",
+                    fontSize: `${ds.fontSize.body}pt`,
+                  }}
+                >
                   {proj.name}
                 </span>
                 {proj.technologies && (
@@ -285,11 +301,17 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Education</h2>
           {resume.education.map((edu, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.element}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.element}pt` }}
+            >
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ fontWeight: "700" }}>{edu.institution}</span>
                 <span
-                  style={{ color: ds.colors.textLight, fontSize: `${ds.fontSize.contact}pt` }}
+                  style={{
+                    color: ds.colors.textLight,
+                    fontSize: `${ds.fontSize.contact}pt`,
+                  }}
                 >
                   {edu.dateRange}
                 </span>
@@ -313,7 +335,13 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
         Object.keys(resume.skillsCategories).length > 0 && (
           <section>
             <h2 style={sectionHeaderStyle}>Skills</h2>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: `${ds.spacing.section * 2}pt` }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: `${ds.spacing.section * 2}pt`,
+              }}
+            >
               {Object.entries(resume.skillsCategories).map(
                 ([cat, items]) =>
                   items &&
@@ -342,7 +370,9 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
       {!resume.skillsCategories && resume.skills && (
         <section>
           <h2 style={sectionHeaderStyle}>Skills</h2>
-          <p style={{ fontSize: `${ds.fontSize.body}pt` }}>{resume.skills.join(", ")}</p>
+          <p style={{ fontSize: `${ds.fontSize.body}pt` }}>
+            {resume.skills.join(", ")}
+          </p>
         </section>
       )}
     </div>

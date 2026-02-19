@@ -81,7 +81,9 @@ export function StandardTemplate({ resume }: TemplateProps) {
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: "center", marginBottom: `${ds.spacing.section}pt` }}>
+      <div
+        style={{ textAlign: "center", marginBottom: `${ds.spacing.section}pt` }}
+      >
         <h1
           style={{
             fontSize: "22pt",
@@ -144,7 +146,10 @@ export function StandardTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Work Experience</h2>
           {resume.experiences.map((exp, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.element}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.element}pt` }}
+            >
               <div
                 style={{
                   display: "flex",
@@ -154,13 +159,16 @@ export function StandardTemplate({ resume }: TemplateProps) {
                 }}
               >
                 <div>
-                  <span style={{ fontWeight: "700", fontSize: `${ds.fontSize.h3}pt` }}>
+                  <span
+                    style={{
+                      fontWeight: "700",
+                      fontSize: `${ds.fontSize.h3}pt`,
+                    }}
+                  >
                     {exp.role}
                   </span>
                   <span style={{ color: ds.colors.secondary }}> at </span>
-                  <span
-                    style={{ fontWeight: "600", color: ds.colors.primary }}
-                  >
+                  <span style={{ fontWeight: "600", color: ds.colors.primary }}>
                     {exp.company}
                   </span>
                   {exp.location && (
@@ -214,9 +222,14 @@ export function StandardTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Projects</h2>
           {resume.projects.map((proj, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.element}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.element}pt` }}
+            >
               <div style={{ marginBottom: `${ds.spacing.minimal}pt` }}>
-                <span style={{ fontWeight: "700", fontSize: `${ds.fontSize.h3}pt` }}>
+                <span
+                  style={{ fontWeight: "700", fontSize: `${ds.fontSize.h3}pt` }}
+                >
                   {proj.name}
                 </span>
                 {proj.technologies && (
@@ -282,7 +295,12 @@ export function StandardTemplate({ resume }: TemplateProps) {
                 }}
               >
                 <div>
-                  <span style={{ fontWeight: "700", fontSize: `${ds.fontSize.h3}pt` }}>
+                  <span
+                    style={{
+                      fontWeight: "700",
+                      fontSize: `${ds.fontSize.h3}pt`,
+                    }}
+                  >
                     {edu.institution}
                   </span>
                 </div>
@@ -316,14 +334,23 @@ export function StandardTemplate({ resume }: TemplateProps) {
       Object.keys(resume.skillsCategories).length > 0 ? (
         <section style={{ marginBottom: "0" }}>
           <h2 style={sectionHeaderStyle}>Technical Skills</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: `${ds.spacing.tight}pt` }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: `${ds.spacing.tight}pt`,
+            }}
+          >
             {Object.entries(resume.skillsCategories).map(
               ([category, skills]) =>
                 skills &&
                 skills.length > 0 && (
                   <div
                     key={category}
-                    style={{ fontSize: `${ds.fontSize.body}pt`, marginBottom: `${ds.spacing.minimal}pt` }}
+                    style={{
+                      fontSize: `${ds.fontSize.body}pt`,
+                      marginBottom: `${ds.spacing.minimal}pt`,
+                    }}
                   >
                     <span style={{ fontWeight: "700" }}>{category}:</span>{" "}
                     {skills.join(", ")}
@@ -346,10 +373,15 @@ export function StandardTemplate({ resume }: TemplateProps) {
 
       {/* Certifications */}
       {resume.certifications && resume.certifications.length > 0 && (
-        <section style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}>
+        <section
+          style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}
+        >
           <h2 style={sectionHeaderStyle}>Certifications</h2>
           {resume.certifications.map((cert, index) => (
-            <div key={index} style={{ fontSize: `${ds.fontSize.body}pt`, marginBottom: "1px" }}>
+            <div
+              key={index}
+              style={{ fontSize: `${ds.fontSize.body}pt`, marginBottom: "1px" }}
+            >
               <span style={{ fontWeight: "700" }}>{cert.name}</span>
               <span style={{ color: ds.colors.textLight }}>
                 {" "}

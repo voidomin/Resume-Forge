@@ -82,7 +82,12 @@ export function ExecutiveTemplate({ resume }: TemplateProps) {
       }}
     >
       {/* Header - Contact Info */}
-      <div style={{ textAlign: "center", marginBottom: `${ds.spacing.section + 4}pt` }}>
+      <div
+        style={{
+          textAlign: "center",
+          marginBottom: `${ds.spacing.section + 4}pt`,
+        }}
+      >
         <h1
           style={{
             fontSize: "24pt",
@@ -141,7 +146,10 @@ export function ExecutiveTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Work Experience</h2>
           {resume.experiences.map((exp, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.section}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.section}pt` }}
+            >
               <div
                 style={{
                   display: "flex",
@@ -170,7 +178,12 @@ export function ExecutiveTemplate({ resume }: TemplateProps) {
                     </span>
                   )}
                 </div>
-                <span style={{ fontSize: `${ds.fontSize.small}pt`, fontWeight: "600" }}>
+                <span
+                  style={{
+                    fontSize: `${ds.fontSize.small}pt`,
+                    fontWeight: "600",
+                  }}
+                >
                   {exp.dateRange}
                 </span>
               </div>
@@ -204,7 +217,10 @@ export function ExecutiveTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Education</h2>
           {resume.education.map((edu, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.element}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.element}pt` }}
+            >
               <div
                 style={{
                   display: "flex",
@@ -213,11 +229,18 @@ export function ExecutiveTemplate({ resume }: TemplateProps) {
                 }}
               >
                 <div>
-                  <span style={{ fontWeight: "700", fontSize: `${ds.fontSize.h3}pt` }}>
+                  <span
+                    style={{
+                      fontWeight: "700",
+                      fontSize: `${ds.fontSize.h3}pt`,
+                    }}
+                  >
                     {edu.institution}
                   </span>
                 </div>
-                <span style={{ fontSize: `${ds.fontSize.small}pt` }}>{edu.dateRange}</span>
+                <span style={{ fontSize: `${ds.fontSize.small}pt` }}>
+                  {edu.dateRange}
+                </span>
               </div>
               <div style={{ fontSize: `${ds.fontSize.body}pt` }}>
                 <span style={{ fontStyle: "italic" }}>
@@ -240,9 +263,14 @@ export function ExecutiveTemplate({ resume }: TemplateProps) {
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Projects</h2>
           {resume.projects.map((proj, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.element}pt` }}>
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.element}pt` }}
+            >
               <div style={{ marginBottom: `${ds.spacing.minimal}pt` }}>
-                <span style={{ fontWeight: "700", fontSize: `${ds.fontSize.h3}pt` }}>
+                <span
+                  style={{ fontWeight: "700", fontSize: `${ds.fontSize.h3}pt` }}
+                >
                   {proj.name}
                 </span>
               </div>
@@ -299,7 +327,10 @@ export function ExecutiveTemplate({ resume }: TemplateProps) {
               ([category, skills]) =>
                 skills &&
                 skills.length > 0 && (
-                  <div key={category} style={{ fontSize: `${ds.fontSize.body}pt` }}>
+                  <div
+                    key={category}
+                    style={{ fontSize: `${ds.fontSize.body}pt` }}
+                  >
                     <span
                       style={{
                         fontWeight: "700",
@@ -310,7 +341,9 @@ export function ExecutiveTemplate({ resume }: TemplateProps) {
                     >
                       {category}
                     </span>
-                    <div style={{ marginTop: `${ds.spacing.minimal}pt` }}>{skills.join(", ")}</div>
+                    <div style={{ marginTop: `${ds.spacing.minimal}pt` }}>
+                      {skills.join(", ")}
+                    </div>
                   </div>
                 ),
             )}
@@ -330,10 +363,15 @@ export function ExecutiveTemplate({ resume }: TemplateProps) {
 
       {/* Certifications */}
       {resume.certifications && resume.certifications.length > 0 && (
-        <section style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}>
+        <section
+          style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}
+        >
           <h2 style={sectionHeaderStyle}>Certifications</h2>
           {resume.certifications.map((cert, index) => (
-            <div key={index} style={{ fontSize: `${ds.fontSize.body}pt`, marginBottom: "1px" }}>
+            <div
+              key={index}
+              style={{ fontSize: `${ds.fontSize.body}pt`, marginBottom: "1px" }}
+            >
               <span style={{ fontWeight: "700" }}>{cert.name}</span>
               <span style={{ color: ds.colors.textLight }}>
                 {" "}
