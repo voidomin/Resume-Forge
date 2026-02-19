@@ -79,6 +79,27 @@ export interface ProfileData {
     issuer: string;
     date?: string;
   }[];
+  // Optional sections
+  coursework?: {
+    courseName: string;
+    topic: string;
+    institution?: string;
+  }[];
+  leadership?: {
+    title: string;
+    organization: string;
+    location?: string;
+    startDate?: string;
+    endDate?: string;
+    current?: boolean;
+    description?: string;
+  }[];
+  awards?: {
+    awardName: string;
+    organization: string;
+    awardDate: string;
+    description?: string;
+  }[];
 }
 
 export interface GeneratedResume {
@@ -129,6 +150,25 @@ export interface GeneratedResume {
     issuer: string;
     date?: string;
     link?: string;
+  }[];
+  // Optional sections (included only if relevant to JD)
+  coursework?: {
+    courseName: string;
+    topic: string;
+    institution?: string;
+  }[];
+  leadership?: {
+    title: string;
+    organization: string;
+    location?: string;
+    dateRange?: string;
+    description?: string;
+  }[];
+  awards?: {
+    awardName: string;
+    organization: string;
+    awardDate: string;
+    description?: string;
   }[];
   modelUsed?: string;
   generationMethod?: "ai" | "fallback"; // Track if AI was used or fallback
