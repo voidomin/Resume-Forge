@@ -132,115 +132,255 @@ export function getCleanColor(hexColor: string): string {
 }
 
 /**
- * Dynamic Scaling Engine for responsive content fitting
- *
- * Ensures resumes fit on one page while respecting minimum thresholds
- * Min font: 11pt, Min spacing: 2pt, Min margins: 28pt
+ * Density Level Definitions
+ * Controls resume compression and spacing
  */
-export class DynamicSizingEngine {
-  private readonly MIN_FONT_SIZE = 11;
-  private readonly MIN_SPACING = 2;
-  private readonly MIN_MARGIN = 28;
-  private readonly MAX_SCALE = 1.15;
-  private readonly MIN_SCALE = 0.65;
+export enum DensityLevel {
+  NORMAL = "normal",           // Full spacing, good for shorter resumes
+  COMPACT = "compact",         // Optimized spacing, balanced for mid-length resumes
+  ULTRA_COMPACT = "ultra",     // Maximum density, for extensive experience
+}
+
+/**
+ * Density Configuration
+ * Defines how design tokens scale at each density level
+ */
+export interface DensityConfig {
+  level: DensityLevel;
+  marginMultiplier: number;      // Applied to margins
+  spacingMultiplier: number;     // Applied to spacing (section, element, tight, minimal)
+  fontSizeMultiplier: number;    // Applied to all font sizes
+  lineHeightMultiplier: number;  // Applied to line height (spacing.line)
+  hideOptionalSections: string[]; // Section names to hide: "awards", "coursework", "leadership"
+}
+
+/**
+ * Density Presets for each level
+ * These define the multipliers for scaling design tokens
+ */
+export const DENSITY_PRESETS: Record<DensityLevel, DensityConfig> = {
+  [DensityLevel.NORMAL]: {
+    level: DensityLevel.NORMAL,
+    marginMultiplier: 1.0,      // 36pt margins
+    spacingMultiplier: 1.0,     // Full spacing
+    fontSizeMultiplier: 1.0,    // No font reduction
+    lineHeightMultiplier: 1.3,  // Normal line height
+    hideOptionalSections: [],
+  },
+
+  [DensityLevel.COMPACT]: {
+    level: DensityLevel.COMPACT,
+    marginMultiplier: 0.67,     // ~24pt margins
+    spacingMultiplier: 0.8,     // 80% spacing
+    fontSizeMultiplier: 0.95,   // 5% font reduction
+    lineHeightMultiplier: 1.25, // Slightly tighter
+    hideOptionalSections: ["awards"],
+  },
+
+  [DensityLevel.ULTRA_COMPACT]: {
+    level: DensityLevel.ULTRA,
+    marginMultiplier: 0.56,     // ~20pt margins
+    spacingMultiplier: 0.6,     // 60% spacing
+    fontSizeMultiplier: 0.9,    // 10% font reduction
+    lineHeightMultiplier: 1.2,  // Compact line height
+    hideOptionalSections: ["awards", "coursework"],
+  },
+};
+
+/**
+ * Content Analysis Result
+ * Output of analyzing resume content for density determination
+ */
+export interface ContentAnalysis {
+  wordCount: number;
+  sectionCount: number;
+  hasOptionalSections: boolean;
+  estimatedLines: number;
+  recommendedDensity: DensityLevel;
+  confidenceScore: number; // 0-100
+}
+
+/**
+ * Scaled Design System
+ * Design tokens multiplied by density multipliers
+ */
+export interface ScaledDesignSystem {
+  fontSize: Record<string, number>;
+  spacing: Record<string, number>;
+  margins: Record<string, number>;
+  lineHeight: number;
+}
+
+/**
+ * Content Density Engine
+ * 
+ * Intelligently analyzes resume content and applies optimal compression
+ * to fit content on exactly one page while maintaining readability and ATS compliance
+ */
+export class ContentDensityEngine {
+  // ATS and readability safety bounds
+  private readonly MIN_FONT_SIZE = 10;        // Minimum font size (pt)
+  private readonly MIN_MARGIN = 18;           // Minimum page margin (pt)
+  private readonly MIN_LINE_HEIGHT = 1.2;     // Minimum line height multiplier
+
+  // Heuristics for density detection
+  private readonly NORMAL_WORD_THRESHOLD = 4000;     // Max words for NORMAL density
+  private readonly COMPACT_WORD_THRESHOLD = 7000;    // Max words for COMPACT density
 
   /**
-   * Calculate optimal scale factor based on content height vs available space
-   * Returns scale factor (1.0 = normal, 0.8 = 20% compressed)
+   * Analyze resume content to determine optimal density level
+   * 
+   * Considers:
+   * - Total word count
+   * - Number of sections
+   * - Optional sections present
+   * 
+   * Returns recommended DensityLevel and analysis details
    */
-  calculateScale(
-    contentHeight: number,
-    pageHeight: number,
-    margins: number,
-  ): number {
-    const availableHeight = pageHeight - margins * 2;
-    if (contentHeight <= availableHeight) {
-      return 1; // Perfect fit, no scaling needed
+  analyzeContentVolume(contentData: {
+    wordCount: number;
+    sectionCount: number;
+    hasOptionalSections: boolean;
+  }): ContentAnalysis {
+    const { wordCount, sectionCount, hasOptionalSections } = contentData;
+
+    let recommendedDensity = DensityLevel.NORMAL;
+    let confidenceScore = 50;
+
+    // Heuristic 1: Based on word count
+    if (wordCount > this.COMPACT_WORD_THRESHOLD) {
+      recommendedDensity = DensityLevel.ULTRA_COMPACT;
+      confidenceScore = Math.min(100, 60 + (wordCount - this.COMPACT_WORD_THRESHOLD) / 100);
+    } else if (wordCount > this.NORMAL_WORD_THRESHOLD) {
+      recommendedDensity = DensityLevel.COMPACT;
+      confidenceScore = 70;
+    } else {
+      recommendedDensity = DensityLevel.NORMAL;
+      confidenceScore = 85;
     }
 
-    // Need to compress: calculate how much
-    const requiredScale = availableHeight / contentHeight;
-    return Math.max(this.MIN_SCALE, Math.min(this.MAX_SCALE, requiredScale));
-  }
-
-  /**
-   * Apply scaling to design system values
-   * All values scale proportionally: fonts, spacing, margins
-   */
-  getScaledDesignSystem(scale: number): {
-    fontSize: Record<string, number>;
-    spacing: Record<string, number>;
-    margins: Record<string, number>;
-  } {
-    const ds = UnifiedDesignSystem;
-
-    // Scale all font sizes, enforce minimum
-    const fontSize: Record<string, number> = {};
-    for (const [key, value] of Object.entries(ds.fontSize)) {
-      fontSize[key] = Math.max(this.MIN_FONT_SIZE, value * scale);
+    // Heuristic 2: Adjust based on section count
+    if (sectionCount > 8 && recommendedDensity === DensityLevel.NORMAL) {
+      recommendedDensity = DensityLevel.COMPACT;
+      confidenceScore = Math.max(confidenceScore - 10, 60);
     }
 
-    // Scale all spacing, enforce minimum
-    const spacing: Record<string, number> = {};
-    for (const [key, value] of Object.entries(ds.spacing)) {
-      if (typeof value === "number") {
-        spacing[key] = Math.max(this.MIN_SPACING, value * scale);
-      } else {
-        spacing[key] = value; // Pass through non-numeric values like line multiplier
+    // Heuristic 3: Consider optional sections
+    if (hasOptionalSections && wordCount > this.NORMAL_WORD_THRESHOLD) {
+      if (recommendedDensity !== DensityLevel.ULTRA_COMPACT) {
+        recommendedDensity = DensityLevel.COMPACT;
       }
     }
 
-    // Scale margins, enforce minimum
-    const margins: Record<string, number> = {};
-    for (const [key, value] of Object.entries(ds.margins)) {
+    const estimatedLines = Math.ceil(wordCount / 10); // Approximate lines
+
+    return {
+      wordCount,
+      sectionCount,
+      hasOptionalSections,
+      estimatedLines,
+      recommendedDensity,
+      confidenceScore,
+    };
+  }
+
+  /**
+   * Get scaled design system for a specific density level
+   * 
+   * Applies DensityConfig multipliers to all design tokens
+   * Enforces minimum thresholds for readability and ATS compliance
+   */
+  getScaledDesignSystem(density: DensityLevel): ScaledDesignSystem {
+    const config = DENSITY_PRESETS[density];
+    const baseDS = UnifiedDesignSystem;
+
+    // Scale font sizes
+    const fontSize: Record<string, number> = {};
+    for (const [key, value] of Object.entries(baseDS.fontSize)) {
+      const scaled = value * config.fontSizeMultiplier;
+      fontSize[key] = Math.max(this.MIN_FONT_SIZE, scaled);
+    }
+
+    // Scale spacing
+    const spacing: Record<string, number> = {};
+    for (const [key, value] of Object.entries(baseDS.spacing)) {
       if (typeof value === "number") {
-        margins[key] = Math.max(this.MIN_MARGIN, value * scale);
+        // Don't scale line height through spacing multiplier
+        if (key === "line") {
+          spacing[key] = Math.max(this.MIN_LINE_HEIGHT, value * config.lineHeightMultiplier);
+        } else {
+          spacing[key] = value * config.spacingMultiplier;
+        }
+      } else {
+        spacing[key] = value;
+      }
+    }
+
+    // Scale margins
+    const margins: Record<string, number> = {};
+    for (const [key, value] of Object.entries(baseDS.margins)) {
+      if (typeof value === "number") {
+        const scaled = value * config.marginMultiplier;
+        margins[key] = Math.max(this.MIN_MARGIN, scaled);
       } else {
         margins[key] = value;
       }
     }
 
-    return { fontSize, spacing, margins };
+    return {
+      fontSize,
+      spacing,
+      margins,
+      lineHeight: config.lineHeightMultiplier,
+    };
   }
 
   /**
-   * Get effective margin value from scaled margins
+   * Determine which sections should be hidden based on density level
+   * 
+   * Returns array of section names that should be hidden
    */
-  getScaledMargin(
-    scale: number,
-    marginType:
-      | "page"
-      | "pageTop"
-      | "pageRight"
-      | "pageBottom"
-      | "pageLeft" = "page",
-  ): number {
-    const scaledMargins = this.getScaledDesignSystem(scale).margins;
-    return scaledMargins[marginType] as number;
+  getHiddenSections(density: DensityLevel): string[] {
+    return DENSITY_PRESETS[density].hideOptionalSections;
   }
 
   /**
-   * Get effective font size from scaled values
+   * Check if a specific section should be visible
    */
-  getScaledFontSize(scale: number, fontSize: FontSize): number {
-    const scaledFonts = this.getScaledDesignSystem(scale).fontSize;
-    return scaledFonts[fontSize] as number;
+  isSectionVisible(density: DensityLevel, sectionName: string): boolean {
+    return !this.getHiddenSections(density).includes(sectionName);
   }
 
   /**
-   * Get effective spacing from scaled values
+   * Get effective scaled value for a font size key
    */
-  getScaledSpacing(scale: number, spacing: Spacing): number {
-    const scaledSpacing = this.getScaledDesignSystem(scale).spacing;
-    const value = scaledSpacing[spacing];
-    return typeof value === "number" ? value : 1.3; // Default line multiplier
+  getScaledFontSize(density: DensityLevel, fontSizeKey: string): number {
+    const scaledDS = this.getScaledDesignSystem(density);
+    return scaledDS.fontSize[fontSizeKey] ?? UnifiedDesignSystem.fontSize.body;
+  }
+
+  /**
+   * Get effective scaled value for a spacing key
+   */
+  getScaledSpacing(density: DensityLevel, spacingKey: string): number {
+    const scaledDS = this.getScaledDesignSystem(density);
+    const value = scaledDS.spacing[spacingKey];
+    return typeof value === "number" ? value : 1.3;
+  }
+
+  /**
+   * Get effective scaled margin value
+   */
+  getScaledMargin(density: DensityLevel, marginType: string = "page"): number {
+    const scaledDS = this.getScaledDesignSystem(density);
+    return scaledDS.margins[marginType] ?? scaledDS.margins.page;
   }
 }
 
 /**
- * Singleton instance
+ * Singleton instance for use throughout the application
  */
-export const dynamicSizingEngine = new DynamicSizingEngine();
+export const contentDensityEngine = new ContentDensityEngine();
 
 /**
  * Type exports for TypeScript
