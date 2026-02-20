@@ -430,6 +430,144 @@ export function ModernTemplate({ resume }: TemplateProps) {
           ))}
         </section>
       )}
+
+      {/* Coursework */}
+      {resume.coursework && resume.coursework.length > 0 && (
+        <section
+          style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}
+        >
+          <h2 style={sectionHeaderStyle}>Coursework</h2>
+          {resume.coursework.map((course, index) => (
+            <div
+              key={index}
+              style={{
+                fontSize: `${ds.fontSize.body}pt`,
+                marginBottom: `${ds.spacing.minimal}pt`,
+              }}
+            >
+              <span style={{ fontWeight: ds.fontWeights.bold }}>
+                {course.courseName}
+              </span>
+              {course.topic && (
+                <span style={{ color: ds.colors.textLight }}>
+                  {" "}
+                  – {course.topic}
+                </span>
+              )}
+              {course.institution && (
+                <span style={{ color: ds.colors.textLight }}>
+                  {" "}
+                  ({course.institution})
+                </span>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Leadership */}
+      {resume.leadership && resume.leadership.length > 0 && (
+        <section
+          style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}
+        >
+          <h2 style={sectionHeaderStyle}>Leadership</h2>
+          {resume.leadership.map((role, index) => (
+            <div key={index} style={{ marginBottom: `${ds.spacing.tight}pt` }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: `${ds.spacing.minimal}pt`,
+                }}
+              >
+                <div>
+                  <span
+                    style={{
+                      fontWeight: ds.fontWeights.bold,
+                      fontSize: `${ds.fontSize.body}pt`,
+                    }}
+                  >
+                    {role.title}
+                  </span>
+                  {role.organization && (
+                    <span
+                      style={{ color: ds.colors.textLight, marginLeft: "8px" }}
+                    >
+                      – {role.organization}
+                    </span>
+                  )}
+                </div>
+                {role.dateRange && (
+                  <span
+                    style={{
+                      color: ds.colors.textLight,
+                      fontSize: `${ds.fontSize.body}pt`,
+                    }}
+                  >
+                    {role.dateRange}
+                  </span>
+                )}
+              </div>
+              {role.description && (
+                <p
+                  style={{
+                    fontSize: `${ds.fontSize.body}pt`,
+                    margin: `${ds.spacing.minimal}pt 0 0 0`,
+                    color: ds.colors.text,
+                  }}
+                >
+                  {role.description}
+                </p>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Awards */}
+      {resume.awards && resume.awards.length > 0 && (
+        <section
+          style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}
+        >
+          <h2 style={sectionHeaderStyle}>Awards</h2>
+          {resume.awards.map((award, index) => (
+            <div
+              key={index}
+              style={{
+                fontSize: `${ds.fontSize.body}pt`,
+                marginBottom: `${ds.spacing.minimal}pt`,
+              }}
+            >
+              <span style={{ fontWeight: ds.fontWeights.bold }}>
+                {award.awardName}
+              </span>
+              {award.organization && (
+                <span style={{ color: ds.colors.textLight }}>
+                  {" "}
+                  – {award.organization}
+                </span>
+              )}
+              {award.awardDate && (
+                <span style={{ color: ds.colors.textLight }}>
+                  {" "}
+                  ({award.awardDate})
+                </span>
+              )}
+              {award.description && (
+                <p
+                  style={{
+                    fontSize: `${ds.fontSize.body}pt`,
+                    margin: `${ds.spacing.minimal}pt 0 0 0`,
+                    color: ds.colors.text,
+                  }}
+                >
+                  {award.description}
+                </p>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
     </div>
   );
 }

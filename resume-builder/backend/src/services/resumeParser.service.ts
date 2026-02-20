@@ -2,14 +2,18 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "../lib/logger";
 import mammoth from "mammoth";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const apiKey = process.env.GEMINI_API_KEY || "";
+if (!apiKey) {
+  logger.error("GEMINI_API_KEY environment variable is not set!");
+}
+const genAI = new GoogleGenerativeAI(apiKey);
 
 // pdf-parse exposes a PDFParse class in this build.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { PDFParse } = require("pdf-parse");
 
-// API timeout configuration (30 seconds)
-const API_TIMEOUT_MS = 30000;
+// API timeout configuration (60 seconds for large resume generation)
+const API_TIMEOUT_MS = 60000;
 
 /**
  * Wrapper to add timeout to async API calls
@@ -242,13 +246,14 @@ Return the JSON object:`;
 
     // Helper to try generation with fallback
     const generateWithFallback = async (retries = 2) => {
-      // List of models to try in order
+      // List of models to try in order (based on available quota)
       const modelsToTry = [
-        "gemini-2.0-flash-001",
-        "gemini-2.0-flash",
         "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-3-flash",
       ];
 
+      let lastError: any = null;
       for (const modelName of modelsToTry) {
         try {
           logger.debug(`Attempting with model: ${modelName}...`);
@@ -258,7 +263,9 @@ Return the JSON object:`;
           );
           return result.response.text();
         } catch (error: any) {
-          logger.debug(`Failed with ${modelName}: ${error.message}`);
+          lastError = error;
+          logger.error(`Failed with ${modelName}:`, error.message);
+          logger.error(`Full error:`, error);
 
           if (error.message?.includes("429")) {
             logger.debug(`Rate limit hit. Waiting 2s before next model...`);
@@ -273,7 +280,9 @@ Return the JSON object:`;
         }
       }
 
-      throw new Error("All AI models failed. Please try again later.");
+      throw new Error(
+        `All AI models failed. Last error: ${lastError?.message || "Unknown error"}`,
+      );
     };
 
     try {

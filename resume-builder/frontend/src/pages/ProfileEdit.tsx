@@ -2094,7 +2094,7 @@ function ProfileEdit() {
 
               <button
                 onClick={() =>
-                  setCoursework([...coursework, INITIAL_COURSEWORK])
+                  setCoursework([...coursework, { ...INITIAL_COURSEWORK }])
                 }
                 className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
               >
@@ -2321,7 +2321,7 @@ function ProfileEdit() {
 
               <button
                 onClick={() =>
-                  setLeadership([...leadership, INITIAL_LEADERSHIP])
+                  setLeadership([...leadership, { ...INITIAL_LEADERSHIP }])
                 }
                 className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
               >
@@ -2491,7 +2491,7 @@ function ProfileEdit() {
               )}
 
               <button
-                onClick={() => setAwards([...awards, INITIAL_AWARD])}
+                onClick={() => setAwards([...awards, { ...INITIAL_AWARD }])}
                 className="flex items-center justify-center w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
               >
                 <Plus className="w-5 h-5 mr-2" />

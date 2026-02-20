@@ -7,8 +7,8 @@ config({ path: path.resolve(__dirname, "../../.env") });
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-// API timeout configuration (30 seconds)
-const API_TIMEOUT_MS = 30000;
+// API timeout configuration (60 seconds for large resume generation)
+const API_TIMEOUT_MS = 60000;
 
 /**
  * Wrapper to add timeout to async API calls

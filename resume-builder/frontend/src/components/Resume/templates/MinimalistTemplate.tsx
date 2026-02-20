@@ -375,6 +375,167 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
           </p>
         </section>
       )}
+
+      {/* Certifications */}
+      {resume.certifications && resume.certifications.length > 0 && (
+        <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
+          <h2 style={sectionHeaderStyle}>Certifications</h2>
+          {resume.certifications.map((cert, index) => (
+            <div
+              key={index}
+              style={{
+                marginBottom: `${ds.spacing.element}pt`,
+                fontSize: `${ds.fontSize.body}pt`,
+              }}
+            >
+              <span style={{ fontWeight: "700" }}>{cert.name}</span>
+              {cert.issuer && (
+                <span style={{ color: ds.colors.textLight }}>
+                  {" "}
+                  – {cert.issuer}
+                </span>
+              )}
+              {cert.date && (
+                <span style={{ color: ds.colors.textLight }}>
+                  {" "}
+                  ({cert.date})
+                </span>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Coursework */}
+      {resume.coursework && resume.coursework.length > 0 && (
+        <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
+          <h2 style={sectionHeaderStyle}>Coursework</h2>
+          {resume.coursework.map((course, index) => (
+            <div
+              key={index}
+              style={{
+                marginBottom: `${ds.spacing.element}pt`,
+                fontSize: `${ds.fontSize.body}pt`,
+              }}
+            >
+              <span style={{ fontWeight: "700" }}>{course.courseName}</span>
+              {course.topic && (
+                <span style={{ color: ds.colors.textLight }}>
+                  {" "}
+                  – {course.topic}
+                </span>
+              )}
+              {course.institution && (
+                <span style={{ color: ds.colors.textLight }}>
+                  {" "}
+                  ({course.institution})
+                </span>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Leadership */}
+      {resume.leadership && resume.leadership.length > 0 && (
+        <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
+          <h2 style={sectionHeaderStyle}>Leadership</h2>
+          {resume.leadership.map((role, index) => (
+            <div
+              key={index}
+              style={{ marginBottom: `${ds.spacing.element}pt` }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: `${ds.spacing.minimal}pt`,
+                }}
+              >
+                <div>
+                  <span
+                    style={{
+                      fontWeight: "700",
+                      fontSize: `${ds.fontSize.body}pt`,
+                    }}
+                  >
+                    {role.title}
+                  </span>
+                  {role.organization && (
+                    <span
+                      style={{ color: ds.colors.textLight, marginLeft: "8px" }}
+                    >
+                      – {role.organization}
+                    </span>
+                  )}
+                </div>
+                {role.dateRange && (
+                  <span
+                    style={{
+                      color: ds.colors.textLight,
+                      fontSize: `${ds.fontSize.contact}pt`,
+                    }}
+                  >
+                    {role.dateRange}
+                  </span>
+                )}
+              </div>
+              {role.description && (
+                <p
+                  style={{
+                    fontSize: `${ds.fontSize.body}pt`,
+                    margin: `${ds.spacing.tight}pt 0 0 0`,
+                    color: ds.colors.text,
+                  }}
+                >
+                  {role.description}
+                </p>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Awards */}
+      {resume.awards && resume.awards.length > 0 && (
+        <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
+          <h2 style={sectionHeaderStyle}>Awards</h2>
+          {resume.awards.map((award, index) => (
+            <div
+              key={index}
+              style={{
+                marginBottom: `${ds.spacing.element}pt`,
+                fontSize: `${ds.fontSize.body}pt`,
+              }}
+            >
+              <span style={{ fontWeight: "700" }}>{award.awardName}</span>
+              {award.organization && (
+                <span style={{ color: ds.colors.textLight }}>
+                  {" "}
+                  – {award.organization}
+                </span>
+              )}
+              {award.awardDate && (
+                <span style={{ color: ds.colors.textLight }}>
+                  {" "}
+                  ({award.awardDate})
+                </span>
+              )}
+              {award.description && (
+                <p
+                  style={{
+                    fontSize: `${ds.fontSize.body}pt`,
+                    margin: `${ds.spacing.tight}pt 0 0 0`,
+                    color: ds.colors.text,
+                  }}
+                >
+                  {award.description}
+                </p>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
     </div>
   );
 }
