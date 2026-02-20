@@ -79,20 +79,12 @@ function ResumePreview({
     const contentHeight = content.scrollHeight;
     const contentWidth = content.scrollWidth;
 
-    if (contentHeight > usableHeight || contentWidth > usableWidth) {
-      const scaleH = usableHeight / contentHeight;
-      const scaleW = usableWidth / contentWidth;
-      const minScale = Math.min(scaleH, scaleW, 1);
-
-      // Only scale down if necessary
-      if (minScale < 1) {
-        setScale(minScale);
-      } else {
-        setScale(1);
-      }
-    } else {
-      setScale(1);
-    }
+    const scaleH = usableHeight / contentHeight;
+    const scaleW = usableWidth / contentWidth;
+    const desiredScale = Math.min(scaleH, scaleW);
+    const maxScale = 1.12;
+    const nextScale = Math.min(maxScale, desiredScale);
+    setScale(nextScale);
   }, [resume, template, density]);
 
   return (

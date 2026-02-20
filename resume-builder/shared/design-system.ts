@@ -220,8 +220,13 @@ export interface ScaledDesignSystem {
 export class ContentDensityEngine {
   // ATS and readability safety bounds
   private readonly MIN_FONT_SIZE = 8.5; // Minimum font size (pt)
+  private readonly MAX_FONT_SCALE = 1.18; // Max expansion vs scaled base
   private readonly MIN_MARGIN = 18; // Minimum page margin (pt)
+  private readonly MAX_MARGIN = 48; // Maximum page margin (pt)
   private readonly MIN_LINE_HEIGHT = 1.2; // Minimum line height multiplier
+  private readonly MAX_LINE_HEIGHT = 1.6; // Maximum line height multiplier
+  private readonly MIN_FIT_MULTIPLIER = 0.6;
+  private readonly MAX_FIT_MULTIPLIER = 1.15;
 
   // Heuristics for density detection
   private readonly NORMAL_WORD_THRESHOLD = 800; // Max words for NORMAL density
@@ -356,10 +361,12 @@ export class ContentDensityEngine {
       (base.margins.pageTop + base.margins.pageBottom);
     const lineHeight = base.fontSize.body * base.spacing.line;
     const targetLines = Math.max(1, Math.floor(availableHeight / lineHeight));
-    const fitMultiplier =
-      analysis.estimatedLines > targetLines
-        ? Math.max(0.6, targetLines / analysis.estimatedLines)
-        : 1;
+    const rawMultiplier =
+      analysis.estimatedLines > 0 ? targetLines / analysis.estimatedLines : 1;
+    const fitMultiplier = Math.max(
+      this.MIN_FIT_MULTIPLIER,
+      Math.min(this.MAX_FIT_MULTIPLIER, rawMultiplier),
+    );
 
     return this.applyFitMultiplier(base, fitMultiplier);
   }
@@ -368,23 +375,35 @@ export class ContentDensityEngine {
     scaled: ScaledDesignSystem,
     multiplier: number,
   ): ScaledDesignSystem {
-    if (multiplier >= 1) {
-      return scaled;
-    }
-
     const fontSize: Record<string, number> = {};
     for (const [key, value] of Object.entries(scaled.fontSize)) {
       const nextValue = value * multiplier;
-      fontSize[key] = Math.max(this.MIN_FONT_SIZE, nextValue);
+      const maxValue = value * this.MAX_FONT_SCALE;
+      if (multiplier >= 1) {
+        fontSize[key] = Math.min(maxValue, nextValue);
+      } else {
+        fontSize[key] = Math.max(this.MIN_FONT_SIZE, nextValue);
+      }
     }
 
     const spacing: Record<string, number> = {};
     for (const [key, value] of Object.entries(scaled.spacing)) {
       if (typeof value === "number") {
         if (key === "line") {
-          spacing[key] = Math.max(this.MIN_LINE_HEIGHT, value * multiplier);
+          if (multiplier >= 1) {
+            spacing[key] = Math.min(this.MAX_LINE_HEIGHT, value * multiplier);
+          } else {
+            spacing[key] = Math.max(this.MIN_LINE_HEIGHT, value * multiplier);
+          }
         } else {
-          spacing[key] = value * multiplier;
+          if (multiplier >= 1) {
+            spacing[key] = Math.min(
+              value * this.MAX_FONT_SCALE,
+              value * multiplier,
+            );
+          } else {
+            spacing[key] = value * multiplier;
+          }
         }
       } else {
         spacing[key] = value;
@@ -394,8 +413,12 @@ export class ContentDensityEngine {
     const margins: Record<string, number> = {};
     for (const [key, value] of Object.entries(scaled.margins)) {
       if (typeof value === "number") {
-        const nextValue = value * multiplier;
-        margins[key] = Math.max(this.MIN_MARGIN, nextValue);
+        const marginScale = multiplier < 1 ? multiplier : 1;
+        const nextValue = value * marginScale;
+        margins[key] = Math.min(
+          this.MAX_MARGIN,
+          Math.max(this.MIN_MARGIN, nextValue),
+        );
       } else {
         margins[key] = value;
       }
@@ -405,10 +428,10 @@ export class ContentDensityEngine {
       fontSize,
       spacing,
       margins,
-      lineHeight: Math.max(
-        this.MIN_LINE_HEIGHT,
-        scaled.lineHeight * multiplier,
-      ),
+      lineHeight:
+        multiplier >= 1
+          ? Math.min(this.MAX_LINE_HEIGHT, scaled.lineHeight * multiplier)
+          : Math.max(this.MIN_LINE_HEIGHT, scaled.lineHeight * multiplier),
     };
   }
 
