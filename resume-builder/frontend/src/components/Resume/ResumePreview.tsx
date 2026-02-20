@@ -5,12 +5,39 @@ import { ModernTemplate } from "./templates/ModernTemplate";
 import { ExecutiveTemplate } from "./templates/ExecutiveTemplate";
 import { MinimalistTemplate } from "./templates/MinimalistTemplate";
 
+type DensityLevel = "normal" | "compact" | "ultra-compact";
+
 interface ResumePreviewProps {
   resume: GeneratedResume;
   template?: "modern" | "executive" | "minimalist" | "standard";
+  density?: DensityLevel;
 }
 
-function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
+function ResumePreview({ resume, template = "modern", density = "normal" }: ResumePreviewProps) {
+  // Calculate density-based CSS scaling multipliers
+  const densityScaling = {
+    normal: {
+      fontSize: 1.0,
+      lineHeight: 1.0,
+      margin: 1.0,
+      padding: 1.0,
+    },
+    compact: {
+      fontSize: 0.9,
+      lineHeight: 0.8,
+      margin: 0.67,
+      padding: 0.67,
+    },
+    "ultra-compact": {
+      fontSize: 0.8,
+      lineHeight: 0.6,
+      margin: 0.56,
+      padding: 0.56,
+    },
+  };
+
+  const scaling = densityScaling[density];
+
   const renderTemplate = () => {
     switch (template) {
       case "standard":
@@ -59,7 +86,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
     } else {
       setScale(1);
     }
-  }, [resume, template]);
+  }, [resume, template, density]);
 
   return (
     <div
@@ -69,7 +96,7 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
       style={{
         width: "8.27in", // A4 width
         height: "11.69in", // A4 height
-        padding: "0.5in", // Match PDF/DOCX margins
+        padding: `${0.5 * scaling.padding}in`, // Scale margins based on density
         overflow: "hidden",
         position: "relative",
         boxSizing: "border-box",
@@ -82,7 +109,11 @@ function ResumePreview({ resume, template = "modern" }: ResumePreviewProps) {
           transform: `scale(${scale})`,
           transformOrigin: "top left",
           width: scale === 1 ? "100%" : `${100 / scale}%`,
-        }}
+          fontSize: `${scaling.fontSize * 100}%`,
+          lineHeight: scaling.lineHeight,
+          "--margin-multiplier": scaling.margin,
+          "--padding-multiplier": scaling.padding,
+        } as React.CSSProperties & { "--margin-multiplier": number; "--padding-multiplier": number }}
       >
         {renderTemplate()}
       </div>

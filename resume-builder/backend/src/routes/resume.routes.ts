@@ -265,13 +265,13 @@ async function resumeRoutes(server: FastifyInstance) {
     async (
       request: FastifyRequest<{
         Params: { id: string };
-        Querystring: { template?: string };
+        Querystring: { template?: string; density?: string };
       }>,
       reply: FastifyReply,
     ) => {
       try {
         const { id } = request.params;
-        const { template } = request.query;
+        const { template, density } = request.query;
 
         const resume = await prisma.resume.findUnique({ where: { id } });
 
@@ -282,14 +282,24 @@ async function resumeRoutes(server: FastifyInstance) {
         const content = JSON.parse(resume.generatedContent);
         // Cast template string to TemplateType, defaulting to 'modern' if invalid or missing
         const selectedTemplate = (
-          ["modern", "executive", "minimalist"].includes(template || "")
+          ["modern", "executive", "minimalist", "standard"].includes(
+            template || ""
+          )
             ? template
             : "modern"
+        ) as any;
+
+        // Validate and cast density parameter
+        const validatedDensity = (
+          ["normal", "compact", "ultra-compact"].includes(density || "")
+            ? density
+            : "normal"
         ) as any;
 
         const pdfBuffer = await pdfService.generateResumePDF(
           content,
           selectedTemplate,
+          validatedDensity,
         );
 
         const filename = `${content.contactInfo.name.replace(/\s+/g, "_")}_${selectedTemplate}_Resume.pdf`;
