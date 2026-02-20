@@ -16,7 +16,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     spacingScale: number = 1,
   ): void {
     // Delegate to renderWithDensity for consistency
-    this.renderWithDensity(doc, resume, "normal");
+    this.renderWithDensity(doc, resume, DensityLevel.NORMAL);
   }
   /**
    * Render with density-aware section visibility and scaling
@@ -27,8 +27,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     density: DensityLevel,
   ): void {
     // Get scaled design system for this density
-    const ds: ScaledDesignSystem =
-      contentDensityEngine.getScaledDesignSystem(density);
+    const ds = this.getScaledDesignSystem(doc, density);
     const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
     const scaledMargin = ds.margins.pageLeft;
@@ -72,7 +71,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
         .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.summary, {
           align: "justify",
-          lineGap: 2,
+          lineGap: ds.spacing.minimal,
         });
     }
 
@@ -108,7 +107,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
         .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "left",
-          lineGap: 2,
+          lineGap: ds.spacing.minimal,
         });
     }
 
@@ -232,7 +231,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     exp.bullets.forEach((b: string) => {
       doc.text(`• ${b}`, {
         indent: ds.spacing.bulletIndent,
-        lineGap: 2,
+        lineGap: ds.spacing.minimal,
       });
     });
   }
@@ -273,11 +272,11 @@ export class ModernRenderer extends BaseTemplateRenderer {
       proj.bullets.forEach((b: string) => {
         doc.text(`• ${b}`, {
           indent: ds.spacing.bulletIndent,
-          lineGap: 2,
+          lineGap: ds.spacing.minimal,
         });
       });
     } else if (proj.description) {
-      doc.text(proj.description, { lineGap: 2 });
+      doc.text(proj.description, { lineGap: ds.spacing.minimal });
     }
   }
 
@@ -379,7 +378,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
         .fillColor(UnifiedDesignSystem.colors.text)
         .text(`• ${role.description}`, {
           indent: ds.spacing.bulletIndent,
-          lineGap: 2,
+          lineGap: ds.spacing.minimal,
         });
     }
   }

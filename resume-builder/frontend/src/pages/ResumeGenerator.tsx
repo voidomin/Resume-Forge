@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import {
@@ -96,6 +96,7 @@ function ResumeGenerator() {
   const [atsReport, setAtsReport] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [density, setDensity] = useState<DensityLevel>("normal");
+  const [isDensityAuto, setIsDensityAuto] = useState(true);
   const navigate = useNavigate();
 
   // Auto-detect density based on content volume
@@ -134,10 +135,17 @@ function ResumeGenerator() {
       });
 
     // Map word count to density
-    if (wordCount >= 7000) return "ultra-compact";
-    if (wordCount >= 4000) return "compact";
+    if (wordCount >= 1100) return "ultra-compact";
+    if (wordCount >= 800) return "compact";
     return "normal";
   }, [generatedResume]);
+
+  useEffect(() => {
+    if (!generatedResume) return;
+    if (isDensityAuto) {
+      setDensity(detectedDensity);
+    }
+  }, [generatedResume, detectedDensity, isDensityAuto]);
 
   const handleGenerate = async () => {
     if (!jobDescription.trim()) {
@@ -147,6 +155,7 @@ function ResumeGenerator() {
 
     setStep("generating");
     setError(null);
+    setIsDensityAuto(true);
 
     try {
       const response = await api.post("/resumes/generate", {
@@ -534,9 +543,10 @@ Required Skills:
                           name="density"
                           value="normal"
                           checked={density === "normal"}
-                          onChange={(e) =>
-                            setDensity(e.target.value as DensityLevel)
-                          }
+                          onChange={(e) => {
+                            setDensity(e.target.value as DensityLevel);
+                            setIsDensityAuto(false);
+                          }}
                           className="w-4 h-4 text-blue-600 cursor-pointer"
                         />
                         <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
@@ -554,9 +564,10 @@ Required Skills:
                           name="density"
                           value="compact"
                           checked={density === "compact"}
-                          onChange={(e) =>
-                            setDensity(e.target.value as DensityLevel)
-                          }
+                          onChange={(e) => {
+                            setDensity(e.target.value as DensityLevel);
+                            setIsDensityAuto(false);
+                          }}
                           className="w-4 h-4 text-blue-600 cursor-pointer"
                         />
                         <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
@@ -574,9 +585,10 @@ Required Skills:
                           name="density"
                           value="ultra-compact"
                           checked={density === "ultra-compact"}
-                          onChange={(e) =>
-                            setDensity(e.target.value as DensityLevel)
-                          }
+                          onChange={(e) => {
+                            setDensity(e.target.value as DensityLevel);
+                            setIsDensityAuto(false);
+                          }}
                           className="w-4 h-4 text-blue-600 cursor-pointer"
                         />
                         <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
@@ -626,6 +638,7 @@ Required Skills:
                         setJobDescription("");
                         setTargetRole("");
                         setGeneratedResume(null);
+                        setIsDensityAuto(true);
                       }}
                       className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                     >

@@ -5,7 +5,6 @@ import {
   UnifiedDesignSystem,
   contentDensityEngine,
   DensityLevel,
-  ScaledDesignSystem,
 } from "../../../../shared/design-system";
 
 export class ExecutiveRenderer extends BaseTemplateRenderer {
@@ -16,7 +15,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
     spacingScale: number = 1,
   ): void {
     // Delegate to renderWithDensity for consistency
-    this.renderWithDensity(doc, resume, "normal");
+    this.renderWithDensity(doc, resume, DensityLevel.NORMAL);
   }
 
   /**
@@ -28,8 +27,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
     density: DensityLevel,
   ): void {
     // Get scaled design system for this density
-    const ds: ScaledDesignSystem =
-      contentDensityEngine.getScaledDesignSystem(density);
+    const ds = this.getScaledDesignSystem(doc, density);
     const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
     const scaledMargin = ds.margins.pageLeft;
@@ -44,7 +42,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
 
     // Helper: Section Headers (Centered, Uppercase, Primary Color)
     const drawHeader = (title: string) => {
-      this.moveDownPoints(doc, 5);
+      this.moveDownPoints(doc, ds.spacing.tight);
       doc
         .font(fontBold)
         .fontSize(ds.fontSize.h2)
@@ -72,7 +70,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         characterSpacing: 1,
       });
 
-    this.moveDownPoints(doc, 3);
+    this.moveDownPoints(doc, ds.spacing.tight);
 
     // 2. Contact Line
     this.renderContactLine(
@@ -84,7 +82,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
       "center",
     );
 
-    this.moveDownPoints(doc, 8);
+    this.moveDownPoints(doc, ds.spacing.element);
 
     // 3. Professional Summary
     if (resume.summary) {
@@ -93,7 +91,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         .font(fontRegular)
         .fontSize(ds.fontSize.body)
         .fillColor(UnifiedDesignSystem.colors.text)
-        .text(resume.summary, { align: "center", lineGap: 1.5 });
+        .text(resume.summary, { align: "center", lineGap: ds.spacing.minimal });
       doc.y += ds.spacing.section;
     }
 
@@ -122,7 +120,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
             .font(fontRegular)
             .fontSize(ds.fontSize.body)
             .fillColor(UnifiedDesignSystem.colors.text)
-            .text(`• ${b}`, { lineGap: 1 });
+            .text(`• ${b}`, { lineGap: ds.spacing.minimal });
         });
         doc.y += ds.spacing.element;
       });
@@ -157,14 +155,14 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
               .font(fontRegular)
               .fontSize(ds.fontSize.body)
               .fillColor(UnifiedDesignSystem.colors.text)
-              .text(`• ${b}`, { lineGap: 1 });
+              .text(`• ${b}`, { lineGap: ds.spacing.minimal });
           });
         } else if (proj.description) {
           doc
             .font(fontRegular)
             .fontSize(ds.fontSize.body)
             .fillColor(UnifiedDesignSystem.colors.text)
-            .text(proj.description, { lineGap: 1 });
+            .text(proj.description, { lineGap: ds.spacing.minimal });
         }
         doc.y += ds.spacing.element;
       });
@@ -209,7 +207,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "center",
-          lineGap: 1.5,
+          lineGap: ds.spacing.minimal,
         });
     }
 
@@ -285,7 +283,7 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
             .font(fontRegular)
             .fontSize(ds.fontSize.body)
             .fillColor(UnifiedDesignSystem.colors.text)
-            .text(role.description, { lineGap: 1 });
+            .text(role.description, { lineGap: ds.spacing.minimal });
         }
         doc.y += ds.spacing.tight;
       });

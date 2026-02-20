@@ -67,6 +67,9 @@ function ResumePreview({
     // 11.69in * 96px = 1122.24px
     const targetHeight = 1122;
     const targetWidth = 794; // 8.27in * 96px
+    const paddingPx = 96 * 0.5 * scaling.padding;
+    const usableHeight = Math.max(1, targetHeight - paddingPx * 2);
+    const usableWidth = Math.max(1, targetWidth - paddingPx * 2);
 
     // We need to measure the ACTUAL content height
     // Since overflow is hidden on the container, we check the child's height
@@ -76,9 +79,9 @@ function ResumePreview({
     const contentHeight = content.scrollHeight;
     const contentWidth = content.scrollWidth;
 
-    if (contentHeight > targetHeight || contentWidth > targetWidth) {
-      const scaleH = targetHeight / contentHeight;
-      const scaleW = targetWidth / contentWidth;
+    if (contentHeight > usableHeight || contentWidth > usableWidth) {
+      const scaleH = usableHeight / contentHeight;
+      const scaleW = usableWidth / contentWidth;
       const minScale = Math.min(scaleH, scaleW, 1);
 
       // Only scale down if necessary

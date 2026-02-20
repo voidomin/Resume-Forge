@@ -68,7 +68,10 @@ export class PDFService {
     );
 
     // Step 2: Get scaled design system for this density
-    const scaledDS = contentDensityEngine.getScaledDesignSystem(density);
+    const scaledDS = contentDensityEngine.getFittedDesignSystem(
+      density,
+      contentAnalysis,
+    );
 
     // Step 3: Create PDF with scaled margins
     const doc = new PDFDocument({

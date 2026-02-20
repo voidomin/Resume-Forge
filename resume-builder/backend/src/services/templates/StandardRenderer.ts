@@ -5,7 +5,6 @@ import {
   UnifiedDesignSystem,
   contentDensityEngine,
   DensityLevel,
-  ScaledDesignSystem,
 } from "../../../../shared/design-system";
 
 export class StandardRenderer extends BaseTemplateRenderer {
@@ -16,7 +15,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
     spacingScale: number = 1,
   ): void {
     // Delegate to renderWithDensity for consistency
-    this.renderWithDensity(doc, resume, "normal");
+    this.renderWithDensity(doc, resume, DensityLevel.NORMAL);
   }
   /**
    * Render with density-aware section visibility and scaling
@@ -27,8 +26,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
     density: DensityLevel,
   ): void {
     // Get scaled design system for this density
-    const ds: ScaledDesignSystem =
-      contentDensityEngine.getScaledDesignSystem(density);
+    const ds = this.getScaledDesignSystem(doc, density);
     const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
     const scaledMargin = ds.margins.pageLeft;
@@ -43,7 +41,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
 
     // Section Header - Left Aligned with Line
     const drawHeader = (title: string) => {
-      this.moveDownPoints(doc, 2);
+      this.moveDownPoints(doc, ds.spacing.minimal);
       doc
         .font(fontBold)
         .fontSize(ds.fontSize.h2)
@@ -68,7 +66,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
       .fillColor(UnifiedDesignSystem.colors.text)
       .text(resume.contactInfo.name.toUpperCase(), { align: "left" });
 
-    this.moveDownPoints(doc, 2);
+    this.moveDownPoints(doc, ds.spacing.minimal);
 
     // Contact Line
     this.renderContactLine(
@@ -80,7 +78,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
       "left",
     );
 
-    this.moveDownPoints(doc, 5);
+    this.moveDownPoints(doc, ds.spacing.tight);
 
     if (resume.summary) {
       drawHeader("PROFESSIONAL SUMMARY");
@@ -88,7 +86,10 @@ export class StandardRenderer extends BaseTemplateRenderer {
         .font(fontRegular)
         .fontSize(ds.fontSize.body)
         .fillColor(UnifiedDesignSystem.colors.text)
-        .text(resume.summary, { align: "justify", lineGap: 1 });
+        .text(resume.summary, {
+          align: "justify",
+          lineGap: ds.spacing.minimal,
+        });
       doc.y += ds.spacing.section;
     }
 
@@ -131,7 +132,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
             .fillColor(UnifiedDesignSystem.colors.text)
             .text(`•  ${b}`, 42, doc.y, {
               width: 595 - scaledMargin * 2 - 16,
-              lineGap: 1,
+              lineGap: ds.spacing.minimal,
               align: "left",
             });
         });
@@ -183,7 +184,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
           .fillColor(UnifiedDesignSystem.colors.text)
           .text(proj.bullets ? "" : proj.description || "", {
             align: "left",
-            lineGap: 1,
+            lineGap: ds.spacing.minimal,
           });
 
         if (proj.bullets) {
@@ -194,7 +195,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
               .fillColor(UnifiedDesignSystem.colors.text)
               .text(`•  ${b}`, 42, doc.y, {
                 width: 595 - scaledMargin * 2 - 16,
-                lineGap: 1,
+                lineGap: ds.spacing.minimal,
                 align: "left",
               });
           });
@@ -250,7 +251,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
         .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "left",
-          lineGap: 1.5,
+          lineGap: ds.spacing.minimal,
         });
     }
 

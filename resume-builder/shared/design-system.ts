@@ -219,13 +219,13 @@ export interface ScaledDesignSystem {
  */
 export class ContentDensityEngine {
   // ATS and readability safety bounds
-  private readonly MIN_FONT_SIZE = 10; // Minimum font size (pt)
+  private readonly MIN_FONT_SIZE = 8.5; // Minimum font size (pt)
   private readonly MIN_MARGIN = 18; // Minimum page margin (pt)
   private readonly MIN_LINE_HEIGHT = 1.2; // Minimum line height multiplier
 
   // Heuristics for density detection
-  private readonly NORMAL_WORD_THRESHOLD = 4000; // Max words for NORMAL density
-  private readonly COMPACT_WORD_THRESHOLD = 7000; // Max words for COMPACT density
+  private readonly NORMAL_WORD_THRESHOLD = 800; // Max words for NORMAL density
+  private readonly COMPACT_WORD_THRESHOLD = 1100; // Max words for COMPACT density
 
   /**
    * Analyze resume content to determine optimal density level
@@ -275,7 +275,9 @@ export class ContentDensityEngine {
       }
     }
 
-    const estimatedLines = Math.ceil(wordCount / 10); // Approximate lines
+    const estimatedLines = Math.ceil(
+      wordCount / 8 + sectionCount * 1.5 + (hasOptionalSections ? 2 : 0),
+    ); // Approximate lines
 
     return {
       wordCount,
@@ -338,6 +340,75 @@ export class ContentDensityEngine {
       spacing,
       margins,
       lineHeight: config.lineHeightMultiplier,
+    };
+  }
+
+  /**
+   * Get a fitted design system to better constrain output to one page
+   */
+  getFittedDesignSystem(
+    density: DensityLevel,
+    analysis: ContentAnalysis,
+  ): ScaledDesignSystem {
+    const base = this.getScaledDesignSystem(density);
+    const availableHeight =
+      UnifiedDesignSystem.page.height -
+      (base.margins.pageTop + base.margins.pageBottom);
+    const lineHeight = base.fontSize.body * base.spacing.line;
+    const targetLines = Math.max(1, Math.floor(availableHeight / lineHeight));
+    const fitMultiplier =
+      analysis.estimatedLines > targetLines
+        ? Math.max(0.6, targetLines / analysis.estimatedLines)
+        : 1;
+
+    return this.applyFitMultiplier(base, fitMultiplier);
+  }
+
+  private applyFitMultiplier(
+    scaled: ScaledDesignSystem,
+    multiplier: number,
+  ): ScaledDesignSystem {
+    if (multiplier >= 1) {
+      return scaled;
+    }
+
+    const fontSize: Record<string, number> = {};
+    for (const [key, value] of Object.entries(scaled.fontSize)) {
+      const nextValue = value * multiplier;
+      fontSize[key] = Math.max(this.MIN_FONT_SIZE, nextValue);
+    }
+
+    const spacing: Record<string, number> = {};
+    for (const [key, value] of Object.entries(scaled.spacing)) {
+      if (typeof value === "number") {
+        if (key === "line") {
+          spacing[key] = Math.max(this.MIN_LINE_HEIGHT, value * multiplier);
+        } else {
+          spacing[key] = value * multiplier;
+        }
+      } else {
+        spacing[key] = value;
+      }
+    }
+
+    const margins: Record<string, number> = {};
+    for (const [key, value] of Object.entries(scaled.margins)) {
+      if (typeof value === "number") {
+        const nextValue = value * multiplier;
+        margins[key] = Math.max(this.MIN_MARGIN, nextValue);
+      } else {
+        margins[key] = value;
+      }
+    }
+
+    return {
+      fontSize,
+      spacing,
+      margins,
+      lineHeight: Math.max(
+        this.MIN_LINE_HEIGHT,
+        scaled.lineHeight * multiplier,
+      ),
     };
   }
 

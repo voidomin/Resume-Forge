@@ -118,6 +118,25 @@ export class DocxService {
                 )
               : []),
 
+            // Coursework
+            ...(resume.coursework && resume.coursework.length > 0
+              ? this.createCourseworkSection(resume.coursework, bodyFont)
+              : []),
+
+            // Leadership
+            ...(resume.leadership && resume.leadership.length > 0
+              ? this.createLeadershipSection(
+                  resume.leadership,
+                  rightTabStop,
+                  bodyFont,
+                )
+              : []),
+
+            // Awards
+            ...(resume.awards && resume.awards.length > 0
+              ? this.createAwardsSection(resume.awards, rightTabStop, bodyFont)
+              : []),
+
             // Skills
             ...(resume.skills.length > 0
               ? this.createSkillsSection(resume.skills, bodyFont)
@@ -662,6 +681,188 @@ export class DocxService {
           ],
         }),
       );
+    });
+
+    return paragraphs;
+  }
+
+  private createCourseworkSection(
+    coursework: NonNullable<GeneratedResume["coursework"]>,
+    font: string,
+  ): Paragraph[] {
+    const ds = UnifiedDesignSystem;
+    const paragraphs: Paragraph[] = [
+      this.createSectionHeader("RELEVANT COURSEWORK", font),
+    ];
+
+    coursework.forEach((course) => {
+      const suffix = course.institution ? ` (${course.institution})` : "";
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
+          children: [
+            new TextRun({
+              text: course.courseName,
+              bold: true,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+              font: font,
+              color: getCleanColor(ds.colors.text),
+            }),
+            new TextRun({
+              text: `  |  ${course.topic}${suffix}`,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+              font: font,
+              color: getCleanColor(ds.colors.textLight),
+            }),
+          ],
+        }),
+      );
+    });
+
+    return paragraphs;
+  }
+
+  private createLeadershipSection(
+    leadership: NonNullable<GeneratedResume["leadership"]>,
+    rightTabStop: number,
+    font: string,
+  ): Paragraph[] {
+    const ds = UnifiedDesignSystem;
+    const paragraphs: Paragraph[] = [
+      this.createSectionHeader("LEADERSHIP & EXTRACURRICULAR", font),
+    ];
+
+    leadership.forEach((role) => {
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
+          tabStops: [
+            {
+              type: TabStopType.RIGHT,
+              position: rightTabStop,
+            },
+          ],
+          children: [
+            new TextRun({
+              text: role.title,
+              bold: true,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.h3),
+              font: font,
+              color: getCleanColor(ds.colors.text),
+            }),
+            new TextRun({
+              text: "  |  ",
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+              font: font,
+              color: getCleanColor(ds.colors.secondary),
+            }),
+            new TextRun({
+              text: role.organization,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+              font: font,
+              color: getCleanColor(ds.colors.primary),
+            }),
+            ...(role.location
+              ? [
+                  new TextRun({
+                    text: `  |  ${role.location}`,
+                    size: UnitConverter.ptToHalfPoint(ds.fontSize.small),
+                    font: font,
+                    color: getCleanColor(ds.colors.textLight),
+                  }),
+                ]
+              : []),
+            new TextRun({
+              text: "\t" + (role.dateRange || ""),
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.small),
+              font: font,
+              color: getCleanColor(ds.colors.textLight),
+            }),
+          ],
+        }),
+      );
+
+      if (role.description) {
+        paragraphs.push(
+          new Paragraph({
+            spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
+            indent: { left: UnitConverter.ptToTwip(ds.spacing.bulletIndent) },
+            children: [
+              new TextRun({
+                text: `•  ${role.description}`,
+                size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+                font: font,
+                color: getCleanColor(ds.colors.text),
+              }),
+            ],
+          }),
+        );
+      }
+    });
+
+    return paragraphs;
+  }
+
+  private createAwardsSection(
+    awards: NonNullable<GeneratedResume["awards"]>,
+    rightTabStop: number,
+    font: string,
+  ): Paragraph[] {
+    const ds = UnifiedDesignSystem;
+    const paragraphs: Paragraph[] = [
+      this.createSectionHeader("HONORS & AWARDS", font),
+    ];
+
+    awards.forEach((award) => {
+      paragraphs.push(
+        new Paragraph({
+          spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
+          tabStops: [
+            {
+              type: TabStopType.RIGHT,
+              position: rightTabStop,
+            },
+          ],
+          children: [
+            new TextRun({
+              text: award.awardName,
+              bold: true,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+              font: font,
+              color: getCleanColor(ds.colors.text),
+            }),
+            new TextRun({
+              text: `  |  ${award.organization}`,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+              font: font,
+              color: getCleanColor(ds.colors.textLight),
+            }),
+            new TextRun({
+              text: "\t" + (award.awardDate || ""),
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.small),
+              font: font,
+              color: getCleanColor(ds.colors.textLight),
+            }),
+          ],
+        }),
+      );
+
+      if (award.description) {
+        paragraphs.push(
+          new Paragraph({
+            spacing: { after: UnitConverter.ptToTwip(ds.spacing.minimal) },
+            children: [
+              new TextRun({
+                text: award.description,
+                italics: true,
+                size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+                font: font,
+                color: getCleanColor(ds.colors.textLight),
+              }),
+            ],
+          }),
+        );
+      }
     });
 
     return paragraphs;

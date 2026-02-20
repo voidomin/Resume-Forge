@@ -5,7 +5,6 @@ import {
   UnifiedDesignSystem,
   contentDensityEngine,
   DensityLevel,
-  ScaledDesignSystem,
 } from "../../../../shared/design-system";
 
 export class MinimalistRenderer extends BaseTemplateRenderer {
@@ -16,7 +15,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
     spacingScale: number = 1,
   ): void {
     // Delegate to renderWithDensity for consistency
-    this.renderWithDensity(doc, resume, "normal");
+    this.renderWithDensity(doc, resume, DensityLevel.NORMAL);
   }
 
   /**
@@ -28,8 +27,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
     density: DensityLevel,
   ): void {
     // Get scaled design system for this density
-    const ds: ScaledDesignSystem =
-      contentDensityEngine.getScaledDesignSystem(density);
+    const ds = this.getScaledDesignSystem(doc, density);
     const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
     const scaledMargin = ds.margins.pageLeft;
@@ -44,7 +42,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
 
     // Helper: Section Headers (Uppercase, Tracking, TextLight Color)
     const drawHeader = (title: string) => {
-      this.moveDownPoints(doc, 2);
+      this.moveDownPoints(doc, ds.spacing.minimal);
       doc
         .font(fontBold)
         .fontSize(ds.fontSize.body)
@@ -71,12 +69,12 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       .fillColor(UnifiedDesignSystem.colors.text)
       .text(resume.contactInfo.name.toUpperCase());
 
-    this.moveDownPoints(doc, 3);
+    this.moveDownPoints(doc, ds.spacing.tight);
 
     // 2. Contact Line
     this.renderContactLine(doc, resume, fontRegular, ds.fontSize.body, false);
 
-    this.moveDownPoints(doc, 6);
+    this.moveDownPoints(doc, ds.spacing.element);
 
     // 3. Professional Summary / Tagline
     if (resume.summary) {
@@ -86,9 +84,9 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         .fillColor(UnifiedDesignSystem.colors.textLight)
         .text(resume.summary, {
           align: "left",
-          lineGap: 1.2,
+          lineGap: ds.spacing.minimal,
         });
-      this.moveDownPoints(doc, 3);
+      this.moveDownPoints(doc, ds.spacing.tight);
     }
 
     // 4. Work Experience
@@ -120,7 +118,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
             .fillColor(UnifiedDesignSystem.colors.text)
             .text(`• ${b}`, {
               indent: ds.spacing.bulletIndent,
-              lineGap: 1,
+              lineGap: ds.spacing.minimal,
             });
         });
 
@@ -172,7 +170,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
               .fillColor(UnifiedDesignSystem.colors.text)
               .text(`• ${b}`, {
                 indent: ds.spacing.bulletIndent,
-                lineGap: 1,
+                lineGap: ds.spacing.minimal,
               });
           });
         } else if (proj.description) {
@@ -180,7 +178,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
             .font(fontRegular)
             .fontSize(ds.fontSize.body)
             .fillColor(UnifiedDesignSystem.colors.text)
-            .text(proj.description, { lineGap: 1 });
+            .text(proj.description, { lineGap: ds.spacing.minimal });
         }
 
         doc.y += ds.spacing.element;
@@ -228,7 +226,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         .fontSize(ds.fontSize.body)
         .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.skills.join(", "), {
-          lineGap: 1.6,
+          lineGap: ds.spacing.minimal,
         });
     }
 
@@ -293,7 +291,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
             .font(fontRegular)
             .fontSize(ds.fontSize.small)
             .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text(role.description, { lineGap: 1 });
+            .text(role.description, { lineGap: ds.spacing.minimal });
         }
       });
     }
@@ -323,7 +321,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
             .font(fontRegular)
             .fontSize(ds.fontSize.small)
             .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text(award.description, { lineGap: 0.8 });
+            .text(award.description, { lineGap: ds.spacing.minimal });
         }
       });
     }

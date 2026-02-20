@@ -1,7 +1,12 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { TemplateRenderer } from "./TemplateRenderer.interface";
-import { UnifiedDesignSystem } from "../../../../shared/design-system";
+import {
+  contentDensityEngine,
+  DensityLevel,
+  ScaledDesignSystem,
+  UnifiedDesignSystem,
+} from "../../../../shared/design-system";
 
 export abstract class BaseTemplateRenderer implements TemplateRenderer {
   abstract render(
@@ -14,7 +19,7 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
   abstract renderWithDensity(
     doc: PDFKit.PDFDocument,
     resume: GeneratedResume,
-    density: "normal" | "compact" | "ultra-compact",
+    density: DensityLevel,
   ): void;
 
   /**
@@ -23,6 +28,23 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
   protected moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
     const lineHeight = (doc.currentFontSize() || 12) * 1.2;
     doc.moveDown(points / lineHeight);
+  }
+
+  protected getScaledDesignSystem(
+    doc: PDFKit.PDFDocument,
+    density: DensityLevel,
+  ): ScaledDesignSystem {
+    const injected = (
+      doc as PDFKit.PDFDocument & {
+        __scaledDesignSystem?: ScaledDesignSystem;
+      }
+    ).__scaledDesignSystem;
+
+    if (injected) {
+      return injected;
+    }
+
+    return contentDensityEngine.getScaledDesignSystem(density);
   }
 
   protected renderContactLine(
