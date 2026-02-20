@@ -18,116 +18,6 @@ export class ModernRenderer extends BaseTemplateRenderer {
     // Delegate to renderWithDensity for consistency
     this.renderWithDensity(doc, resume, "normal");
   }
-    doc.page.margins = {
-      top: scaledMargin,
-      bottom: scaledMargin,
-      left: scaledMargin,
-      right: scaledMargin,
-    };
-
-    // Header - Name
-    doc
-      .font(fontBold)
-      .fontSize(ds.fontSize.h1)
-      .fillColor(UnifiedDesignSystem.colors.primary)
-      .text(resume.contactInfo.name.toUpperCase(), { align: "center" });
-
-    // Small spacing after name
-    this.moveDownPoints(doc, ds.spacing.tight);
-
-    // Contact Line
-    this.renderContactLine(
-      doc,
-      resume,
-      fontRegular,
-      ds.fontSize.contact,
-      false,
-    );
-
-    // Spacing after contact
-    this.moveDownPoints(doc, ds.spacing.element);
-
-    // Professional Summary
-    if (resume.summary) {
-      this.drawModernHeader(doc, "PROFESSIONAL SUMMARY", ds);
-      doc
-        .font(fontRegular)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.text)
-        .text(resume.summary, {
-          align: "justify",
-          lineGap: 2,
-        });
-      this.moveDownPoints(doc, ds.spacing.element);
-    }
-
-    // Work Experience
-    if (resume.experiences?.length) {
-      this.drawModernHeader(doc, "WORK EXPERIENCE", ds);
-      resume.experiences.forEach((exp) => {
-        this.renderExperienceModern(doc, exp, fontBold, fontRegular, ds);
-        this.moveDownPoints(doc, ds.spacing.tight);
-      });
-    }
-
-    // Projects
-    if (resume.projects?.length) {
-      this.drawModernHeader(doc, "PROJECTS", ds);
-      resume.projects.forEach((proj) => {
-        this.renderProjectModern(doc, proj, fontBold, fontRegular, ds);
-        this.moveDownPoints(doc, ds.spacing.tight);
-      });
-    }
-
-    // Education
-    if (resume.education?.length) {
-      this.drawModernHeader(doc, "EDUCATION", ds);
-      resume.education.forEach((edu) => {
-        this.renderEducationModern(doc, edu, fontBold, fontRegular, ds);
-        this.moveDownPoints(doc, ds.spacing.tight);
-      });
-    }
-
-    // Skills
-    if (resume.skills?.length) {
-      this.drawModernHeader(doc, "SKILLS", ds);
-      doc
-        .font(fontRegular)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.text)
-        .text(resume.skills.join("  •  "), {
-          align: "left",
-          lineGap: 2,
-        });
-    }
-
-    // Optional Sections (Coursework, Leadership, Awards)
-    // Coursework - after Education
-    if (resume.coursework?.length) {
-      this.drawModernHeader(doc, "RELEVANT COURSEWORK", ds);
-      resume.coursework.forEach((course) => {
-        this.renderCourseworkModern(doc, course, fontBold, fontRegular, ds);
-      });
-    }
-
-    // Leadership - as separate section
-    if (resume.leadership?.length) {
-      this.drawModernHeader(doc, "LEADERSHIP & EXTRACURRICULAR", ds);
-      resume.leadership.forEach((role) => {
-        this.renderLeadershipModern(doc, role, fontBold, fontRegular, ds);
-        this.moveDownPoints(doc, ds.spacing.tight);
-      });
-    }
-
-    // Awards - after other achievements
-    if (resume.awards?.length) {
-      this.drawModernHeader(doc, "HONORS & AWARDS", ds);
-      resume.awards.forEach((award) => {
-        this.renderAwardModern(doc, award, fontBold, fontRegular, ds);
-      });
-    }
-  }
-
   /**
    * Render with density-aware section visibility and scaling
    */
@@ -281,7 +171,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
   private drawModernHeader(
     doc: PDFKit.PDFDocument,
     title: string,
-    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
+    ds: ScaledDesignSystem,
   ) {
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
 
@@ -308,7 +198,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     exp: any,
     fontBold: string,
     fontRegular: string,
-    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
+    ds: ScaledDesignSystem,
   ) {
     doc
       .font(fontBold)
@@ -352,7 +242,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     proj: any,
     fontBold: string,
     fontRegular: string,
-    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
+    ds: ScaledDesignSystem,
   ) {
     doc
       .font(fontBold)
@@ -396,7 +286,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     edu: any,
     fontBold: string,
     fontRegular: string,
-    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
+    ds: ScaledDesignSystem,
   ) {
     doc
       .font(fontBold)
@@ -428,7 +318,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     course: any,
     fontBold: string,
     fontRegular: string,
-    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
+    ds: ScaledDesignSystem,
   ) {
     doc
       .font(fontBold)
@@ -457,7 +347,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     role: any,
     fontBold: string,
     fontRegular: string,
-    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
+    ds: ScaledDesignSystem,
   ) {
     doc
       .font(fontBold)
@@ -499,7 +389,7 @@ export class ModernRenderer extends BaseTemplateRenderer {
     award: any,
     fontBold: string,
     fontRegular: string,
-    ds: ReturnType<typeof dynamicSizingEngine.getScaledDesignSystem>,
+    ds: ScaledDesignSystem,
   ) {
     doc
       .font(fontBold)

@@ -13,7 +13,11 @@ interface ResumePreviewProps {
   density?: DensityLevel;
 }
 
-function ResumePreview({ resume, template = "modern", density = "normal" }: ResumePreviewProps) {
+function ResumePreview({
+  resume,
+  template = "modern",
+  density = "normal",
+}: ResumePreviewProps) {
   // Calculate density-based CSS scaling multipliers
   const densityScaling = {
     normal: {
@@ -105,15 +109,20 @@ function ResumePreview({ resume, template = "modern", density = "normal" }: Resu
       }}
     >
       <div
-        style={{
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
-          width: scale === 1 ? "100%" : `${100 / scale}%`,
-          fontSize: `${scaling.fontSize * 100}%`,
-          lineHeight: scaling.lineHeight,
-          "--margin-multiplier": scaling.margin,
-          "--padding-multiplier": scaling.padding,
-        } as React.CSSProperties & { "--margin-multiplier": number; "--padding-multiplier": number }}
+        style={
+          {
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+            width: scale === 1 ? "100%" : `${100 / scale}%`,
+            fontSize: `${scaling.fontSize * 100}%`,
+            lineHeight: scaling.lineHeight,
+            "--margin-multiplier": scaling.margin,
+            "--padding-multiplier": scaling.padding,
+          } as React.CSSProperties & {
+            "--margin-multiplier": number;
+            "--padding-multiplier": number;
+          }
+        }
       >
         {renderTemplate()}
       </div>

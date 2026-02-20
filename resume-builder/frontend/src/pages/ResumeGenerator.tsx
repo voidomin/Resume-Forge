@@ -109,19 +109,24 @@ function ResumeGenerator() {
       wordCount += generatedResume.summary.split(/\s+/).length;
     if (generatedResume.experiences)
       generatedResume.experiences.forEach((exp) => {
-        wordCount += (exp.role + exp.company + exp.location).split(/\s+/).length;
+        wordCount += (exp.role + exp.company + exp.location).split(
+          /\s+/,
+        ).length;
         wordCount += exp.bullets.join(" ").split(/\s+/).length;
       });
     if (generatedResume.education)
       generatedResume.education.forEach((edu) => {
-        wordCount += (edu.degree + edu.field + edu.institution).split(/\s+/).length;
+        wordCount += (edu.degree + edu.field + edu.institution).split(
+          /\s+/,
+        ).length;
       });
     if (generatedResume.skills)
       wordCount += generatedResume.skills.join(" ").split(/\s+/).length;
     if (generatedResume.projects)
       generatedResume.projects.forEach((proj) => {
-        wordCount +=
-          (proj.name + proj.description + proj.technologies).split(/\s+/).length;
+        wordCount += (proj.name + proj.description + proj.technologies).split(
+          /\s+/,
+        ).length;
       });
     if (generatedResume.certifications)
       generatedResume.certifications.forEach((cert) => {
@@ -520,7 +525,7 @@ Required Skills:
                         Content Density
                       </h3>
                     </div>
-                    
+
                     {/* Density Selector */}
                     <div className="space-y-2 mb-3">
                       <label className="flex items-center cursor-pointer group">
@@ -529,7 +534,9 @@ Required Skills:
                           name="density"
                           value="normal"
                           checked={density === "normal"}
-                          onChange={(e) => setDensity(e.target.value as DensityLevel)}
+                          onChange={(e) =>
+                            setDensity(e.target.value as DensityLevel)
+                          }
                           className="w-4 h-4 text-blue-600 cursor-pointer"
                         />
                         <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
@@ -547,7 +554,9 @@ Required Skills:
                           name="density"
                           value="compact"
                           checked={density === "compact"}
-                          onChange={(e) => setDensity(e.target.value as DensityLevel)}
+                          onChange={(e) =>
+                            setDensity(e.target.value as DensityLevel)
+                          }
                           className="w-4 h-4 text-blue-600 cursor-pointer"
                         />
                         <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
@@ -565,7 +574,9 @@ Required Skills:
                           name="density"
                           value="ultra-compact"
                           checked={density === "ultra-compact"}
-                          onChange={(e) => setDensity(e.target.value as DensityLevel)}
+                          onChange={(e) =>
+                            setDensity(e.target.value as DensityLevel)
+                          }
                           className="w-4 h-4 text-blue-600 cursor-pointer"
                         />
                         <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
@@ -581,7 +592,8 @@ Required Skills:
 
                     {/* Info */}
                     <p className="text-xs text-gray-600 bg-white bg-opacity-50 rounded px-2 py-1.5">
-                      💡 Auto-detected based on content volume. At compact densities, some optional sections may be hidden.
+                      💡 Auto-detected based on content volume. At compact
+                      densities, some optional sections may be hidden.
                     </p>
                   </div>
 

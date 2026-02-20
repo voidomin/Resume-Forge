@@ -9,12 +9,16 @@
 ## 1. Overview
 
 ### Problem Statement
+
 Resume generation needs to handle two extremes optimally:
+
 1. **Fresher/Entry-level:** Limited experience → Should look polished with proper spacing
 2. **Senior (10-12 years):** Extensive experience → Must fit on ONE page with minimal whitespace, no information loss
 
 ### Solution Approach
+
 Implement an intelligent **Content Density Engine** that:
+
 - Auto-detects content volume and complexity
 - Applies progressive compression strategy
 - Maintains ATS compliance and readability
@@ -83,18 +87,18 @@ frontend/src/
 
 ```typescript
 enum DensityLevel {
-  NORMAL = "normal",      // Content fits comfortably, good spacing
-  COMPACT = "compact",    // Content tight, optimized spacing
-  ULTRA_COMPACT = "ultra" // Maximum density, minimal white space
+  NORMAL = "normal", // Content fits comfortably, good spacing
+  COMPACT = "compact", // Content tight, optimized spacing
+  ULTRA_COMPACT = "ultra", // Maximum density, minimal white space
 }
 
 interface DensityConfig {
   level: DensityLevel;
-  marginMultiplier: number;      // 0.5 = 50% of base margin
-  spacingMultiplier: number;     // 0.8 = 80% of base spacing
-  fontSizeMultiplier: number;    // 1.0 = no font reduction
+  marginMultiplier: number; // 0.5 = 50% of base margin
+  spacingMultiplier: number; // 0.8 = 80% of base spacing
+  fontSizeMultiplier: number; // 1.0 = no font reduction
   hideOptionalSections: string[]; // Section names to hide
-  lineHeightMultiplier: number;   // Line height scaling
+  lineHeightMultiplier: number; // Line height scaling
 }
 ```
 
@@ -104,41 +108,41 @@ interface DensityConfig {
 const DENSITY_PRESETS: Record<DensityLevel, DensityConfig> = {
   NORMAL: {
     level: DensityLevel.NORMAL,
-    marginMultiplier: 1.0,      // 36pt margins
-    spacingMultiplier: 1.0,     // Full spacing
-    fontSizeMultiplier: 1.0,    // No font reduction
+    marginMultiplier: 1.0, // 36pt margins
+    spacingMultiplier: 1.0, // Full spacing
+    fontSizeMultiplier: 1.0, // No font reduction
     hideOptionalSections: [],
-    lineHeightMultiplier: 1.3
+    lineHeightMultiplier: 1.3,
   },
-  
+
   COMPACT: {
     level: DensityLevel.COMPACT,
-    marginMultiplier: 0.67,     // 24pt margins
-    spacingMultiplier: 0.8,     // 80% spacing
-    fontSizeMultiplier: 0.95,   // 5% font reduction
+    marginMultiplier: 0.67, // 24pt margins
+    spacingMultiplier: 0.8, // 80% spacing
+    fontSizeMultiplier: 0.95, // 5% font reduction
     hideOptionalSections: ["awards"],
-    lineHeightMultiplier: 1.25
+    lineHeightMultiplier: 1.25,
   },
-  
+
   ULTRA_COMPACT: {
     level: DensityLevel.ULTRA,
-    marginMultiplier: 0.56,     // 20pt margins (minimum)
-    spacingMultiplier: 0.6,     // 60% spacing
-    fontSizeMultiplier: 0.9,    // 10% font reduction
+    marginMultiplier: 0.56, // 20pt margins (minimum)
+    spacingMultiplier: 0.6, // 60% spacing
+    fontSizeMultiplier: 0.9, // 10% font reduction
     hideOptionalSections: ["awards", "coursework"],
-    lineHeightMultiplier: 1.2
-  }
-}
+    lineHeightMultiplier: 1.2,
+  },
+};
 ```
 
 #### 3.2 ContentDensityEngine Methods
 
 ```typescript
 class ContentDensityEngine {
-  private readonly MIN_FONT_SIZE = 10;       // ATS safe minimum
-  private readonly MIN_MARGIN = 18;          // Industry minimum
+  private readonly MIN_FONT_SIZE = 10; // ATS safe minimum
+  private readonly MIN_MARGIN = 18; // Industry minimum
   private readonly MIN_LINE_HEIGHT = 1.2;
-  
+
   /**
    * Detect optimal density based on content analysis
    * Returns: DensityLevel recommendation
@@ -146,30 +150,30 @@ class ContentDensityEngine {
   detectDensityLevel(
     estimatedWordCount: number,
     sectionCount: number,
-    hasOptionalSections: boolean
-  ): DensityLevel
-  
+    hasOptionalSections: boolean,
+  ): DensityLevel;
+
   /**
    * Get scaled design system values for a density level
    * Returns: Scaled fonts, spacing, margins
    */
-  getScaledDesignSystem(density: DensityLevel): ScaledDesignSystem
-  
+  getScaledDesignSystem(density: DensityLevel): ScaledDesignSystem;
+
   /**
    * Analyze resume content to determine density
    * Input: Generated resume data
    * Output: Content analysis with recommendation
    */
-  analyzeContentVolume(resume: GeneratedResume): ContentAnalysis
-  
+  analyzeContentVolume(resume: GeneratedResume): ContentAnalysis;
+
   /**
    * Calculate which optional sections to hide
    * Based on density level and content volume
    */
   getVisibleSections(
     density: DensityLevel,
-    availableSections: Section[]
-  ): Section[]
+    availableSections: Section[],
+  ): Section[];
 }
 ```
 
@@ -182,8 +186,9 @@ class ContentDensityEngine {
 **Location:** `backend/src/services/pdf.service.ts`
 
 **Changes:**
+
 - Remove `calculateOptimalScale()` method
-- Replace with `detectAndApplyDensity()` 
+- Replace with `detectAndApplyDensity()`
 - Update `generateResumePDF()` to use ContentDensityEngine
 - Pass density to template renderers
 
@@ -193,29 +198,29 @@ generateResumePDF(
   template: string = "modern",
   userDensity?: DensityLevel // Optional user override
 ): Promise<Buffer> {
-  
+
   // Auto-detect or use user preference
   const densityEngine = new ContentDensityEngine();
   const analysis = densityEngine.analyzeContentVolume(resume);
   const density = userDensity || analysis.recommendedDensity;
-  
+
   // Get scaled design system
   const scaledDS = densityEngine.getScaledDesignSystem(density);
-  
+
   // Create PDF with scaled margins
   const doc = new PDFDocument({
     size: "A4",
     margins: scaledDS.margins
   });
-  
+
   // Attach density info for renderers
   (doc as any).__density = density;
   (doc as any).__scaledDesignSystem = scaledDS;
-  
+
   // Render with density aware template
   const renderer = this.renderers[selectedTemplate];
   renderer.renderWithDensity(doc, resume, density);
-  
+
   return buffer;
 }
 ```
@@ -233,16 +238,16 @@ interface TemplateRenderer {
     doc: PDFDocument,
     resume: GeneratedResume,
     fontScale: number,
-    spacingScale: number
+    spacingScale: number,
   ): void;
-  
+
   /**
    * New method - density aware rendering
    */
   renderWithDensity(
     doc: PDFDocument,
     resume: GeneratedResume,
-    density: DensityLevel
+    density: DensityLevel,
   ): void;
 }
 ```
@@ -250,12 +255,14 @@ interface TemplateRenderer {
 #### 3.5 Update Individual Template Renderers
 
 **Files to modify:**
+
 - `StandardRenderer.ts`
 - `ModernRenderer.ts`
 - `ExecutiveRenderer.ts`
 - `MinimalistRenderer.ts`
 
 **Key changes in each:**
+
 - Check `doc.__density` for current density level
 - Get scaled design system from `doc.__scaledDesignSystem`
 - Skip rendering optional sections based on density
@@ -263,16 +270,17 @@ interface TemplateRenderer {
 - Remove `fontScale` and `spacingScale` parameters from `render()`
 
 Example for StandardRenderer:
+
 ```typescript
 renderWithDensity(doc, resume, density) {
   const scaledDS = (doc as any).__scaledDesignSystem;
-  
+
   // Only render if not hidden by density
   if (!this.isHidden(density, "awards")) {
     // Render awards section with scaled values
     this.renderAwards(doc, resume, scaledDS);
   }
-  
+
   // Use scaledDS.fontSize.h2 instead of fixed values
 }
 ```
@@ -286,6 +294,7 @@ renderWithDensity(doc, resume, density) {
 **Location:** `frontend/src/pages/ResumeGenerator.tsx` (or ResumeView.tsx)
 
 **Add:**
+
 - Density slider UI component (0.5 = normal, 1.0 = ultra-compact)
 - Show detected density level
 - Allow user override
@@ -299,16 +308,16 @@ const [detectedDensity, setDetectedDensity] = useState<DensityLevel>("normal");
 const density = userDensity || detectedDensity;
 
 // Pass to resume preview
-<ResumePreview resume={resume} template={template} density={density} />
+<ResumePreview resume={resume} template={template} density={density} />;
 
 // Pass to PDF generation
 const downloadPDF = async () => {
   await api.post("/resumes/download-pdf", {
     resumeId: id,
     density: density,
-    template: template
+    template: template,
   });
-}
+};
 ```
 
 #### 3.7 Update ResumePreview Component
@@ -316,23 +325,23 @@ const downloadPDF = async () => {
 **Location:** `frontend/src/components/Resume/ResumePreview.tsx`
 
 **Add:**
+
 - Accept density prop
 - Pass density to templates
 - Update preview scaling logic
 
 ```tsx
-function ResumePreview({ 
-  resume, 
+function ResumePreview({
+  resume,
   template = "modern",
-  density = "normal" 
+  density = "normal",
 }: ResumePreviewProps) {
-  
   // Determine CSS scale factor based on density
   const getScaleFactor = (density: DensityLevel) => {
     // Return visual scale for preview
     return { normal: 1.0, compact: 0.92, ultra: 0.85 }[density];
   };
-  
+
   return (
     <div style={{ transform: `scale(${getScaleFactor(density)})` }}>
       {renderTemplate()}
@@ -346,6 +355,7 @@ function ResumePreview({
 **Files:** All 4 template TSX files
 
 **Add:**
+
 - Context/prop to receive density level
 - Conditional rendering of optional sections
 - Use CSS custom properties for scaled values
@@ -373,7 +383,7 @@ const fontStyle = getDensityFont(density, "body");
 ```typescript
 export interface GeneratedResume {
   // ... existing fields ...
-  
+
   // New density-related fields
   detectedDensity?: DensityLevel;
   contentAnalysis?: {
@@ -382,7 +392,7 @@ export interface GeneratedResume {
     hasOptionalSections: boolean;
     recommendedDensity: DensityLevel;
   };
-  
+
   // Optional sections with scores
   awards?: Array<{
     awardName: string;
@@ -391,14 +401,14 @@ export interface GeneratedResume {
     description?: string;
     relevanceScore?: number;
   }>;
-  
+
   coursework?: Array<{
     courseName: string;
     topic: string;
     institution: string;
     relevanceScore?: number;
   }>;
-  
+
   leadership?: Array<{
     title: string;
     organization: string;
@@ -435,10 +445,10 @@ WORD_COUNT = sum of all text content
 
 IF contentFits(WORD_COUNT, NORMAL):
   density = NORMAL
-  
+
 ELSE IF contentFits(WORD_COUNT, COMPACT):
   density = COMPACT
-  
+
 ELSE:
   density = ULTRA_COMPACT
 ```
@@ -446,6 +456,7 @@ ELSE:
 ### Section Hiding Priority
 
 When space is tight, hide in this order:
+
 1. **Awards** (lowest priority, easy to remove)
 2. **Coursework** (supplementary, can be omitted)
 3. **Leadership** (nice-to-have, not requiredfor ATS)
@@ -455,11 +466,11 @@ When space is tight, hide in this order:
 
 Applied to ALL sizing values proportionally:
 
-| Density | Margins | Spacing | Font | Line Height |
-|---------|---------|---------|------|-------------|
-| Normal  | 1.0x    | 1.0x    | 1.0x | 1.3x        |
-| Compact | 0.67x   | 0.8x    | 0.95x| 1.25x       |
-| Ultra   | 0.56x   | 0.6x    | 0.9x | 1.2x        |
+| Density | Margins | Spacing | Font  | Line Height |
+| ------- | ------- | ------- | ----- | ----------- |
+| Normal  | 1.0x    | 1.0x    | 1.0x  | 1.3x        |
+| Compact | 0.67x   | 0.8x    | 0.95x | 1.25x       |
+| Ultra   | 0.56x   | 0.6x    | 0.9x  | 1.2x        |
 
 ---
 
@@ -476,6 +487,7 @@ Applied to ALL sizing values proportionally:
 ## 7. User Controls (Frontend)
 
 ### Density Slider UI
+
 ```
 [ Spacious ] ----●---- [ Compact ] -------- [ Ultra ]
    (Normal)    (Compact)              (Max Compression)
@@ -486,6 +498,7 @@ Applied to ALL sizing values proportionally:
 - Update preview in real-time
 
 ### Display Information
+
 - "Detected Density: Compact (9,500 words)"
 - "Estimated pages: 1"
 - Optional sections hidden: Awards, Coursework
@@ -495,12 +508,14 @@ Applied to ALL sizing values proportionally:
 ## 8. Code Cleanup
 
 ### Files to Clean
+
 - Remove old `DynamicSizingEngine` from design-system.ts
 - Remove `calculateOptimalScale()` from pdf.service.ts
 - Remove commented-out code
 - Remove unused imports
 
 ### Keep
+
 - UnifiedDesignSystem base values
 - All design tokens
 
@@ -526,6 +541,7 @@ Applied to ALL sizing values proportionally:
    - Tight but readable, no overflow
 
 ### Verification Checklist
+
 - [ ] All content fits on 1 page
 - [ ] Fonts remain readable (min 10pt)
 - [ ] No overlapping text
@@ -549,6 +565,7 @@ Applied to ALL sizing values proportionally:
 ## 11. Rollback Plan
 
 If issues arise:
+
 - Revert to previous commit: `git revert <commit-hash>`
 - Fall back to simple scaling: `scale = min(1.0, pageHeight / contentHeight)`
 - Use NORMAL density as default for all
@@ -556,4 +573,3 @@ If issues arise:
 ---
 
 **Next Step:** User approval of this plan, then begin Phase 1 implementation.
-

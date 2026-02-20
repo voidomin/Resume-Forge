@@ -283,7 +283,7 @@ async function resumeRoutes(server: FastifyInstance) {
         // Cast template string to TemplateType, defaulting to 'modern' if invalid or missing
         const selectedTemplate = (
           ["modern", "executive", "minimalist", "standard"].includes(
-            template || ""
+            template || "",
           )
             ? template
             : "modern"
