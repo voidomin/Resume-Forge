@@ -73,6 +73,8 @@ export class ModernRenderer extends BaseTemplateRenderer {
           align: "justify",
           lineGap: ds.spacing.minimal,
         });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(doc, ds.spacing.section, "summary", resume.summary);
     }
 
     if (resume.experiences?.length) {
@@ -81,6 +83,13 @@ export class ModernRenderer extends BaseTemplateRenderer {
         this.renderExperienceModern(doc, exp, fontBold, fontRegular, ds);
         this.moveDownPoints(doc, ds.spacing.element);
       });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "experiences",
+        resume.experiences,
+      );
     }
 
     if (resume.projects?.length) {
@@ -89,6 +98,13 @@ export class ModernRenderer extends BaseTemplateRenderer {
         this.renderProjectModern(doc, proj, fontBold, fontRegular, ds);
         this.moveDownPoints(doc, ds.spacing.element);
       });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "projects",
+        resume.projects,
+      );
     }
 
     if (resume.education?.length) {
@@ -97,6 +113,13 @@ export class ModernRenderer extends BaseTemplateRenderer {
         this.renderEducationModern(doc, edu, fontBold, fontRegular, ds);
         this.moveDownPoints(doc, ds.spacing.tight);
       });
+      // Adjusted spacing after section - reduced for sparse education sections
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "education",
+        resume.education,
+      );
     }
 
     if (resume.skills?.length) {
@@ -109,6 +132,8 @@ export class ModernRenderer extends BaseTemplateRenderer {
           align: "left",
           lineGap: ds.spacing.minimal,
         });
+      // Adjusted spacing after section - reduced for sparse skills sections
+      this.moveDownAdjusted(doc, ds.spacing.section, "skills", resume.skills);
     }
 
     // Optional Sections - Only show if visible at this density
@@ -130,6 +155,13 @@ export class ModernRenderer extends BaseTemplateRenderer {
           .text(` | ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
         this.moveDownPoints(doc, ds.spacing.tight);
       });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "certifications",
+        resume.certifications,
+      );
     }
 
     // Coursework - only if visible at this density
@@ -141,6 +173,13 @@ export class ModernRenderer extends BaseTemplateRenderer {
       resume.coursework.forEach((course) => {
         this.renderCourseworkModern(doc, course, fontBold, fontRegular, ds);
       });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "coursework",
+        resume.coursework,
+      );
     }
 
     // Leadership - only if visible at this density
@@ -153,6 +192,13 @@ export class ModernRenderer extends BaseTemplateRenderer {
         this.renderLeadershipModern(doc, role, fontBold, fontRegular, ds);
         this.moveDownPoints(doc, ds.spacing.tight);
       });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "leadership",
+        resume.leadership,
+      );
     }
 
     // Awards - only if visible at this density
@@ -164,6 +210,8 @@ export class ModernRenderer extends BaseTemplateRenderer {
       resume.awards.forEach((award) => {
         this.renderAwardModern(doc, award, fontBold, fontRegular, ds);
       });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(doc, ds.spacing.section, "awards", resume.awards);
     }
   }
 

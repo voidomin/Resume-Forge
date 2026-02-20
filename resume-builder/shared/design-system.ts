@@ -188,6 +188,19 @@ export const DENSITY_PRESETS: Record<DensityLevel, DensityConfig> = {
 };
 
 /**
+ * Section Density Analysis
+ * Analyzes individual section content to determine spacing
+ */
+export interface SectionDensityAnalysis {
+  sectionName: string;
+  contentLines: number; // Estimated lines of content
+  wordCount: number;
+  itemCount: number; // Number of items (experiences, skills, etc.)
+  isSparse: boolean; // True if content is thin
+  spacingMultiplier: number; // 0.5 - 1.0
+}
+
+/**
  * Content Analysis Result
  * Output of analyzing resume content for density determination
  */
@@ -433,6 +446,159 @@ export class ContentDensityEngine {
           ? Math.min(this.MAX_LINE_HEIGHT, scaled.lineHeight * multiplier)
           : Math.max(this.MIN_LINE_HEIGHT, scaled.lineHeight * multiplier),
     };
+  }
+
+  /**
+   * Analyze a single section's content density
+   *
+   * Returns spacing multiplier (0.5-1.0) based on how sparse the section is
+   * Sparse sections (few items/words) get reduced spacing to eliminate white space
+   */
+  analyzeSectionDensity(
+    sectionName: string,
+    sectionData: any,
+  ): SectionDensityAnalysis {
+    let wordCount = 0;
+    let itemCount = 0;
+    let contentLines = 0;
+
+    if (!sectionData) {
+      return {
+        sectionName,
+        contentLines: 0,
+        wordCount: 0,
+        itemCount: 0,
+        isSparse: true,
+        spacingMultiplier: 0.5,
+      };
+    }
+
+    // Analyze by section type
+    if (sectionName === "summary" && typeof sectionData === "string") {
+      wordCount = sectionData.split(/\s+/).length;
+      contentLines = Math.ceil(wordCount / 15); // ~15 words per line
+      itemCount = 1;
+    } else if (
+      sectionName === "experiences" ||
+      sectionName === "education" ||
+      sectionName === "projects"
+    ) {
+      if (Array.isArray(sectionData)) {
+        itemCount = sectionData.length;
+        sectionData.forEach((item: any) => {
+          // Count words in main fields
+          if (item.company || item.role)
+            wordCount += `${item.company || ""} ${item.role || ""}`.split(
+              /\s+/,
+            ).length;
+          if (item.institution || item.degree)
+            wordCount += `${item.institution || ""} ${item.degree || ""}`.split(
+              /\s+/,
+            ).length;
+          if (item.name) wordCount += item.name.split(/\s+/).length;
+
+          // Count words in bullets/description
+          if (Array.isArray(item.bullets)) {
+            item.bullets.forEach((bullet: string) => {
+              wordCount += bullet.split(/\s+/).length;
+            });
+          }
+          if (item.description) {
+            wordCount += item.description.split(/\s+/).length;
+          }
+        });
+        contentLines = Math.ceil(wordCount / 15);
+      }
+    } else if (sectionName === "skills") {
+      if (Array.isArray(sectionData)) {
+        itemCount = sectionData.length;
+        wordCount = sectionData.reduce(
+          (sum: number, skill: string) =>
+            sum + (typeof skill === "string" ? skill.split(/\s+/).length : 0),
+          0,
+        );
+      }
+      contentLines = Math.max(1, Math.ceil(itemCount / 5)); // ~5 skills per line
+    } else if (sectionName === "skillsCategories") {
+      if (typeof sectionData === "object" && !Array.isArray(sectionData)) {
+        Object.values(sectionData).forEach((skills: any) => {
+          if (Array.isArray(skills)) {
+            itemCount += skills.length;
+            wordCount += skills.reduce(
+              (sum: number, skill: string) =>
+                sum +
+                (typeof skill === "string" ? skill.split(/\s+/).length : 0),
+              0,
+            );
+          }
+        });
+      }
+      contentLines = Math.max(1, Math.ceil(itemCount / 5));
+    } else if (
+      sectionName === "certifications" ||
+      sectionName === "coursework" ||
+      sectionName === "leadership" ||
+      sectionName === "awards"
+    ) {
+      if (Array.isArray(sectionData)) {
+        itemCount = sectionData.length;
+        sectionData.forEach((item: any) => {
+          wordCount +=
+            `${item.name || ""} ${item.title || ""} ${item.issuer || ""} ${item.organization || ""}`.split(
+              /\s+/,
+            ).length;
+          if (item.description) {
+            wordCount += item.description.split(/\s+/).length;
+          }
+        });
+      }
+      contentLines = Math.max(1, itemCount); // 1 line per item minimum
+    }
+
+    // Thresholds for detecting sparse content
+    const SPARSE_WORD_THRESHOLD = 25; // Less than 25 words = sparse
+    const SPARSE_ITEM_THRESHOLD = 2; // Less than 2 items = sparse
+    const SPARSE_LINE_THRESHOLD = 2; // Less than 2 lines = very sparse
+
+    const isSparse =
+      wordCount < SPARSE_WORD_THRESHOLD ||
+      itemCount < SPARSE_ITEM_THRESHOLD ||
+      contentLines < SPARSE_LINE_THRESHOLD;
+
+    // Calculate spacing multiplier
+    let spacingMultiplier = 1.0;
+
+    if (contentLines === 0 || itemCount === 0) {
+      spacingMultiplier = 0.3; // Empty section
+    } else if (contentLines <= 1) {
+      spacingMultiplier = 0.5; // Very sparse (1 line)
+    } else if (contentLines <= 2) {
+      spacingMultiplier = 0.65; // Sparse (2 lines)
+    } else if (contentLines <= 3) {
+      spacingMultiplier = 0.8; // Medium-sparse (3 lines)
+    } else {
+      spacingMultiplier = 1.0; // Normal content
+    }
+
+    return {
+      sectionName,
+      contentLines,
+      wordCount,
+      itemCount,
+      isSparse,
+      spacingMultiplier,
+    };
+  }
+
+  /**
+   * Get spacing multiplier for a specific section
+   *
+   * Used by templates to adjust spacing based on content sparsity
+   * Returns value between 0.3 and 1.0
+   */
+  getSectionSpacingMultiplier(sectionName: string, sectionData: any): number {
+    const analysis = this.analyzeSectionDensity(sectionName, sectionData);
+    return analysis.spacingMultiplier;
   }
 
   /**

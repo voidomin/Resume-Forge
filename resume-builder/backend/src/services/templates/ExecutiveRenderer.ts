@@ -92,7 +92,13 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         .fontSize(ds.fontSize.body)
         .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.summary, { align: "center", lineGap: ds.spacing.minimal });
-      doc.y += ds.spacing.section;
+      // Adjusted spacing after section
+      const summaryMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "summary",
+        resume.summary,
+      );
+      doc.y += ds.spacing.section * summaryMultiplier;
     }
 
     // 4. Work Experience
@@ -124,7 +130,13 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         });
         doc.y += ds.spacing.element;
       });
-      doc.y += ds.spacing.section;
+      // Adjusted spacing after section
+      const expMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "experiences",
+        resume.experiences,
+      );
+      doc.y += ds.spacing.section * expMultiplier;
     }
 
     // 5. Projects
@@ -166,7 +178,13 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         }
         doc.y += ds.spacing.element;
       });
-      doc.y += ds.spacing.section;
+      // Adjusted spacing after section
+      const projMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "projects",
+        resume.projects,
+      );
+      doc.y += ds.spacing.section * projMultiplier;
     }
 
     // 6. Education
@@ -195,7 +213,13 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         }
         doc.y += ds.spacing.element;
       });
-      doc.y += ds.spacing.section;
+      // Adjusted spacing after section
+      const eduMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "education",
+        resume.education,
+      );
+      doc.y += ds.spacing.section * eduMultiplier;
     }
 
     // 7. Skills
@@ -209,6 +233,13 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
           align: "center",
           lineGap: ds.spacing.minimal,
         });
+      // Adjusted spacing after section
+      const skillsMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "skills",
+        resume.skills,
+      );
+      doc.y += ds.spacing.section * skillsMultiplier;
     }
 
     // Optional Sections - Only show if visible at this density
@@ -228,7 +259,13 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
           .fillColor(UnifiedDesignSystem.colors.textLight)
           .text(` | ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
       });
-      doc.y += ds.spacing.section;
+      // Adjusted spacing after section
+      const certMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "certifications",
+        resume.certifications,
+      );
+      doc.y += ds.spacing.section * certMultiplier;
     }
 
     if (
@@ -251,7 +288,13 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
             }`,
           );
       });
-      doc.y += ds.spacing.section;
+      // Adjusted spacing after section
+      const courseMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "coursework",
+        resume.coursework,
+      );
+      doc.y += ds.spacing.section * courseMultiplier;
     }
 
     if (
@@ -287,7 +330,13 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         }
         doc.y += ds.spacing.tight;
       });
-      doc.y += ds.spacing.section;
+      // Adjusted spacing after section
+      const leadMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "leadership",
+        resume.leadership,
+      );
+      doc.y += ds.spacing.section * leadMultiplier;
     }
 
     if (
@@ -317,6 +366,13 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
         }
         doc.y += ds.spacing.tight;
       });
+      // Adjusted spacing after section
+      const awardMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "awards",
+        resume.awards,
+      );
+      doc.y += ds.spacing.section * awardMultiplier;
     }
   }
 }

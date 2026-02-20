@@ -30,6 +30,44 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
     doc.moveDown(points / lineHeight);
   }
 
+  /**
+   * Apply section-aware spacing adjustment
+   *
+   * Reduces spacing for sparse sections (few items/words)
+   * to eliminate excessive white space while maintaining readability
+   */
+  protected getSectionSpacingAdjustment(
+    doc: PDFKit.PDFDocument,
+    sectionName: string,
+    sectionData: any,
+  ): number {
+    const multiplier = contentDensityEngine.getSectionSpacingMultiplier(
+      sectionName,
+      sectionData,
+    );
+    return multiplier;
+  }
+
+  /**
+   * Move down with section-aware spacing
+   *
+   * Applies the content-aware multiplier to adjust spacing
+   */
+  protected moveDownAdjusted(
+    doc: PDFKit.PDFDocument,
+    basePoints: number,
+    sectionName: string,
+    sectionData: any,
+  ): void {
+    const multiplier = this.getSectionSpacingAdjustment(
+      doc,
+      sectionName,
+      sectionData,
+    );
+    const adjustedPoints = basePoints * multiplier;
+    this.moveDownPoints(doc, adjustedPoints);
+  }
+
   protected getScaledDesignSystem(
     doc: PDFKit.PDFDocument,
     density: DensityLevel,
