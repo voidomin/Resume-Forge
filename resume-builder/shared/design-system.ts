@@ -136,9 +136,9 @@ export function getCleanColor(hexColor: string): string {
  * Controls resume compression and spacing
  */
 export enum DensityLevel {
-  NORMAL = "normal",           // Full spacing, good for shorter resumes
-  COMPACT = "compact",         // Optimized spacing, balanced for mid-length resumes
-  ULTRA_COMPACT = "ultra",     // Maximum density, for extensive experience
+  NORMAL = "normal", // Full spacing, good for shorter resumes
+  COMPACT = "compact", // Optimized spacing, balanced for mid-length resumes
+  ULTRA_COMPACT = "ultra-compact", // Maximum density, for extensive experience
 }
 
 /**
@@ -147,10 +147,10 @@ export enum DensityLevel {
  */
 export interface DensityConfig {
   level: DensityLevel;
-  marginMultiplier: number;      // Applied to margins
-  spacingMultiplier: number;     // Applied to spacing (section, element, tight, minimal)
-  fontSizeMultiplier: number;    // Applied to all font sizes
-  lineHeightMultiplier: number;  // Applied to line height (spacing.line)
+  marginMultiplier: number; // Applied to margins
+  spacingMultiplier: number; // Applied to spacing (section, element, tight, minimal)
+  fontSizeMultiplier: number; // Applied to all font sizes
+  lineHeightMultiplier: number; // Applied to line height (spacing.line)
   hideOptionalSections: string[]; // Section names to hide: "awards", "coursework", "leadership"
 }
 
@@ -161,28 +161,28 @@ export interface DensityConfig {
 export const DENSITY_PRESETS: Record<DensityLevel, DensityConfig> = {
   [DensityLevel.NORMAL]: {
     level: DensityLevel.NORMAL,
-    marginMultiplier: 1.0,      // 36pt margins
-    spacingMultiplier: 1.0,     // Full spacing
-    fontSizeMultiplier: 1.0,    // No font reduction
-    lineHeightMultiplier: 1.3,  // Normal line height
+    marginMultiplier: 1.0, // 36pt margins
+    spacingMultiplier: 1.0, // Full spacing
+    fontSizeMultiplier: 1.0, // No font reduction
+    lineHeightMultiplier: 1.3, // Normal line height
     hideOptionalSections: [],
   },
 
   [DensityLevel.COMPACT]: {
     level: DensityLevel.COMPACT,
-    marginMultiplier: 0.67,     // ~24pt margins
-    spacingMultiplier: 0.8,     // 80% spacing
-    fontSizeMultiplier: 0.95,   // 5% font reduction
+    marginMultiplier: 0.67, // ~24pt margins
+    spacingMultiplier: 0.8, // 80% spacing
+    fontSizeMultiplier: 0.95, // 5% font reduction
     lineHeightMultiplier: 1.25, // Slightly tighter
     hideOptionalSections: ["awards"],
   },
 
   [DensityLevel.ULTRA_COMPACT]: {
-    level: DensityLevel.ULTRA,
-    marginMultiplier: 0.56,     // ~20pt margins
-    spacingMultiplier: 0.6,     // 60% spacing
-    fontSizeMultiplier: 0.9,    // 10% font reduction
-    lineHeightMultiplier: 1.2,  // Compact line height
+    level: DensityLevel.ULTRA_COMPACT,
+    marginMultiplier: 0.56, // ~20pt margins
+    spacingMultiplier: 0.6, // 60% spacing
+    fontSizeMultiplier: 0.9, // 10% font reduction
+    lineHeightMultiplier: 1.2, // Compact line height
     hideOptionalSections: ["awards", "coursework"],
   },
 };
@@ -213,28 +213,28 @@ export interface ScaledDesignSystem {
 
 /**
  * Content Density Engine
- * 
+ *
  * Intelligently analyzes resume content and applies optimal compression
  * to fit content on exactly one page while maintaining readability and ATS compliance
  */
 export class ContentDensityEngine {
   // ATS and readability safety bounds
-  private readonly MIN_FONT_SIZE = 10;        // Minimum font size (pt)
-  private readonly MIN_MARGIN = 18;           // Minimum page margin (pt)
-  private readonly MIN_LINE_HEIGHT = 1.2;     // Minimum line height multiplier
+  private readonly MIN_FONT_SIZE = 10; // Minimum font size (pt)
+  private readonly MIN_MARGIN = 18; // Minimum page margin (pt)
+  private readonly MIN_LINE_HEIGHT = 1.2; // Minimum line height multiplier
 
   // Heuristics for density detection
-  private readonly NORMAL_WORD_THRESHOLD = 4000;     // Max words for NORMAL density
-  private readonly COMPACT_WORD_THRESHOLD = 7000;    // Max words for COMPACT density
+  private readonly NORMAL_WORD_THRESHOLD = 4000; // Max words for NORMAL density
+  private readonly COMPACT_WORD_THRESHOLD = 7000; // Max words for COMPACT density
 
   /**
    * Analyze resume content to determine optimal density level
-   * 
+   *
    * Considers:
    * - Total word count
    * - Number of sections
    * - Optional sections present
-   * 
+   *
    * Returns recommended DensityLevel and analysis details
    */
   analyzeContentVolume(contentData: {
@@ -250,7 +250,10 @@ export class ContentDensityEngine {
     // Heuristic 1: Based on word count
     if (wordCount > this.COMPACT_WORD_THRESHOLD) {
       recommendedDensity = DensityLevel.ULTRA_COMPACT;
-      confidenceScore = Math.min(100, 60 + (wordCount - this.COMPACT_WORD_THRESHOLD) / 100);
+      confidenceScore = Math.min(
+        100,
+        60 + (wordCount - this.COMPACT_WORD_THRESHOLD) / 100,
+      );
     } else if (wordCount > this.NORMAL_WORD_THRESHOLD) {
       recommendedDensity = DensityLevel.COMPACT;
       confidenceScore = 70;
@@ -286,7 +289,7 @@ export class ContentDensityEngine {
 
   /**
    * Get scaled design system for a specific density level
-   * 
+   *
    * Applies DensityConfig multipliers to all design tokens
    * Enforces minimum thresholds for readability and ATS compliance
    */
@@ -307,7 +310,10 @@ export class ContentDensityEngine {
       if (typeof value === "number") {
         // Don't scale line height through spacing multiplier
         if (key === "line") {
-          spacing[key] = Math.max(this.MIN_LINE_HEIGHT, value * config.lineHeightMultiplier);
+          spacing[key] = Math.max(
+            this.MIN_LINE_HEIGHT,
+            value * config.lineHeightMultiplier,
+          );
         } else {
           spacing[key] = value * config.spacingMultiplier;
         }
@@ -337,7 +343,7 @@ export class ContentDensityEngine {
 
   /**
    * Determine which sections should be hidden based on density level
-   * 
+   *
    * Returns array of section names that should be hidden
    */
   getHiddenSections(density: DensityLevel): string[] {

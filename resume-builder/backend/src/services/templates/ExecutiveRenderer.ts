@@ -3,7 +3,6 @@ import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
 import {
   UnifiedDesignSystem,
-  dynamicSizingEngine,
   contentDensityEngine,
   DensityLevel,
   ScaledDesignSystem,
@@ -16,14 +15,9 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
     fontScale: number = 1,
     spacingScale: number = 1,
   ): void {
-    // Get scaled design system values
-    const scale = (doc as any).__scale || fontScale;
-    const ds = dynamicSizingEngine.getScaledDesignSystem(scale);
-    const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
-    const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
-
-    // Apply scaled margins
-    const scaledMargin = dynamicSizingEngine.getScaledMargin(scale);
+    // Delegate to renderWithDensity for consistency
+    this.renderWithDensity(doc, resume, "normal");
+  }
     doc.page.margins = {
       top: scaledMargin,
       bottom: scaledMargin,

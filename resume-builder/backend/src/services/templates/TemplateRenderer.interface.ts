@@ -1,6 +1,6 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
-import { DensityLevel } from "../../design-system";
+import { DensityLevel } from "../../../../shared/design-system";
 
 export interface TemplateRenderer {
   render(
