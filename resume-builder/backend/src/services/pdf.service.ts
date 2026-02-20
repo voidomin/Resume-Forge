@@ -7,20 +7,24 @@ import { MinimalistRenderer } from "./templates/MinimalistRenderer";
 import { TemplateRenderer } from "./templates/TemplateRenderer.interface";
 import {
   UnifiedDesignSystem,
-  dynamicSizingEngine,
+  contentDensityEngine,
+  DensityLevel,
+  ScaledDesignSystem,
 } from "../../../shared/design-system";
+import { logger } from "../lib/logger";
 
 // Re-export type if needed
 export type { TemplateType } from "./pdf.service.types";
 
 /**
- * Enhanced PDF Service with Dynamic Sizing
+ * Enhanced PDF Service with Content Density Engine
  *
  * Principles:
- * - Content determines scale (not AI heuristics)
- * - Scale applied proportionally to margins, fonts, spacing
- * - Minimums enforced: 7pt font, 2pt spacing, 24pt margins
- * - Always fits on one page, no overflow, minimal white space
+ * - Content determines density level (NORMAL, COMPACT, ULTRA_COMPACT)
+ * - Auto-detect based on word count and section count
+ * - Apply proportional scaling to margins, fonts, spacing
+ * - Minimize optional sections when space is tight
+ * - Always fits on one page, no overflow, optimal white space
  */
 export class PDFService {
   private renderers: Record<string, TemplateRenderer>;
@@ -38,53 +42,55 @@ export class PDFService {
    * Generate a one-page adaptive resume
    *
    * Algorithm:
-   * 1. Measure content at 1.0 scale
-   * 2. If fits: try to expand slightly for better spacing (up to 1.15)
-   * 3. If overflows: iteratively compress until it fits
-   * 4. Render with calculated scale factor
+   * 1. Analyze content to determine optimal density
+   * 2. Get scaled design system for that density
+   * 3. Create PDF with scaled margins
+   * 4. Render with density-aware templates
    *
-   * All sizing (margins, fonts, spacing) scales proportionally
+   * All sizing (margins, fonts, spacing) scales based on density level
    */
   generateResumePDF(
     resume: GeneratedResume,
     template: string = "modern",
+    userDensityOverride?: DensityLevel,
   ): Promise<Buffer> {
     const chunks: Buffer[] = [];
-
-    const pageHeight = UnifiedDesignSystem.page.height;
-    const baseMargin = UnifiedDesignSystem.margins.page;
 
     // Safe template fallback
     const selectedTemplate = this.renderers[template] ? template : "modern";
 
-    // Step 1: Measure content at normal scale and calculate optimal scale
-    const scale = this.calculateOptimalScale(
-      resume,
-      selectedTemplate,
-      baseMargin,
+    // Step 1: Analyze content and detect optimal density
+    const contentAnalysis = this.analyzeResumeContent(resume);
+    const density = userDensityOverride || contentAnalysis.recommendedDensity;
+
+    logger.debug(
+      `PDF Density: ${density} (words: ${contentAnalysis.wordCount})`,
     );
 
-    // Create PDF with A4 size
+    // Step 2: Get scaled design system for this density
+    const scaledDS = contentDensityEngine.getScaledDesignSystem(density);
+
+    // Step 3: Create PDF with scaled margins
     const doc = new PDFDocument({
       size: "A4",
       margins: {
-        top: baseMargin,
-        left: baseMargin,
-        bottom: baseMargin,
-        right: baseMargin,
+        top: scaledDS.margins.pageTop,
+        left: scaledDS.margins.pageLeft,
+        bottom: scaledDS.margins.pageBottom,
+        right: scaledDS.margins.pageRight,
       },
     });
 
     // Collect PDF chunks
     doc.on("data", (chunk) => chunks.push(chunk));
 
-    // Attach scale factor to doc for templates to use
-    (doc as any).__scale = scale;
-    (doc as any).__baseMargin = baseMargin;
+    // Attach density info for templates to use
+    (doc as any).__density = density;
+    (doc as any).__scaledDesignSystem = scaledDS;
 
-    // Route to appropriate renderer with scale factor
+    // Step 4: Route to appropriate renderer with density
     const renderer = this.renderers[selectedTemplate];
-    renderer.render(doc, resume, scale, scale); // Both fontScale and spacingScale = scale
+    renderer.renderWithDensity(doc, resume, density);
 
     // Finalize PDF and return buffer via Promise
     return new Promise<Buffer>((resolve, reject) => {
@@ -95,138 +101,126 @@ export class PDFService {
   }
 
   /**
-   * Calculate optimal scale for content
+   * Analyze resume content to determine density
    *
-   * Smart algorithm:
-   * 1. Measure at 1.0 scale
-   * 2. If overflows: compress iteratively until fits
-   * 3. If underflows significantly: expand slightly for better spacing
-   * 4. Return scale that ensures exactly one page, optimal spacing
+   * Counts words, sections, and optional sections
+   * Uses ContentDensityEngine to recommend density level
    */
-  private calculateOptimalScale(
-    resume: GeneratedResume,
-    template: string,
-    baseMargin: number,
-  ): number {
-    const pageHeight = UnifiedDesignSystem.page.height;
+  private analyzeResumeContent(resume: GeneratedResume): any {
+    // Count total words
+    let wordCount = 0;
 
-    // Initial measurement at normal scale
-    let { totalHeight, pages } = this.measureContentHeight(
-      resume,
-      template,
-      baseMargin,
-      1.0,
-    );
+    // Count contact info words
+    if (resume.contactInfo?.name)
+      wordCount += resume.contactInfo.name.split(/\s+/).length;
+    if (resume.contactInfo?.email) wordCount += 1;
+    if (resume.contactInfo?.phone) wordCount += 1;
+    if (resume.contactInfo?.location)
+      wordCount += resume.contactInfo.location.split(/\s+/).length;
 
-    const availableHeight = pageHeight - baseMargin * 2;
+    // Count summary
+    if (resume.summary) {
+      wordCount += resume.summary.split(/\s+/).length;
+    }
 
-    // Perfect fit or better
-    if (pages === 1 && totalHeight <= availableHeight) {
-      // Check if we can expand slightly for better spacing distribution
-      const usageRatio = totalHeight / availableHeight;
-
-      if (usageRatio < 0.85) {
-        // Underutilized, try to expand (up to 1.15)
-        const targetScale = Math.min(
-          1.15,
-          1 + (0.92 - usageRatio) * 0.25, // Gradual expansion
-        );
-
-        const expandCheck = this.measureContentHeight(
-          resume,
-          template,
-          baseMargin,
-          targetScale,
-        );
-
-        // If expansion keeps us on one page, use it
-        if (expandCheck.pages === 1) {
-          const expandedHeight = expandCheck.totalHeight;
-          if (expandedHeight <= availableHeight) {
-            return targetScale;
-          }
+    // Count experiences
+    if (resume.experiences) {
+      resume.experiences.forEach((exp) => {
+        if (exp.company) wordCount += exp.company.split(/\s+/).length;
+        if (exp.role) wordCount += exp.role.split(/\s+/).length;
+        if (exp.location) wordCount += exp.location.split(/\s+/).length;
+        if (exp.bullets) {
+          exp.bullets.forEach((bullet) => {
+            wordCount += bullet.split(/\s+/).length;
+          });
         }
-      }
-
-      // Current scale is good
-      return 1.0;
+      });
     }
 
-    // Overflow: compress iteratively
-    let scale = 1.0;
-    const maxIterations = 7;
-
-    for (let i = 0; i < maxIterations; i++) {
-      // Calculate compression ratio needed
-      const compressionRatio = availableHeight / totalHeight;
-      scale = Math.max(0.65, scale * compressionRatio * 0.97); // 0.97 = 3% safety buffer
-
-      const check = this.measureContentHeight(
-        resume,
-        template,
-        baseMargin,
-        scale,
-      );
-
-      // Success: fits on one page
-      if (check.pages === 1 && check.totalHeight <= availableHeight) {
-        return scale;
-      }
-
-      totalHeight = check.totalHeight;
+    // Count education
+    if (resume.education) {
+      resume.education.forEach((edu) => {
+        if (edu.institution) wordCount += edu.institution.split(/\s+/).length;
+        if (edu.degree) wordCount += edu.degree.split(/\s+/).length;
+        if (edu.field) wordCount += edu.field.split(/\s+/).length;
+      });
     }
 
-    // Fallback (should rarely reach this)
-    return 0.65;
-  }
+    // Count skills
+    if (resume.skills && Array.isArray(resume.skills)) {
+      wordCount += resume.skills.length;
+    }
 
-  /**
-   * Measure actual rendered content height
-   *
-   * Creates a dry-run PDF to accurately measure what will be rendered
-   * Uses dynamic sizing engine to apply scaled margins/fonts
-   */
-  private measureContentHeight(
-    resume: GeneratedResume,
-    template: string,
-    baseMargin: number,
-    scale: number,
-  ): { totalHeight: number; pages: number } {
-    let pageCount = 1;
+    // Count projects
+    if (resume.projects) {
+      resume.projects.forEach((proj) => {
+        if (proj.name) wordCount += proj.name.split(/\s+/).length;
+        if (proj.description) wordCount += proj.description.split(/\s+/).length;
+      });
+    }
 
-    const measureDoc = new PDFDocument({
-      size: "A4",
-      margins: {
-        top: baseMargin,
-        left: baseMargin,
-        bottom: baseMargin,
-        right: baseMargin,
-      },
+    // Count certifications
+    if (resume.certifications) {
+      resume.certifications.forEach((cert) => {
+        if (cert.name) wordCount += cert.name.split(/\s+/).length;
+        if (cert.issuer) wordCount += cert.issuer.split(/\s+/).length;
+      });
+    }
+
+    // Count optional sections
+    if (resume.coursework) {
+      resume.coursework.forEach((course) => {
+        if (course.courseName)
+          wordCount += course.courseName.split(/\s+/).length;
+        if (course.topic) wordCount += course.topic.split(/\s+/).length;
+      });
+    }
+
+    if (resume.leadership) {
+      resume.leadership.forEach((role) => {
+        if (role.title) wordCount += role.title.split(/\s+/).length;
+        if (role.organization)
+          wordCount += role.organization.split(/\s+/).length;
+        if (role.description) wordCount += role.description.split(/\s+/).length;
+      });
+    }
+
+    if (resume.awards) {
+      resume.awards.forEach((award) => {
+        if (award.awardName) wordCount += award.awardName.split(/\s+/).length;
+        if (award.organization)
+          wordCount += award.organization.split(/\s+/).length;
+        if (award.description)
+          wordCount += award.description.split(/\s+/).length;
+      });
+    }
+
+    // Count sections
+    let sectionCount = 0;
+    if (resume.summary) sectionCount++;
+    if (resume.experiences?.length) sectionCount++;
+    if (resume.education?.length) sectionCount++;
+    if (resume.skills?.length) sectionCount++;
+    if (resume.projects?.length) sectionCount++;
+    if (resume.certifications?.length) sectionCount++;
+    if (resume.coursework?.length) sectionCount++;
+    if (resume.leadership?.length) sectionCount++;
+    if (resume.awards?.length) sectionCount++;
+
+    // Check for optional sections
+    const hasOptionalSections =
+      (resume.coursework?.length || 0) > 0 ||
+      (resume.leadership?.length || 0) > 0 ||
+      (resume.awards?.length || 0) > 0;
+
+    // Analyze using density engine
+    const analysis = contentDensityEngine.analyzeContentVolume({
+      wordCount,
+      sectionCount,
+      hasOptionalSections,
     });
 
-    measureDoc.on("pageAdded", () => {
-      pageCount += 1;
-    });
-
-    // Ignore data events (dry run)
-    measureDoc.on("data", () => null);
-
-    // Attach scale for templates to use
-    (measureDoc as any).__scale = scale;
-    (measureDoc as any).__baseMargin = baseMargin;
-
-    // Render to measure
-    const renderer = this.renderers[template];
-    renderer.render(measureDoc, resume, scale, scale);
-
-    const pageHeight = UnifiedDesignSystem.page.height;
-    const usableHeight = pageHeight - baseMargin * 2;
-    const lastPageY = Math.max(0, measureDoc.y - baseMargin);
-    const totalHeight = (pageCount - 1) * usableHeight + lastPageY;
-
-    measureDoc.end();
-
-    return { totalHeight, pages: pageCount };
+    return analysis;
   }
 }
 

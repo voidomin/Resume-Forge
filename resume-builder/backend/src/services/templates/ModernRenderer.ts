@@ -4,6 +4,9 @@ import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
 import {
   UnifiedDesignSystem,
   dynamicSizingEngine,
+  contentDensityEngine,
+  DensityLevel,
+  ScaledDesignSystem,
 } from "../../../../shared/design-system";
 
 export class ModernRenderer extends BaseTemplateRenderer {
@@ -124,6 +127,156 @@ export class ModernRenderer extends BaseTemplateRenderer {
 
     // Awards - after other achievements
     if (resume.awards?.length) {
+      this.drawModernHeader(doc, "HONORS & AWARDS", ds);
+      resume.awards.forEach((award) => {
+        this.renderAwardModern(doc, award, fontBold, fontRegular, ds);
+      });
+    }
+  }
+
+  /**
+   * Render with density-aware section visibility and scaling
+   */
+  renderWithDensity(
+    doc: PDFKit.PDFDocument,
+    resume: GeneratedResume,
+    density: DensityLevel,
+  ): void {
+    // Get scaled design system for this density
+    const ds: ScaledDesignSystem =
+      contentDensityEngine.getScaledDesignSystem(density);
+    const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
+    const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
+    const scaledMargin = ds.margins.pageLeft;
+
+    // Apply scaled margins to document
+    doc.page.margins = {
+      top: ds.margins.pageTop,
+      bottom: ds.margins.pageBottom,
+      left: ds.margins.pageLeft,
+      right: ds.margins.pageRight,
+    };
+
+    // Header - Name
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.h1)
+      .fillColor(UnifiedDesignSystem.colors.primary)
+      .text(resume.contactInfo.name.toUpperCase(), { align: "center" });
+
+    // Small spacing after name
+    this.moveDownPoints(doc, ds.spacing.tight);
+
+    // Contact Line
+    this.renderContactLine(
+      doc,
+      resume,
+      fontRegular,
+      ds.fontSize.contact,
+      false,
+    );
+
+    // Spacing after contact
+    this.moveDownPoints(doc, ds.spacing.element);
+
+    // Professional Summary
+    if (resume.summary) {
+      this.drawModernHeader(doc, "PROFESSIONAL SUMMARY", ds);
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(resume.summary, {
+          align: "justify",
+          lineGap: 2,
+        });
+    }
+
+    if (resume.experiences?.length) {
+      this.drawModernHeader(doc, "WORK EXPERIENCE", ds);
+      resume.experiences.forEach((exp) => {
+        this.renderExperienceModern(doc, exp, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.element);
+      });
+    }
+
+    if (resume.projects?.length) {
+      this.drawModernHeader(doc, "PROJECTS", ds);
+      resume.projects.forEach((proj) => {
+        this.renderProjectModern(doc, proj, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.element);
+      });
+    }
+
+    if (resume.education?.length) {
+      this.drawModernHeader(doc, "EDUCATION", ds);
+      resume.education.forEach((edu) => {
+        this.renderEducationModern(doc, edu, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.tight);
+      });
+    }
+
+    if (resume.skills?.length) {
+      this.drawModernHeader(doc, "SKILLS", ds);
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(resume.skills.join("  •  "), {
+          align: "left",
+          lineGap: 2,
+        });
+    }
+
+    // Optional Sections - Only show if visible at this density
+    if (
+      resume.certifications?.length &&
+      contentDensityEngine.isSectionVisible(density, "certifications")
+    ) {
+      this.drawModernHeader(doc, "CERTIFICATIONS", ds);
+      resume.certifications.forEach((cert) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(cert.name, { continued: true });
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(` | ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
+        this.moveDownPoints(doc, ds.spacing.tight);
+      });
+    }
+
+    // Coursework - only if visible at this density
+    if (
+      resume.coursework?.length &&
+      contentDensityEngine.isSectionVisible(density, "coursework")
+    ) {
+      this.drawModernHeader(doc, "RELEVANT COURSEWORK", ds);
+      resume.coursework.forEach((course) => {
+        this.renderCourseworkModern(doc, course, fontBold, fontRegular, ds);
+      });
+    }
+
+    // Leadership - only if visible at this density
+    if (
+      resume.leadership?.length &&
+      contentDensityEngine.isSectionVisible(density, "leadership")
+    ) {
+      this.drawModernHeader(doc, "LEADERSHIP & EXTRACURRICULAR", ds);
+      resume.leadership.forEach((role) => {
+        this.renderLeadershipModern(doc, role, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.tight);
+      });
+    }
+
+    // Awards - only if visible at this density
+    if (
+      resume.awards?.length &&
+      contentDensityEngine.isSectionVisible(density, "awards")
+    ) {
       this.drawModernHeader(doc, "HONORS & AWARDS", ds);
       resume.awards.forEach((award) => {
         this.renderAwardModern(doc, award, fontBold, fontRegular, ds);
