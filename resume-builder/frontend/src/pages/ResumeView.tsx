@@ -63,6 +63,24 @@ interface GeneratedResume {
   modelUsed?: string;
   generationMethod?: "ai" | "fallback";
   failureReason?: string;
+  coursework?: {
+    courseName: string;
+    topic: string;
+    institution?: string;
+  }[];
+  leadership?: {
+    title: string;
+    organization: string;
+    location?: string;
+    dateRange?: string;
+    description?: string;
+  }[];
+  awards?: {
+    awardName: string;
+    organization: string;
+    awardDate?: string;
+    description?: string;
+  }[];
 }
 
 interface Resume {
