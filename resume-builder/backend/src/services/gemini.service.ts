@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { config } from "dotenv";
 import path from "path";
 import { logger } from "../lib/logger";
+import { contentDensityEngine } from "../../../shared/design-system";
 
 config({ path: path.resolve(__dirname, "../../.env") });
 
@@ -274,6 +275,158 @@ Return this exact JSON structure:
     };
   }
 
+  private countWords(value?: string): number {
+    if (!value) return 0;
+    return value.trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  private estimateContentVolume(profile: ProfileData): {
+    wordCount: number;
+    sectionCount: number;
+    hasOptionalSections: boolean;
+  } {
+    let wordCount = 0;
+    let sectionCount = 0;
+
+    if (profile.summary) {
+      wordCount += this.countWords(profile.summary);
+      sectionCount += 1;
+    }
+
+    if (profile.experiences?.length) {
+      sectionCount += 1;
+      profile.experiences.forEach((exp) => {
+        wordCount += this.countWords(exp.company);
+        wordCount += this.countWords(exp.role);
+        wordCount += this.countWords(exp.location);
+        wordCount += this.countWords(exp.startDate);
+        wordCount += this.countWords(exp.endDate);
+        exp.bullets?.forEach((bullet) => {
+          wordCount += this.countWords(bullet);
+        });
+      });
+    }
+
+    if (profile.projects?.length) {
+      sectionCount += 1;
+      profile.projects.forEach((proj) => {
+        wordCount += this.countWords(proj.name);
+        wordCount += this.countWords(proj.description);
+        wordCount += this.countWords(proj.technologies);
+      });
+    }
+
+    if (profile.education?.length) {
+      sectionCount += 1;
+      profile.education.forEach((edu) => {
+        wordCount += this.countWords(edu.institution);
+        wordCount += this.countWords(edu.degree);
+        wordCount += this.countWords(edu.field);
+        wordCount += this.countWords(edu.location);
+        wordCount += this.countWords(edu.endDate);
+        wordCount += this.countWords(edu.gpa);
+      });
+    }
+
+    if (profile.skills?.length) {
+      sectionCount += 1;
+      profile.skills.forEach((skill) => {
+        wordCount += this.countWords(skill.name);
+      });
+    }
+
+    if (profile.certifications?.length) {
+      sectionCount += 1;
+      profile.certifications.forEach((cert) => {
+        wordCount += this.countWords(cert.name);
+        wordCount += this.countWords(cert.issuer);
+        wordCount += this.countWords(cert.date);
+      });
+    }
+
+    if (profile.coursework?.length) {
+      sectionCount += 1;
+      profile.coursework.forEach((cw) => {
+        wordCount += this.countWords(cw.courseName);
+        wordCount += this.countWords(cw.topic);
+        wordCount += this.countWords(cw.institution);
+      });
+    }
+
+    if (profile.leadership?.length) {
+      sectionCount += 1;
+      profile.leadership.forEach((lead) => {
+        wordCount += this.countWords(lead.title);
+        wordCount += this.countWords(lead.organization);
+        wordCount += this.countWords(lead.location);
+        wordCount += this.countWords(lead.description);
+      });
+    }
+
+    if (profile.awards?.length) {
+      sectionCount += 1;
+      profile.awards.forEach((award) => {
+        wordCount += this.countWords(award.awardName);
+        wordCount += this.countWords(award.organization);
+        wordCount += this.countWords(award.awardDate);
+        wordCount += this.countWords(award.description);
+      });
+    }
+
+    const hasOptionalSections = Boolean(
+      profile.certifications?.length ||
+      profile.coursework?.length ||
+      profile.leadership?.length ||
+      profile.awards?.length,
+    );
+
+    return {
+      wordCount,
+      sectionCount,
+      hasOptionalSections,
+    };
+  }
+
+  private getDynamicBulletBudget(estimatedLines: number): {
+    summarySentencesMax: number;
+    experienceBulletsMax: number;
+    projectBulletsMax: number;
+    projectsMax: number;
+    totalBulletMin: number;
+    totalBulletMax: number;
+  } {
+    if (estimatedLines <= 30) {
+      return {
+        summarySentencesMax: 4,
+        experienceBulletsMax: 4,
+        projectBulletsMax: 4,
+        projectsMax: 3,
+        totalBulletMin: 18,
+        totalBulletMax: 24,
+      };
+    }
+
+    if (estimatedLines <= 42) {
+      return {
+        summarySentencesMax: 3,
+        experienceBulletsMax: 3,
+        projectBulletsMax: 3,
+        projectsMax: 3,
+        totalBulletMin: 15,
+        totalBulletMax: 20,
+      };
+    }
+
+    return {
+      summarySentencesMax: 3,
+      experienceBulletsMax: 2,
+      projectBulletsMax: 2,
+      projectsMax: 2,
+      totalBulletMin: 12,
+      totalBulletMax: 16,
+    };
+  }
+
   /**
    * Generate an ATS-optimized resume tailored to the job description
    */
@@ -282,6 +435,12 @@ Return this exact JSON structure:
     jobDescription: string,
   ): Promise<GeneratedResume> {
     const jobAnalysis = await this.analyzeJobDescription(jobDescription);
+    const contentEstimate = this.estimateContentVolume(profile);
+    const contentAnalysis =
+      contentDensityEngine.analyzeContentVolume(contentEstimate);
+    const bulletBudget = this.getDynamicBulletBudget(
+      contentAnalysis.estimatedLines,
+    );
 
     const prompt = `You are an expert resume writer. Create an ATS-optimized, one-page resume tailored to this job.
 
@@ -416,19 +575,26 @@ You MUST analyze the job description and SELECT ONLY the items that are MOST REL
 DO NOT simply take the first N items from each list. ANALYZE each item for relevance to the job requirements and select accordingly.
 
 **CRITICAL - SINGLE PAGE ENFORCEMENT:**
-1. **CONTENT VOLUME**: If the candidate has many experiences, you MUST SELECT the 3 MOST RELEVANT ones based on the job requirements and use NO MORE THAN 3 bullets per role to ensure it fits on one page.
-2. **PROFESSIONAL SUMMARY**: Max 3 sentences. Tailor to emphasize skills and experience that match the job description.
+1. **CONTENT VOLUME**: Select only the most relevant experiences and projects based on the job requirements. Use the dynamic bullet budget below to fit exactly one page.
+2. **PROFESSIONAL SUMMARY**: Max ${bulletBudget.summarySentencesMax} sentences. Tailor to emphasize skills and experience that match the job description.
 3. **WORK EXPERIENCE**: 
    - SELECT the most relevant work experiences that demonstrate the required skills
    - Each bullet must be 1 line if possible. Use the **XYZ Formula**.
    - Incorporate these keywords: ${jobAnalysis.keywords.slice(0, 5).join(", ")}.
 4. **SKILLS**: SELECT and group ONLY the skills most relevant to the job description. Prioritize required skills from the JD: ${jobAnalysis.requiredSkills.slice(0, 10).join(", ")}. Group into max 5 categories with 4-5 skills each.
-5. **PROJECTS**: SELECT the 2 MOST RELEVANT projects that best demonstrate the required skills and technologies mentioned in the job description. Include 2 bullets each highlighting achievements with metrics.
+5. **PROJECTS**: SELECT the ${bulletBudget.projectsMax} MOST RELEVANT projects that best demonstrate the required skills and technologies mentioned in the job description. Include 2-${bulletBudget.projectBulletsMax} bullets each highlighting achievements with metrics.
 6. **EDUCATION**: Concise 1-line per degree. Include ALL degrees.
 7. **CERTIFICATIONS**: If the candidate has certifications, include ONLY those directly relevant to the job description (max 3). Certifications that demonstrate required skills or industry knowledge should be prioritized.
 
+**DYNAMIC CONTENT TARGETS (BASED ON AVAILABLE SPACE):**
+- Experience bullets per role: 2-${bulletBudget.experienceBulletsMax}
+- Projects to include: up to ${bulletBudget.projectsMax}
+- Project bullets per project: 2-${bulletBudget.projectBulletsMax}
+- Total bullets across all sections: ${bulletBudget.totalBulletMin}-${bulletBudget.totalBulletMax}
+- If content is short, expand bullets with concrete outcomes from the provided profile. Do NOT invent facts.
+
 **PAGE FIT HEURISTIC:**
-- Total bullet points across all sections should not exceed 15-18 to guarantee layout stability on a single A4 page.
+- Total bullet points across all sections should be ${bulletBudget.totalBulletMin}-${bulletBudget.totalBulletMax} to guarantee layout stability on a single A4 page.
 - Do NOT hallucinate content to "fill space" unless the candidate has almost no history. Prioritize white space over overflow.
 
 **OPTIONAL SECTIONS INCLUSION LOGIC (IMPORTANT):**
@@ -498,7 +664,11 @@ Return ONLY valid JSON with this structure:
       "role": "Job Title",
       "location": "City, State",
       "dateRange": "Month Year - Month Year",
-      "bullets": ["Rewritten tailored bullet 1", "Rewritten tailored bullet 2"]
+      "bullets": [
+        "Rewritten tailored bullet 1",
+        "Rewritten tailored bullet 2",
+        "Rewritten tailored bullet 3"
+      ]
     }
   ],
   "education": [

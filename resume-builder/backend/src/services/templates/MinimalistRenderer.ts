@@ -87,7 +87,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
           lineGap: ds.spacing.minimal,
         });
       // Adjusted spacing after section
-      const summaryMultiplier = this.getSectionSpacingAdjustment(doc, "summary", resume.summary);
+      const summaryMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "summary",
+        resume.summary,
+      );
       this.moveDownAdjusted(doc, ds.spacing.section, "summary", resume.summary);
     }
 
@@ -127,7 +131,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         doc.y += ds.spacing.element;
       });
       // Adjusted spacing after section
-      const expMultiplier = this.getSectionSpacingAdjustment(doc, "experiences", resume.experiences);
+      const expMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "experiences",
+        resume.experiences,
+      );
       doc.y += ds.spacing.section * expMultiplier;
     }
 
@@ -188,7 +196,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         doc.y += ds.spacing.element;
       });
       // Adjusted spacing after section
-      const projMultiplier = this.getSectionSpacingAdjustment(doc, "projects", resume.projects);
+      const projMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "projects",
+        resume.projects,
+      );
       doc.y += ds.spacing.section * projMultiplier;
     }
 
@@ -222,7 +234,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         doc.y += ds.spacing.element;
       });
       // Adjusted spacing after section
-      const eduMultiplier = this.getSectionSpacingAdjustment(doc, "education", resume.education);
+      const eduMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "education",
+        resume.education,
+      );
       doc.y += ds.spacing.section * eduMultiplier;
     }
 
@@ -237,7 +253,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
           lineGap: ds.spacing.minimal,
         });
       // Adjusted spacing after section
-      const skillsMultiplier = this.getSectionSpacingAdjustment(doc, "skills", resume.skills);
+      const skillsMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "skills",
+        resume.skills,
+      );
       doc.y += ds.spacing.section * skillsMultiplier;
     }
 
@@ -259,7 +279,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
           .text(` — ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
       });
       // Adjusted spacing after section
-      const certMultiplier = this.getSectionSpacingAdjustment(doc, "certifications", resume.certifications);
+      const certMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "certifications",
+        resume.certifications,
+      );
       doc.y += ds.spacing.section * certMultiplier;
     }
 
@@ -284,7 +308,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
           );
       });
       // Adjusted spacing after section
-      const courseMultiplier = this.getSectionSpacingAdjustment(doc, "coursework", resume.coursework);
+      const courseMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "coursework",
+        resume.coursework,
+      );
       doc.y += ds.spacing.section * courseMultiplier;
     }
 
@@ -312,7 +340,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         }
       });
       // Adjusted spacing after section
-      const leadMultiplier = this.getSectionSpacingAdjustment(doc, "leadership", resume.leadership);
+      const leadMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "leadership",
+        resume.leadership,
+      );
       doc.y += ds.spacing.section * leadMultiplier;
     }
 
@@ -345,7 +377,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         }
       });
       // Adjusted spacing after section
-      const awardMultiplier = this.getSectionSpacingAdjustment(doc, "awards", resume.awards);
+      const awardMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "awards",
+        resume.awards,
+      );
       doc.y += ds.spacing.section * awardMultiplier;
     }
   }
