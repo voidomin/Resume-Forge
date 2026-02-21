@@ -15,4 +15,8 @@ module.exports = {
     },
   },
   setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
+  // Configure ts-jest for test files to include Jest types
+  transform: {
+    "^.+\\.ts$": ["ts-jest", { tsconfig: { types: ["jest", "node"] } }],
+  },
 };
