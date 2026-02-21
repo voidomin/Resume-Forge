@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Added
+
 - Tracking for user feedback and bug reports from v1.0.0 deployment
 - Comprehensive testing guides (TESTING_GUIDE.md, TESTING_SUMMARY.md)
 - Unified design system (`resume-builder/shared/design-system.ts`)
@@ -41,6 +47,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Applied fix to all 4 templates: Modern, Standard, Executive, Minimalist
 
 ### Security
+
+---
+
+## [1.1.0] - 2026-02-21
+
+### Added
+
+- Content density engine with normal/compact/ultra-compact levels
+- Bidirectional fit scaling to expand short resumes and compress long ones
+- Content-aware section spacing to reduce white gaps in sparse sections
+- Dynamic Gemini prompt bullet budgets based on content volume
+
+### Changed
+
+- PDF templates now use fitted design system scaling from content analysis
+- Resume preview scaling allows gentle expansion for short content
+
+### Fixed
+
+- Excessive whitespace for short sections like education and skills
+- Over-compression that reduced readability on short resumes
 
 ---
 
@@ -155,6 +182,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/voidomin/Resume-Forge/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/voidomin/Resume-Forge/compare/v1.1.0...HEAD
 [1.0.0]: https://github.com/voidomin/Resume-Forge/releases/tag/v1.0.0
-[1.1.0]: https://github.com/voidomin/Resume-Forge/compare/v1.0.0...develop
+[1.1.0]: https://github.com/voidomin/Resume-Forge/compare/v1.0.0...v1.1.0

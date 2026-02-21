@@ -1,9 +1,9 @@
-# SmartResume Builder - v1.0 Release Checklist
+# SmartResume Builder - v1.1 Release Checklist
 
 ## Release Information
 
-- **Version**: 1.0.0
-- **Release Date**: 2024-02-10
+- **Version**: 1.1.0
+- **Release Date**: 2026-02-21
 - **Status**: Ready for Release
 
 ---
@@ -153,23 +153,18 @@
 
 ## 📝 Release Notes
 
-### What's New in v1.0
+### What's New in v1.1
 
-- Complete ATS-optimized resume builder
-- AI-powered resume tailoring with Gemini 3 Flash
-- Multi-template support with consistent styling
-- PDF and DOCX export with exact formatting
-- Real-time ATS scoring and keyword analysis
-- Graceful AI fallback for reliability
-- Comprehensive E2E test coverage
-- Production-ready deployment configuration
+- Content density engine with auto scaling for one-page fit
+- Bidirectional fit scaling for short and long resumes
+- Content-aware section spacing to reduce white gaps
+- Dynamic Gemini prompt bullet budgets
+- Improved PDF/preview consistency for short content
 
 ### Bug Fixes
 
-- Fixed template literal escaping in DOCX bullet points
-- Fixed A4 page scaling on various screen sizes
-- Fixed spacing consistency across all templates
-- Fixed DOCX formatting when opened in Google Docs
+- Fixed excessive whitespace for sparse sections (education/skills)
+- Fixed over-compression when resume content is short
 
 ### API Changes (from earlier versions)
 
@@ -192,7 +187,7 @@
 
 ---
 
-## 🎯 Post-Release Tasks (v1.1 Planning)
+## 🎯 Post-Release Tasks (v1.2 Planning)
 
 - [x] Add unit tests for backend
 - [x] Implement API rate limiting

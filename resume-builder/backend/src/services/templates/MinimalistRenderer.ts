@@ -87,11 +87,6 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
           lineGap: ds.spacing.minimal,
         });
       // Adjusted spacing after section
-      const summaryMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "summary",
-        resume.summary,
-      );
       this.moveDownAdjusted(doc, ds.spacing.section, "summary", resume.summary);
     }
 
