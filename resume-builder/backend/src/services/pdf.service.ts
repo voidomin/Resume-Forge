@@ -5,10 +5,27 @@ import { ModernRenderer } from "./templates/ModernRenderer";
 import { ExecutiveRenderer } from "./templates/ExecutiveRenderer";
 import { MinimalistRenderer } from "./templates/MinimalistRenderer";
 import { TemplateRenderer } from "./templates/TemplateRenderer.interface";
+import {
+  UnifiedDesignSystem,
+  contentDensityEngine,
+  DensityLevel,
+  ScaledDesignSystem,
+} from "../../../shared/design-system";
+import { logger } from "../lib/logger";
 
 // Re-export type if needed
 export type { TemplateType } from "./pdf.service.types";
 
+/**
+ * Enhanced PDF Service with Content Density Engine
+ *
+ * Principles:
+ * - Content determines density level (NORMAL, COMPACT, ULTRA_COMPACT)
+ * - Auto-detect based on word count and section count
+ * - Apply proportional scaling to margins, fonts, spacing
+ * - Minimize optional sections when space is tight
+ * - Always fits on one page, no overflow, optimal white space
+ */
 export class PDFService {
   private renderers: Record<string, TemplateRenderer>;
 
@@ -22,45 +39,61 @@ export class PDFService {
   }
 
   /**
-   * Generate a one-page ATS-friendly PDF resume with selected template
+   * Generate a one-page adaptive resume
+   *
+   * Algorithm:
+   * 1. Analyze content to determine optimal density
+   * 2. Get scaled design system for that density
+   * 3. Create PDF with scaled margins
+   * 4. Render with density-aware templates
+   *
+   * All sizing (margins, fonts, spacing) scales based on density level
    */
   generateResumePDF(
     resume: GeneratedResume,
     template: string = "modern",
+    userDensityOverride?: DensityLevel,
   ): Promise<Buffer> {
     const chunks: Buffer[] = [];
-
-    const pageMargins = {
-      top: 36,
-      bottom: 36,
-      left: 36,
-      right: 36,
-    };
 
     // Safe template fallback
     const selectedTemplate = this.renderers[template] ? template : "modern";
 
-    // Measure content height to determine if scaling is needed
-    const scale = this.calculateScaleForContent(
-      resume,
-      selectedTemplate,
-      pageMargins,
+    // Step 1: Analyze content and detect optimal density
+    const contentAnalysis = this.analyzeResumeContent(resume);
+    const density = userDensityOverride || contentAnalysis.recommendedDensity;
+
+    logger.debug(
+      `PDF Density: ${density} (words: ${contentAnalysis.wordCount})`,
     );
 
-    // Create PDF with A4 size
+    // Step 2: Get scaled design system for this density
+    const scaledDS = contentDensityEngine.getFittedDesignSystem(
+      density,
+      contentAnalysis,
+    );
+
+    // Step 3: Create PDF with scaled margins
     const doc = new PDFDocument({
       size: "A4",
-      margins: pageMargins,
+      margins: {
+        top: scaledDS.margins.pageTop,
+        left: scaledDS.margins.pageLeft,
+        bottom: scaledDS.margins.pageBottom,
+        right: scaledDS.margins.pageRight,
+      },
     });
 
     // Collect PDF chunks
     doc.on("data", (chunk) => chunks.push(chunk));
 
-    // Store scale on document for logic that relies on it (legacy or smart renderers)
-    (doc as any).__fontScale = scale;
+    // Attach density info for templates to use
+    (doc as any).__density = density;
+    (doc as any).__scaledDesignSystem = scaledDS;
 
-    // Route to appropriate renderer
-    this.renderTemplate(doc, resume, selectedTemplate, scale);
+    // Step 4: Route to appropriate renderer with density
+    const renderer = this.renderers[selectedTemplate];
+    renderer.renderWithDensity(doc, resume, density);
 
     // Finalize PDF and return buffer via Promise
     return new Promise<Buffer>((resolve, reject) => {
@@ -70,120 +103,127 @@ export class PDFService {
     });
   }
 
-  private calculateScaleForContent(
-    resume: GeneratedResume,
-    template: string,
-    margins: { top: number; bottom: number; left: number; right: number },
-  ): number {
-    const pageHeight = 842 - margins.top - margins.bottom;
-    const minScale = 0.65; // Allow more shrinkage to force fit
-    const maxScale = 1.15; // Don't expand too much (looks comedic)
+  /**
+   * Analyze resume content to determine density
+   *
+   * Counts words, sections, and optional sections
+   * Uses ContentDensityEngine to recommend density level
+   */
+  private analyzeResumeContent(resume: GeneratedResume): any {
+    // Count total words
+    let wordCount = 0;
 
-    // Initial measure with scale 1
-    let { totalHeight, pages } = this.measureContentHeight(
-      resume,
-      template,
-      margins,
-      1,
-    );
+    // Count contact info words
+    if (resume.contactInfo?.name)
+      wordCount += resume.contactInfo.name.split(/\s+/).length;
+    if (resume.contactInfo?.email) wordCount += 1;
+    if (resume.contactInfo?.phone) wordCount += 1;
+    if (resume.contactInfo?.location)
+      wordCount += resume.contactInfo.location.split(/\s+/).length;
 
-    // Case 1: Overflow (Need compression)
-    if (pages > 1 || totalHeight > pageHeight) {
-      let scale = 1;
-      // Attempt mitigation loop
-      for (let i = 0; i < 5; i++) {
-        const ratio = pageHeight / totalHeight;
-        scale = Math.max(minScale, scale * ratio * 0.98); // 0.98 buffer
-
-        const check = this.measureContentHeight(
-          resume,
-          template,
-          margins,
-          scale,
-        );
-        if (check.pages === 1 && check.totalHeight <= pageHeight) return scale;
-
-        totalHeight = check.totalHeight; // Update for next iteration
-      }
-      return minScale; // Fallback
+    // Count summary
+    if (resume.summary) {
+      wordCount += resume.summary.split(/\s+/).length;
     }
 
-    // Case 2: Underflow (Need expansion)
-    // If usage is less than 85% of page, try to expand
-    const usageRatio = totalHeight / pageHeight;
-    if (usageRatio < 0.85) {
-      // Target ~92% fill
-      const targetScale = Math.min(maxScale, 1 + (0.92 - usageRatio));
-
-      // Verify expansion doesn't cause overflow
-      const check = this.measureContentHeight(
-        resume,
-        template,
-        margins,
-        targetScale,
-      );
-      if (check.pages === 1) return targetScale;
-
-      // If overflowed, back off halfway
-      return (1 + targetScale) / 2;
+    // Count experiences
+    if (resume.experiences) {
+      resume.experiences.forEach((exp) => {
+        if (exp.company) wordCount += exp.company.split(/\s+/).length;
+        if (exp.role) wordCount += exp.role.split(/\s+/).length;
+        if (exp.location) wordCount += exp.location.split(/\s+/).length;
+        if (exp.bullets) {
+          exp.bullets.forEach((bullet) => {
+            wordCount += bullet.split(/\s+/).length;
+          });
+        }
+      });
     }
 
-    return 1; // Perfect fit already
-  }
+    // Count education
+    if (resume.education) {
+      resume.education.forEach((edu) => {
+        if (edu.institution) wordCount += edu.institution.split(/\s+/).length;
+        if (edu.degree) wordCount += edu.degree.split(/\s+/).length;
+        if (edu.field) wordCount += edu.field.split(/\s+/).length;
+      });
+    }
 
-  private measureContentHeight(
-    resume: GeneratedResume,
-    template: string,
-    margins: { top: number; bottom: number; left: number; right: number },
-    scale: number,
-  ): { totalHeight: number; pages: number } {
-    let pageCount = 1;
+    // Count skills
+    if (resume.skills && Array.isArray(resume.skills)) {
+      wordCount += resume.skills.length;
+    }
 
-    const measureDoc = new PDFDocument({
-      size: "A4",
-      margins,
+    // Count projects
+    if (resume.projects) {
+      resume.projects.forEach((proj) => {
+        if (proj.name) wordCount += proj.name.split(/\s+/).length;
+        if (proj.description) wordCount += proj.description.split(/\s+/).length;
+      });
+    }
+
+    // Count certifications
+    if (resume.certifications) {
+      resume.certifications.forEach((cert) => {
+        if (cert.name) wordCount += cert.name.split(/\s+/).length;
+        if (cert.issuer) wordCount += cert.issuer.split(/\s+/).length;
+      });
+    }
+
+    // Count optional sections
+    if (resume.coursework) {
+      resume.coursework.forEach((course) => {
+        if (course.courseName)
+          wordCount += course.courseName.split(/\s+/).length;
+        if (course.topic) wordCount += course.topic.split(/\s+/).length;
+      });
+    }
+
+    if (resume.leadership) {
+      resume.leadership.forEach((role) => {
+        if (role.title) wordCount += role.title.split(/\s+/).length;
+        if (role.organization)
+          wordCount += role.organization.split(/\s+/).length;
+        if (role.description) wordCount += role.description.split(/\s+/).length;
+      });
+    }
+
+    if (resume.awards) {
+      resume.awards.forEach((award) => {
+        if (award.awardName) wordCount += award.awardName.split(/\s+/).length;
+        if (award.organization)
+          wordCount += award.organization.split(/\s+/).length;
+        if (award.description)
+          wordCount += award.description.split(/\s+/).length;
+      });
+    }
+
+    // Count sections
+    let sectionCount = 0;
+    if (resume.summary) sectionCount++;
+    if (resume.experiences?.length) sectionCount++;
+    if (resume.education?.length) sectionCount++;
+    if (resume.skills?.length) sectionCount++;
+    if (resume.projects?.length) sectionCount++;
+    if (resume.certifications?.length) sectionCount++;
+    if (resume.coursework?.length) sectionCount++;
+    if (resume.leadership?.length) sectionCount++;
+    if (resume.awards?.length) sectionCount++;
+
+    // Check for optional sections
+    const hasOptionalSections =
+      (resume.coursework?.length || 0) > 0 ||
+      (resume.leadership?.length || 0) > 0 ||
+      (resume.awards?.length || 0) > 0;
+
+    // Analyze using density engine
+    const analysis = contentDensityEngine.analyzeContentVolume({
+      wordCount,
+      sectionCount,
+      hasOptionalSections,
     });
 
-    measureDoc.on("pageAdded", () => {
-      pageCount += 1;
-    });
-
-    measureDoc.on("data", () => null);
-
-    let fontScale = scale;
-    let spacingScale = scale;
-
-    if (template === "standard") {
-      if (scale < 1) {
-        spacingScale = scale * 0.9;
-        fontScale = Math.max(0.9, scale * 1.05);
-      }
-    }
-
-    // Inject for any legacy reading
-    (measureDoc as any).__fontScale = fontScale;
-    (measureDoc as any).__spacingScale = spacingScale;
-
-    this.renderTemplate(measureDoc, resume, template, fontScale, spacingScale);
-
-    const lastPageY = Math.max(0, measureDoc.y - margins.top);
-    const pageHeight = 842 - margins.top - margins.bottom;
-    const totalHeight = (pageCount - 1) * pageHeight + lastPageY;
-
-    measureDoc.end();
-
-    return { totalHeight, pages: pageCount };
-  }
-
-  private renderTemplate(
-    doc: PDFKit.PDFDocument,
-    resume: GeneratedResume,
-    template: string,
-    fontScale: number = 1,
-    spacingScale: number = 1,
-  ): void {
-    const renderer = this.renderers[template] || this.renderers["modern"];
-    renderer.render(doc, resume, fontScale, spacingScale);
+    return analysis;
   }
 }
 

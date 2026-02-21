@@ -49,9 +49,12 @@ async function resumeRoutes(server: FastifyInstance) {
           include: {
             experiences: { orderBy: { startDate: "desc" } },
             education: { orderBy: { endDate: "desc" } },
-            skills: true,
-            projects: true,
-            certifications: true,
+            skills: { orderBy: { createdAt: "desc" } },
+            projects: { orderBy: { createdAt: "desc" } },
+            certifications: { orderBy: { createdAt: "desc" } },
+            coursework: { orderBy: { createdAt: "desc" } },
+            leadership: { orderBy: { startDate: "desc" } },
+            awards: { orderBy: { awardDate: "desc" } },
           },
         });
 
@@ -104,6 +107,26 @@ async function resumeRoutes(server: FastifyInstance) {
             name: c.name,
             issuer: c.issuer,
             date: c.date || undefined,
+          })),
+          coursework: profile.coursework?.map((cw) => ({
+            courseName: cw.courseName,
+            topic: cw.topic,
+            institution: cw.institution || undefined,
+          })),
+          leadership: profile.leadership?.map((l) => ({
+            title: l.title,
+            organization: l.organization,
+            location: l.location || undefined,
+            startDate: l.startDate || undefined,
+            endDate: l.endDate || undefined,
+            current: l.current || false,
+            description: l.description || undefined,
+          })),
+          awards: profile.awards?.map((a) => ({
+            awardName: a.awardName,
+            organization: a.organization,
+            awardDate: a.awardDate,
+            description: a.description || undefined,
           })),
         };
 
@@ -242,13 +265,13 @@ async function resumeRoutes(server: FastifyInstance) {
     async (
       request: FastifyRequest<{
         Params: { id: string };
-        Querystring: { template?: string };
+        Querystring: { template?: string; density?: string };
       }>,
       reply: FastifyReply,
     ) => {
       try {
         const { id } = request.params;
-        const { template } = request.query;
+        const { template, density } = request.query;
 
         const resume = await prisma.resume.findUnique({ where: { id } });
 
@@ -259,14 +282,24 @@ async function resumeRoutes(server: FastifyInstance) {
         const content = JSON.parse(resume.generatedContent);
         // Cast template string to TemplateType, defaulting to 'modern' if invalid or missing
         const selectedTemplate = (
-          ["modern", "executive", "minimalist"].includes(template || "")
+          ["modern", "executive", "minimalist", "standard"].includes(
+            template || "",
+          )
             ? template
             : "modern"
+        ) as any;
+
+        // Validate and cast density parameter
+        const validatedDensity = (
+          ["normal", "compact", "ultra-compact"].includes(density || "")
+            ? density
+            : "normal"
         ) as any;
 
         const pdfBuffer = await pdfService.generateResumePDF(
           content,
           selectedTemplate,
+          validatedDensity,
         );
 
         const filename = `${content.contactInfo.name.replace(/\s+/g, "_")}_${selectedTemplate}_Resume.pdf`;
@@ -424,9 +457,12 @@ async function resumeRoutes(server: FastifyInstance) {
           include: {
             experiences: { orderBy: { startDate: "desc" } },
             education: { orderBy: { endDate: "desc" } },
-            skills: true,
-            projects: true,
-            certifications: true,
+            skills: { orderBy: { createdAt: "desc" } },
+            projects: { orderBy: { createdAt: "desc" } },
+            certifications: { orderBy: { createdAt: "desc" } },
+            coursework: { orderBy: { createdAt: "desc" } },
+            leadership: { orderBy: { startDate: "desc" } },
+            awards: { orderBy: { awardDate: "desc" } },
           },
         });
 
@@ -475,6 +511,26 @@ async function resumeRoutes(server: FastifyInstance) {
             issuer: c.issuer,
             date: c.date || undefined,
           })),
+          coursework: profile.coursework?.map((cw) => ({
+            courseName: cw.courseName,
+            topic: cw.topic,
+            institution: cw.institution || undefined,
+          })),
+          leadership: profile.leadership?.map((l) => ({
+            title: l.title,
+            organization: l.organization,
+            location: l.location || undefined,
+            startDate: l.startDate || undefined,
+            endDate: l.endDate || undefined,
+            current: l.current || false,
+            description: l.description || undefined,
+          })),
+          awards: profile.awards?.map((a) => ({
+            awardName: a.awardName,
+            organization: a.organization,
+            awardDate: a.awardDate,
+            description: a.description || undefined,
+          })),
         };
 
         const generatedResume = await geminiService.generateOptimizedResume(
@@ -482,11 +538,11 @@ async function resumeRoutes(server: FastifyInstance) {
           jd,
         );
 
-        // Update resume
+        // Update resume (preserve original jobDescription)
         await prisma.resume.update({
           where: { id },
           data: {
-            jobDescription: jd,
+            // Don't overwrite jobDescription - keep the original
             generatedContent: JSON.stringify(generatedResume),
             atsScore: generatedResume.atsScore,
           },

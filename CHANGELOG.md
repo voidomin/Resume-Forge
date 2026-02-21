@@ -9,13 +9,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Tracking for user feedback and bug reports from v1.0.0 deployment
-
 ### Changed
 
 ### Fixed
 
+### Added
+
+- Tracking for user feedback and bug reports from v1.0.0 deployment
+- Comprehensive testing guides (TESTING_GUIDE.md, TESTING_SUMMARY.md)
+- Unified design system (`resume-builder/shared/design-system.ts`)
+- Unit conversion utilities (`resume-builder/shared/unit-converters.ts`)
+
+### Changed
+
+- Updated all 4 PDF renderers to use UnifiedDesignSystem
+- Updated DOCX service to use UnifiedDesignSystem
+- Updated all 4 frontend templates to use UnifiedDesignSystem (Standard, Executive, Minimalist, Modern)
+- Improved spacing calculations in PDF generation
+- Achieved 100% visual consistency across preview, PDF, and DOCX for all templates
+
+### Fixed
+
+- **[HIGH]** Fixed AI selecting first items instead of most relevant (#AI-SELECTION-RELEVANCE-001)
+  - Added database ordering for skills, projects, and certifications (most recent first)
+  - Strengthened AI prompt with explicit relevance selection instructions
+  - Added "CRITICAL SELECTION RULE" to emphasize intelligent item selection
+  - AI now analyzes all items and selects based on job description match
+- **[CRITICAL]** Fixed regenerate button using wrong job description (#REGENERATE-JD-BUG-001)
+  - Backend now preserves original job description instead of overwriting it
+  - Frontend properly resets state when navigating between resumes
+  - Added state validation guards to prevent mismatches
+  - Prevents data corruption and ensures regeneration uses correct job posting
+- **[CRITICAL]** Fixed visual inconsistencies between preview, PDF, and DOCX formats (#TEMPLATE-CONSISTENCY-001)
+  - All templates now render identically across all three output formats
+  - Fonts now consistent (Helvetica/Arial) across all formats
+  - Spacing calculations now accurate using proper point-to-line-height conversion
+  - Applied fix to all 4 templates: Modern, Standard, Executive, Minimalist
+
 ### Security
+
+---
+
+## [1.1.0] - 2026-02-21
+
+### Added
+
+- Content density engine with normal/compact/ultra-compact levels
+- Bidirectional fit scaling to expand short resumes and compress long ones
+- Content-aware section spacing to reduce white gaps in sparse sections
+- Dynamic Gemini prompt bullet budgets based on content volume
+
+### Changed
+
+- PDF templates now use fitted design system scaling from content analysis
+- Resume preview scaling allows gentle expansion for short content
+
+### Fixed
+
+- Excessive whitespace for short sections like education and skills
+- Over-compression that reduced readability on short resumes
 
 ---
 
@@ -130,6 +182,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/voidomin/Resume-Forge/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/voidomin/Resume-Forge/compare/v1.1.0...HEAD
 [1.0.0]: https://github.com/voidomin/Resume-Forge/releases/tag/v1.0.0
-[1.1.0]: https://github.com/voidomin/Resume-Forge/compare/v1.0.0...develop
+[1.1.0]: https://github.com/voidomin/Resume-Forge/compare/v1.0.0...v1.1.0

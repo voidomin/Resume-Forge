@@ -1,7 +1,11 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
-import { DesignTokens } from "./design-tokens";
+import {
+  UnifiedDesignSystem,
+  contentDensityEngine,
+  DensityLevel,
+} from "../../../../shared/design-system";
 
 export class MinimalistRenderer extends BaseTemplateRenderer {
   render(
@@ -10,108 +14,124 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
     fontScale: number = 1,
     spacingScale: number = 1,
   ): void {
-    const fontRegular = DesignTokens.fonts.sans;
-    const fontBold = DesignTokens.fonts.sansBold;
-    const { primary, secondary, text, textLight } = DesignTokens.colors;
+    // Delegate to renderWithDensity for consistency
+    this.renderWithDensity(doc, resume, DensityLevel.NORMAL);
+  }
 
-    // Airy Minimalist Design
-    const baseFontSize = 10 * fontScale < 9 ? 9 : 10 * fontScale;
-    const headerFontSize = 20 * fontScale; // Smaller than Executive, larger than body
-    const sectionTitleSize = 10 * fontScale;
+  /**
+   * Render with density-aware section visibility and scaling
+   */
+  renderWithDensity(
+    doc: PDFKit.PDFDocument,
+    resume: GeneratedResume,
+    density: DensityLevel,
+  ): void {
+    // Get scaled design system for this density
+    const ds = this.getScaledDesignSystem(doc, density);
+    const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
+    const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
+    const scaledMargin = ds.margins.pageLeft;
 
-    const lineGap = 1.6 * spacingScale; // More leading for clean look
-    const sectionGap = 18 * spacingScale; // Large gaps between sections
-    const itemGap = 12 * spacingScale;
+    // Apply scaled margins to document
+    doc.page.margins = {
+      top: ds.margins.pageTop,
+      bottom: ds.margins.pageBottom,
+      left: ds.margins.pageLeft,
+      right: ds.margins.pageRight,
+    };
 
     // Helper: Section Headers (Uppercase, Tracking, TextLight Color)
     const drawHeader = (title: string) => {
-      doc.moveDown(0.2 * spacingScale);
+      this.moveDownPoints(doc, ds.spacing.minimal);
       doc
         .font(fontBold)
-        .fontSize(sectionTitleSize)
-        .fillColor(textLight) // Distinctive feature of Minimalist: muted headers
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
         .text(title.toUpperCase(), { characterSpacing: 2 });
 
-      const y = doc.y + 2 * spacingScale;
-      // No border for Minimalist in Pro Max, or very subtle short line.
+      const y = doc.y + 2;
       doc
-        .strokeColor(secondary)
+        .strokeColor(UnifiedDesignSystem.colors.secondary)
         .opacity(0.3)
         .lineWidth(0.5)
-        .moveTo(36, y)
-        .lineTo(100, y) // Short underline
+        .moveTo(scaledMargin, y)
+        .lineTo(scaledMargin + 64, y)
         .stroke()
-        .opacity(1); // Reset opacity
+        .opacity(1);
 
-      doc.y = y + 8 * spacingScale;
+      doc.y = y + ds.spacing.element;
     };
 
-    // 1. Header (Left Aligned, Clean)
+    // 1. Header - Name
     doc
       .font(fontBold)
-      .fontSize(headerFontSize)
-      .fillColor(text)
-      .text(resume.contactInfo.name, { align: "left", characterSpacing: -0.5 }); // Tight styling
+      .fontSize(ds.fontSize.h1)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(resume.contactInfo.name.toUpperCase());
 
-    doc.moveDown(0.4 * spacingScale);
+    this.moveDownPoints(doc, ds.spacing.tight);
 
-    // 2. Contact (Left aligned, wrapped)
-    this.renderContactLine(
-      doc,
-      resume,
-      fontRegular,
-      baseFontSize,
-      false,
-      "left",
-    );
+    // 2. Contact Line
+    this.renderContactLine(doc, resume, fontRegular, ds.fontSize.body, false);
 
-    doc.moveDown(1.5 * spacingScale);
+    this.moveDownPoints(doc, ds.spacing.element);
 
-    // 3. Summary
+    // 3. Professional Summary / Tagline
     if (resume.summary) {
-      drawHeader("ABOUT");
       doc
         .font(fontRegular)
-        .fontSize(baseFontSize)
-        .fillColor(text)
-        .text(resume.summary, { align: "left", lineGap: lineGap });
-      doc.y += sectionGap;
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(resume.summary, {
+          align: "left",
+          lineGap: ds.spacing.minimal,
+        });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(doc, ds.spacing.section, "summary", resume.summary);
     }
 
-    // 4. Experience
+    // 4. Work Experience
     if (resume.experiences?.length) {
       drawHeader("EXPERIENCE");
       resume.experiences.forEach((exp) => {
-        // Role
         doc
           .font(fontBold)
-          .fontSize(baseFontSize + 1)
-          .fillColor(text)
-          .text(exp.role);
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(exp.role, { continued: true });
 
-        doc.moveDown(0.2 * spacingScale);
-
-        // Company | Location | Date (Single line secondary)
         doc
           .font(fontRegular)
-          .fontSize(baseFontSize - 1)
-          .fillColor(textLight)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(`  •  ${exp.company}`, { continued: true });
+
+        doc
+          .fontSize(ds.fontSize.small)
           .text(
-            `${exp.company} ${exp.location ? " | " + exp.location : ""} | ${exp.dateRange}`,
+            `  •  ${exp.dateRange}${exp.location ? ` — ${exp.location}` : ""}`,
+            { continued: false },
           );
 
-        doc.moveDown(0.5 * spacingScale);
-
-        // Bullets (Clean indentation)
         exp.bullets.forEach((b: string) => {
-          doc.font(fontRegular).fontSize(baseFontSize).fillColor(text).text(b, {
-            indent: 10,
-            lineGap: lineGap,
-          });
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(`• ${b}`, {
+              indent: ds.spacing.bulletIndent,
+              lineGap: ds.spacing.minimal,
+            });
         });
-        doc.y += itemGap;
+
+        doc.y += ds.spacing.element;
       });
-      doc.y += sectionGap;
+      // Adjusted spacing after section
+      const expMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "experiences",
+        resume.experiences,
+      );
+      doc.y += ds.spacing.section * expMultiplier;
     }
 
     // 5. Projects
@@ -120,54 +140,63 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       resume.projects.forEach((proj) => {
         doc
           .font(fontBold)
-          .fontSize(baseFontSize + 1)
-          .fillColor(text)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
           .text(proj.name, { continued: true });
-
-        if (proj.technologies) {
-          doc
-            .font(fontRegular)
-            .fontSize(baseFontSize - 1)
-            .fillColor(textLight)
-            .text(`  ${proj.technologies}`, { continued: false });
-        } else {
-          doc.text("");
-        }
-
-        doc.moveDown(0.2 * spacingScale);
 
         if (proj.link) {
           doc
             .font(fontRegular)
-            .fontSize(baseFontSize - 1)
-            .fillColor(primary)
-            .text(proj.link, { link: proj.link });
-          doc.moveDown(0.2 * spacingScale);
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text("  •  ", { continued: true })
+            .fillColor(UnifiedDesignSystem.colors.primary)
+            .text(proj.link, {
+              link: proj.link.startsWith("http")
+                ? proj.link
+                : `https://${proj.link}`,
+              underline: true,
+              continued: false,
+            });
+        } else {
+          doc.text("");
         }
 
-        if (proj.description) {
+        if (proj.technologies) {
           doc
             .font(fontRegular)
-            .fontSize(baseFontSize)
-            .fillColor(text)
-            .text(proj.description, { lineGap: lineGap });
+            .fontSize(ds.fontSize.small)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(`Tech: ${proj.technologies}`, { oblique: true });
         }
 
         if (proj.bullets) {
           proj.bullets.forEach((b: string) => {
             doc
               .font(fontRegular)
-              .fontSize(baseFontSize)
-              .fillColor(text)
-              .text(b, {
-                indent: 10,
-                lineGap: lineGap,
+              .fontSize(ds.fontSize.body)
+              .fillColor(UnifiedDesignSystem.colors.text)
+              .text(`• ${b}`, {
+                indent: ds.spacing.bulletIndent,
+                lineGap: ds.spacing.minimal,
               });
           });
+        } else if (proj.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(proj.description, { lineGap: ds.spacing.minimal });
         }
-        doc.y += itemGap;
+
+        doc.y += ds.spacing.element;
       });
-      doc.y += sectionGap;
+      // Adjusted spacing after section
+      const projMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "projects",
+        resume.projects,
+      );
+      doc.y += ds.spacing.section * projMultiplier;
     }
 
     // 6. Education
@@ -177,28 +206,35 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         // Institution
         doc
           .font(fontBold)
-          .fontSize(baseFontSize)
-          .fillColor(text)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
           .text(edu.institution, { continued: true });
 
-        // Date right? Or inline for minimalist? Inline is cleaner.
         doc
           .font(fontRegular)
-          .fillColor(textLight)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
           .text(`  |  ${edu.dateRange}`, { continued: false });
 
         // Degree
         doc
           .font(fontRegular)
-          .fillColor(text)
+          .fillColor(UnifiedDesignSystem.colors.text)
           .text(`${edu.degree} in ${edu.field}`);
 
         if (edu.gpa) {
-          doc.fillColor(textLight).text(`GPA: ${edu.gpa}`);
+          doc
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(`GPA: ${edu.gpa}`);
         }
-        doc.y += itemGap;
+        doc.y += ds.spacing.element;
       });
-      doc.y += sectionGap;
+      // Adjusted spacing after section
+      const eduMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "education",
+        resume.education,
+      );
+      doc.y += ds.spacing.section * eduMultiplier;
     }
 
     // 7. Skills
@@ -206,11 +242,142 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       drawHeader("SKILLS");
       doc
         .font(fontRegular)
-        .fontSize(baseFontSize)
-        .fillColor(text)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.skills.join(", "), {
-          lineGap: lineGap,
+          lineGap: ds.spacing.minimal,
         });
+      // Adjusted spacing after section
+      const skillsMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "skills",
+        resume.skills,
+      );
+      doc.y += ds.spacing.section * skillsMultiplier;
+    }
+
+    // Optional Sections - Only show if visible at this density
+    if (
+      resume.certifications?.length &&
+      contentDensityEngine.isSectionVisible(density, "certifications")
+    ) {
+      drawHeader("CERTIFICATIONS");
+      resume.certifications.forEach((cert) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(cert.name, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(` — ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
+      });
+      // Adjusted spacing after section
+      const certMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "certifications",
+        resume.certifications,
+      );
+      doc.y += ds.spacing.section * certMultiplier;
+    }
+
+    if (
+      resume.coursework?.length &&
+      contentDensityEngine.isSectionVisible(density, "coursework")
+    ) {
+      drawHeader("RELEVANT COURSEWORK");
+      resume.coursework.forEach((course) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(course.courseName, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(
+            ` — ${course.topic}${
+              course.institution ? ` (${course.institution})` : ""
+            }`,
+          );
+      });
+      // Adjusted spacing after section
+      const courseMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "coursework",
+        resume.coursework,
+      );
+      doc.y += ds.spacing.section * courseMultiplier;
+    }
+
+    if (
+      resume.leadership?.length &&
+      contentDensityEngine.isSectionVisible(density, "leadership")
+    ) {
+      drawHeader("LEADERSHIP & EXTRACURRICULAR");
+      resume.leadership.forEach((role) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(role.title, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(` — ${role.organization}`);
+        if (role.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.small)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(role.description, { lineGap: ds.spacing.minimal });
+        }
+      });
+      // Adjusted spacing after section
+      const leadMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "leadership",
+        resume.leadership,
+      );
+      doc.y += ds.spacing.section * leadMultiplier;
+    }
+
+    if (
+      resume.awards?.length &&
+      contentDensityEngine.isSectionVisible(density, "awards")
+    ) {
+      drawHeader("HONORS & AWARDS");
+      resume.awards.forEach((award) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(award.awardName, { continued: true });
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.small)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(
+            ` — ${award.organization}${
+              award.awardDate ? ` (${award.awardDate})` : ""
+            }`,
+          );
+        if (award.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.small)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(award.description, { lineGap: ds.spacing.minimal });
+        }
+      });
+      // Adjusted spacing after section
+      const awardMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "awards",
+        resume.awards,
+      );
+      doc.y += ds.spacing.section * awardMultiplier;
     }
   }
 }

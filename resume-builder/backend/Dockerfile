@@ -1,21 +1,23 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:20-bullseye-slim AS builder
 WORKDIR /app
-COPY package*.json ./
+COPY backend/package*.json ./
 RUN npm install
-COPY . .
+COPY backend ./backend
+COPY shared ./shared
+WORKDIR /app/backend
 RUN npx prisma generate
 RUN npm run build
 
 # Stage 2: Production
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
+FROM node:20-bullseye-slim
+WORKDIR /app/backend
+COPY backend/package*.json ./
 RUN npm install --only=production
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/prisma ./prisma
 # Need prisma client in prod too
 RUN npx prisma generate
 
 EXPOSE 3000
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/backend/src/index.js"]

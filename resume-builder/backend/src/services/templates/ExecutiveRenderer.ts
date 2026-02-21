@@ -1,7 +1,11 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
-import { DesignTokens } from "./design-tokens";
+import {
+  UnifiedDesignSystem,
+  contentDensityEngine,
+  DensityLevel,
+} from "../../../../shared/design-system";
 
 export class ExecutiveRenderer extends BaseTemplateRenderer {
   render(
@@ -10,169 +14,177 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
     fontScale: number = 1,
     spacingScale: number = 1,
   ): void {
-    const fontRegular = DesignTokens.fonts.serif;
-    const fontBold = DesignTokens.fonts.serifBold;
-    const { primary, secondary, text, textLight } = DesignTokens.colors;
+    // Delegate to renderWithDensity for consistency
+    this.renderWithDensity(doc, resume, DensityLevel.NORMAL);
+  }
 
-    // Adaptive sizes
-    const baseFontSize = 10 * fontScale < 9 ? 9 : 10 * fontScale;
-    const headerFontSize = 24 * fontScale;
-    const sectionTitleSize = 12 * fontScale;
+  /**
+   * Render with density-aware section visibility and scaling
+   */
+  renderWithDensity(
+    doc: PDFKit.PDFDocument,
+    resume: GeneratedResume,
+    density: DensityLevel,
+  ): void {
+    // Get scaled design system for this density
+    const ds = this.getScaledDesignSystem(doc, density);
+    const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
+    const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
+    const scaledMargin = ds.margins.pageLeft;
 
-    // Spacing
-    const lineGap = 1.5 * spacingScale;
-    const sectionGap = 14 * spacingScale;
-    const itemGap = 10 * spacingScale;
-    const headerGap = 6 * spacingScale;
+    // Apply scaled margins to document
+    doc.page.margins = {
+      top: ds.margins.pageTop,
+      bottom: ds.margins.pageBottom,
+      left: ds.margins.pageLeft,
+      right: ds.margins.pageRight,
+    };
 
     // Helper: Section Headers (Centered, Uppercase, Primary Color)
     const drawHeader = (title: string) => {
-      doc.moveDown(0.5 * spacingScale);
+      this.moveDownPoints(doc, ds.spacing.tight);
       doc
         .font(fontBold)
-        .fontSize(sectionTitleSize)
-        .fillColor(primary) // Executive Deep Blue
+        .fontSize(ds.fontSize.h2)
+        .fillColor(UnifiedDesignSystem.colors.primary)
         .text(title.toUpperCase(), { align: "center", characterSpacing: 1 });
 
-      const y = doc.y + 2 * spacingScale;
+      const y = doc.y + 2;
       doc
-        .strokeColor(secondary) // Subtle separation
+        .strokeColor(UnifiedDesignSystem.colors.secondary)
         .lineWidth(0.5)
-        .moveTo(100, y) // Centered line
-        .lineTo(495, y)
+        .moveTo(scaledMargin + 64, y)
+        .lineTo(595 - scaledMargin - 64, y)
         .stroke();
 
-      doc.y = y + headerGap;
+      doc.y = y + ds.spacing.element;
     };
 
     // 1. Header Name
     doc
       .font(fontBold)
-      .fontSize(headerFontSize)
-      .fillColor(primary)
+      .fontSize(ds.fontSize.h1 * 1.2)
+      .fillColor(UnifiedDesignSystem.colors.primary)
       .text(resume.contactInfo.name.toUpperCase(), {
         align: "center",
         characterSpacing: 1,
       });
 
-    doc.moveDown(0.3 * spacingScale);
+    this.moveDownPoints(doc, ds.spacing.tight);
 
     // 2. Contact Line
     this.renderContactLine(
       doc,
       resume,
       fontRegular,
-      baseFontSize,
+      ds.fontSize.body,
       true,
       "center",
     );
 
-    doc.moveDown(0.8 * spacingScale);
+    this.moveDownPoints(doc, ds.spacing.element);
 
-    // 3. Summary
+    // 3. Professional Summary
     if (resume.summary) {
-      drawHeader("PROFESSIONAL SUMMARY");
+      drawHeader("EXECUTIVE PROFILE");
       doc
         .font(fontRegular)
-        .fontSize(baseFontSize)
-        .fillColor(text)
-        .text(resume.summary, { align: "justify", lineGap: lineGap });
-      doc.y += sectionGap;
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(resume.summary, { align: "center", lineGap: ds.spacing.minimal });
+      // Adjusted spacing after section
+      const summaryMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "summary",
+        resume.summary,
+      );
+      doc.y += ds.spacing.section * summaryMultiplier;
     }
 
-    // 4. Experience (Executive creates emphasis here)
+    // 4. Work Experience
     if (resume.experiences?.length) {
-      drawHeader("WORK EXPERIENCE");
+      drawHeader("PROFESSIONAL EXPERIENCE");
       resume.experiences.forEach((exp) => {
-        // Role | Company | Location
         doc
           .font(fontBold)
-          .fontSize(baseFontSize + 1)
-          .fillColor(text)
-          .text(exp.role.toUpperCase(), { continued: true });
-
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(exp.role, { continued: true });
         doc
           .font(fontRegular)
-          .fillColor(textLight)
-          .text(" | ", { continued: true })
-          .fillColor(text)
-          .text(exp.company, { continued: true })
-          .fillColor(textLight)
-          .text(exp.location ? ` | ${exp.location}` : "", { continued: false });
-
-        // Date
-        doc.moveUp(1);
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.secondary)
+          .text(` | ${exp.company}`);
         doc
-          .font(fontBold)
-          .fontSize(baseFontSize)
-          .fillColor(primary)
-          .text(exp.dateRange, { align: "right" });
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(`${exp.location} | ${exp.dateRange}`, {
+            oblique: true,
+          });
 
-        doc.moveDown(0.5 * spacingScale);
-
-        // Bullets
         exp.bullets.forEach((b: string) => {
           doc
             .font(fontRegular)
-            .fontSize(baseFontSize)
-            .fillColor(text)
-            .text(`▪  ${b}`, 50, doc.y, {
-              // Square bullet for executive
-              width: 500,
-              align: "left",
-              lineGap: lineGap,
-            });
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(`• ${b}`, { lineGap: ds.spacing.minimal });
         });
-        doc.y += itemGap;
+        doc.y += ds.spacing.element;
       });
-      doc.y += sectionGap;
+      // Adjusted spacing after section
+      const expMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "experiences",
+        resume.experiences,
+      );
+      doc.y += ds.spacing.section * expMultiplier;
     }
 
     // 5. Projects
     if (resume.projects?.length) {
-      drawHeader("PROJECTS");
+      drawHeader("NOTABLE PROJECTS");
       resume.projects.forEach((proj) => {
         doc
           .font(fontBold)
-          .fontSize(baseFontSize + 1)
-          .fillColor(text)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.text)
           .text(proj.name, { continued: true });
-
-        if (proj.link) {
+        if (proj.technologies) {
           doc
             .font(fontRegular)
-            .fontSize(baseFontSize)
-            .fillColor(primary) // Link in Primary
-            .text(`  [${proj.link}]`, { link: proj.link, continued: false });
+            .fontSize(ds.fontSize.small)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(` | ${proj.technologies}`, {
+              oblique: true,
+              continued: false,
+            });
         } else {
           doc.text("");
-        }
-
-        // Description
-        if (proj.description) {
-          doc
-            .font(fontRegular)
-            .fontSize(baseFontSize)
-            .fillColor(text)
-            .text(proj.description);
         }
 
         if (proj.bullets) {
           proj.bullets.forEach((b: string) => {
             doc
               .font(fontRegular)
-              .fontSize(baseFontSize)
-              .fillColor(text)
-              .text(`▪  ${b}`, 50, doc.y, {
-                width: 500,
-                align: "left",
-                lineGap: lineGap,
-              });
+              .fontSize(ds.fontSize.body)
+              .fillColor(UnifiedDesignSystem.colors.text)
+              .text(`• ${b}`, { lineGap: ds.spacing.minimal });
           });
+        } else if (proj.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(proj.description, { lineGap: ds.spacing.minimal });
         }
-        doc.y += itemGap;
+        doc.y += ds.spacing.element;
       });
-      doc.y += sectionGap;
+      // Adjusted spacing after section
+      const projMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "projects",
+        resume.projects,
+      );
+      doc.y += ds.spacing.section * projMultiplier;
     }
 
     // 6. Education
@@ -181,26 +193,33 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
       resume.education.forEach((edu) => {
         doc
           .font(fontBold)
-          .fontSize(baseFontSize)
-          .fillColor(text)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
           .text(edu.institution, { continued: true });
-
         doc
           .font(fontRegular)
-          .fillColor(textLight)
-          .text(`  |  ${edu.dateRange}`, { align: "right" });
-
-        doc
-          .font(fontRegular)
-          .fillColor(text)
-          .text(`${edu.degree} in ${edu.field}`);
-
-        if (edu.gpa) {
-          doc.fillColor(textLight).text(`GPA: ${edu.gpa}`);
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(` | ${edu.degree} in ${edu.field}`);
+        if (edu.dateRange) {
+          doc
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(edu.dateRange, { oblique: true });
         }
-        doc.y += itemGap;
+        if (edu.gpa) {
+          doc
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(`GPA: ${edu.gpa}`);
+        }
+        doc.y += ds.spacing.element;
       });
-      doc.y += sectionGap;
+      // Adjusted spacing after section
+      const eduMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "education",
+        resume.education,
+      );
+      doc.y += ds.spacing.section * eduMultiplier;
     }
 
     // 7. Skills
@@ -208,12 +227,152 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
       drawHeader("COMPETENCIES");
       doc
         .font(fontRegular)
-        .fontSize(baseFontSize)
-        .fillColor(text)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "center",
-          lineGap: lineGap * 1.5,
+          lineGap: ds.spacing.minimal,
         });
+      // Adjusted spacing after section
+      const skillsMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "skills",
+        resume.skills,
+      );
+      doc.y += ds.spacing.section * skillsMultiplier;
+    }
+
+    // Optional Sections - Only show if visible at this density
+    if (
+      resume.certifications?.length &&
+      contentDensityEngine.isSectionVisible(density, "certifications")
+    ) {
+      drawHeader("CERTIFICATIONS");
+      resume.certifications.forEach((cert) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(`${cert.name}`, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(` | ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
+      });
+      // Adjusted spacing after section
+      const certMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "certifications",
+        resume.certifications,
+      );
+      doc.y += ds.spacing.section * certMultiplier;
+    }
+
+    if (
+      resume.coursework?.length &&
+      contentDensityEngine.isSectionVisible(density, "coursework")
+    ) {
+      drawHeader("RELEVANT COURSEWORK");
+      resume.coursework.forEach((course) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(`${course.courseName}`, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(
+            ` | ${course.topic}${
+              course.institution ? ` (${course.institution})` : ""
+            }`,
+          );
+      });
+      // Adjusted spacing after section
+      const courseMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "coursework",
+        resume.coursework,
+      );
+      doc.y += ds.spacing.section * courseMultiplier;
+    }
+
+    if (
+      resume.leadership?.length &&
+      contentDensityEngine.isSectionVisible(density, "leadership")
+    ) {
+      drawHeader("LEADERSHIP & EXTRACURRICULAR");
+      resume.leadership.forEach((role) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(role.title, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.secondary)
+          .text(" | ", { continued: true })
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(role.organization);
+        if (role.location) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(role.location);
+        }
+        if (role.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(role.description, { lineGap: ds.spacing.minimal });
+        }
+        doc.y += ds.spacing.tight;
+      });
+      // Adjusted spacing after section
+      const leadMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "leadership",
+        resume.leadership,
+      );
+      doc.y += ds.spacing.section * leadMultiplier;
+    }
+
+    if (
+      resume.awards?.length &&
+      contentDensityEngine.isSectionVisible(density, "awards")
+    ) {
+      drawHeader("HONORS & AWARDS");
+      resume.awards.forEach((award) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(award.awardName, { continued: true });
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(
+            ` | ${award.organization}${
+              award.awardDate ? ` (${award.awardDate})` : ""
+            }`,
+          );
+        if (award.description) {
+          doc
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(award.description, { oblique: true });
+        }
+        doc.y += ds.spacing.tight;
+      });
+      // Adjusted spacing after section
+      const awardMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "awards",
+        resume.awards,
+      );
+      doc.y += ds.spacing.section * awardMultiplier;
     }
   }
 }

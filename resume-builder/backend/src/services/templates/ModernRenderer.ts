@@ -1,7 +1,12 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
-import { DesignTokens } from "./design-tokens";
+import {
+  UnifiedDesignSystem,
+  contentDensityEngine,
+  DensityLevel,
+  ScaledDesignSystem,
+} from "../../../../shared/design-system";
 
 export class ModernRenderer extends BaseTemplateRenderer {
   render(
@@ -10,120 +15,229 @@ export class ModernRenderer extends BaseTemplateRenderer {
     fontScale: number = 1,
     spacingScale: number = 1,
   ): void {
-    const fontRegular = DesignTokens.fonts.sans;
-    const fontBold = DesignTokens.fonts.sansBold;
-    const { primary, secondary, text, textLight, white } = DesignTokens.colors;
-    const fontScaleVal = fontScale;
-    const spacingScaleVal = spacingScale;
+    // Delegate to renderWithDensity for consistency
+    this.renderWithDensity(doc, resume, DensityLevel.NORMAL);
+  }
+  /**
+   * Render with density-aware section visibility and scaling
+   */
+  renderWithDensity(
+    doc: PDFKit.PDFDocument,
+    resume: GeneratedResume,
+    density: DensityLevel,
+  ): void {
+    // Get scaled design system for this density
+    const ds = this.getScaledDesignSystem(doc, density);
+    const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
+    const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
+    const scaledMargin = ds.margins.pageLeft;
 
-    // Header
+    // Apply scaled margins to document
+    doc.page.margins = {
+      top: ds.margins.pageTop,
+      bottom: ds.margins.pageBottom,
+      left: ds.margins.pageLeft,
+      right: ds.margins.pageRight,
+    };
+
+    // Header - Name
     doc
       .font(fontBold)
-      .fontSize(14 * fontScaleVal)
-      .fillColor(primary) // Pro Max Primary
+      .fontSize(ds.fontSize.h1)
+      .fillColor(UnifiedDesignSystem.colors.primary)
       .text(resume.contactInfo.name.toUpperCase(), { align: "center" });
 
-    doc.moveDown(0.2 * fontScaleVal);
+    // Small spacing after name
+    this.moveDownPoints(doc, ds.spacing.tight);
 
-    // Contact
-    this.renderContactLine(doc, resume, fontRegular, 8.5 * fontScaleVal, false);
+    // Contact Line
+    this.renderContactLine(
+      doc,
+      resume,
+      fontRegular,
+      ds.fontSize.contact,
+      false,
+    );
 
-    doc.moveDown(0.5 * fontScaleVal);
+    // Spacing after contact
+    this.moveDownPoints(doc, ds.spacing.element);
 
-    // Sections
+    // Professional Summary
     if (resume.summary) {
-      this.drawModernHeader(doc, "PROFESSIONAL SUMMARY", fontScaleVal);
+      this.drawModernHeader(doc, "PROFESSIONAL SUMMARY", ds);
       doc
         .font(fontRegular)
-        .fontSize(8.5 * fontScaleVal)
-        .fillColor(text)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.summary, {
           align: "justify",
-          lineGap: 0.2 * fontScaleVal,
+          lineGap: ds.spacing.minimal,
         });
-      doc.moveDown(0.5 * fontScaleVal);
+      // Adjusted spacing after section
+      this.moveDownAdjusted(doc, ds.spacing.section, "summary", resume.summary);
     }
 
     if (resume.experiences?.length) {
-      this.drawModernHeader(doc, "WORK EXPERIENCE", fontScaleVal);
+      this.drawModernHeader(doc, "WORK EXPERIENCE", ds);
       resume.experiences.forEach((exp) => {
-        this.renderExperienceModern(
-          doc,
-          exp,
-          fontBold,
-          fontRegular,
-          fontScaleVal,
-          spacingScaleVal,
-        );
-        doc.moveDown(0.25 * spacingScaleVal);
+        this.renderExperienceModern(doc, exp, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.element);
       });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "experiences",
+        resume.experiences,
+      );
     }
 
     if (resume.projects?.length) {
-      this.drawModernHeader(doc, "PROJECTS", fontScaleVal);
+      this.drawModernHeader(doc, "PROJECTS", ds);
       resume.projects.forEach((proj) => {
-        this.renderProjectModern(
-          doc,
-          proj,
-          fontBold,
-          fontRegular,
-          fontScaleVal,
-          spacingScaleVal,
-        );
-        doc.moveDown(0.25 * spacingScaleVal);
+        this.renderProjectModern(doc, proj, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.element);
       });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "projects",
+        resume.projects,
+      );
     }
 
     if (resume.education?.length) {
-      this.drawModernHeader(doc, "EDUCATION", fontScaleVal);
+      this.drawModernHeader(doc, "EDUCATION", ds);
       resume.education.forEach((edu) => {
-        this.renderEducationModern(
-          doc,
-          edu,
-          fontBold,
-          fontRegular,
-          fontScaleVal,
-          spacingScaleVal,
-        );
-        doc.moveDown(0.25 * spacingScaleVal);
+        this.renderEducationModern(doc, edu, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.tight);
       });
+      // Adjusted spacing after section - reduced for sparse education sections
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "education",
+        resume.education,
+      );
     }
 
     if (resume.skills?.length) {
-      this.drawModernHeader(doc, "SKILLS", fontScaleVal);
+      this.drawModernHeader(doc, "SKILLS", ds);
       doc
         .font(fontRegular)
-        .fontSize(8.5 * fontScaleVal)
-        .fillColor(text)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.skills.join("  •  "), {
           align: "left",
-          lineGap: 0.2 * fontScaleVal,
+          lineGap: ds.spacing.minimal,
         });
+      // Adjusted spacing after section - reduced for sparse skills sections
+      this.moveDownAdjusted(doc, ds.spacing.section, "skills", resume.skills);
+    }
+
+    // Optional Sections - Only show if visible at this density
+    if (
+      resume.certifications?.length &&
+      contentDensityEngine.isSectionVisible(density, "certifications")
+    ) {
+      this.drawModernHeader(doc, "CERTIFICATIONS", ds);
+      resume.certifications.forEach((cert) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(cert.name, { continued: true });
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(` | ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
+        this.moveDownPoints(doc, ds.spacing.tight);
+      });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "certifications",
+        resume.certifications,
+      );
+    }
+
+    // Coursework - only if visible at this density
+    if (
+      resume.coursework?.length &&
+      contentDensityEngine.isSectionVisible(density, "coursework")
+    ) {
+      this.drawModernHeader(doc, "RELEVANT COURSEWORK", ds);
+      resume.coursework.forEach((course) => {
+        this.renderCourseworkModern(doc, course, fontBold, fontRegular, ds);
+      });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "coursework",
+        resume.coursework,
+      );
+    }
+
+    // Leadership - only if visible at this density
+    if (
+      resume.leadership?.length &&
+      contentDensityEngine.isSectionVisible(density, "leadership")
+    ) {
+      this.drawModernHeader(doc, "LEADERSHIP & EXTRACURRICULAR", ds);
+      resume.leadership.forEach((role) => {
+        this.renderLeadershipModern(doc, role, fontBold, fontRegular, ds);
+        this.moveDownPoints(doc, ds.spacing.tight);
+      });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "leadership",
+        resume.leadership,
+      );
+    }
+
+    // Awards - only if visible at this density
+    if (
+      resume.awards?.length &&
+      contentDensityEngine.isSectionVisible(density, "awards")
+    ) {
+      this.drawModernHeader(doc, "HONORS & AWARDS", ds);
+      resume.awards.forEach((award) => {
+        this.renderAwardModern(doc, award, fontBold, fontRegular, ds);
+      });
+      // Adjusted spacing after section
+      this.moveDownAdjusted(doc, ds.spacing.section, "awards", resume.awards);
     }
   }
 
   private drawModernHeader(
     doc: PDFKit.PDFDocument,
     title: string,
-    fontScaleVal: number,
+    ds: ScaledDesignSystem,
   ) {
-    const { primary, text } = DesignTokens.colors;
+    const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
+
     doc
-      .font(DesignTokens.fonts.sansBold)
-      .fontSize(11 * fontScaleVal)
-      .fillColor(primary)
+      .font(fontBold)
+      .fontSize(ds.fontSize.h2)
+      .fillColor(UnifiedDesignSystem.colors.primary)
       .text(title.toUpperCase());
 
-    // Underline
+    // Underline with design system border width
     doc
-      .strokeColor(primary)
-      .lineWidth(1)
+      .strokeColor(UnifiedDesignSystem.colors.primary)
+      .lineWidth(UnifiedDesignSystem.borders.sectionUnderline.width)
       .moveTo(doc.x, doc.y + 2)
       .lineTo(doc.page.width - doc.page.margins.right, doc.y + 2)
       .stroke();
 
-    doc.fillColor(text); // Reset to standard text color
-    doc.moveDown(0.5 * fontScaleVal);
+    doc.fillColor(UnifiedDesignSystem.colors.text); // Reset to standard text color
+    this.moveDownPoints(doc, ds.spacing.element);
   }
 
   private renderExperienceModern(
@@ -131,37 +245,42 @@ export class ModernRenderer extends BaseTemplateRenderer {
     exp: any,
     fontBold: string,
     fontRegular: string,
-    fontScaleVal: number,
-    spacingScaleVal: number,
+    ds: ScaledDesignSystem,
   ) {
-    const { primary, secondary, text, textLight } = DesignTokens.colors;
-
     doc
       .font(fontBold)
-      .fontSize(10 * fontScaleVal)
-      .fillColor(text)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.text)
       .text(exp.role, { continued: true });
 
     doc
       .font(fontRegular)
-      .fillColor(secondary)
+      .fillColor(UnifiedDesignSystem.colors.secondary)
       .text(" | ", { continued: true })
-      .fillColor(primary)
+      .fillColor(UnifiedDesignSystem.colors.primary)
       .text(exp.company, { continued: true });
 
-    doc.fillColor(textLight).text(exp.location ? ` | ${exp.location}` : "", {
-      continued: false,
-    });
+    doc
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(exp.location ? ` | ${exp.location}` : "", {
+        continued: false,
+      });
 
     doc.moveUp(1);
-    doc.fillColor(textLight).text(exp.dateRange, { align: "right" });
+    doc
+      .fontSize(ds.fontSize.small)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(exp.dateRange, { align: "right" });
 
     doc
       .font(fontRegular)
-      .fontSize(9 * fontScaleVal)
-      .fillColor(text);
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.text);
     exp.bullets.forEach((b: string) => {
-      doc.text(`• ${b}`, { indent: 10, lineGap: 1 * spacingScaleVal });
+      doc.text(`• ${b}`, {
+        indent: ds.spacing.bulletIndent,
+        lineGap: ds.spacing.minimal,
+      });
     });
   }
 
@@ -170,42 +289,42 @@ export class ModernRenderer extends BaseTemplateRenderer {
     proj: any,
     fontBold: string,
     fontRegular: string,
-    fontScaleVal: number,
-    spacingScaleVal: number,
+    ds: ScaledDesignSystem,
   ) {
-    const { primary, secondary, text, textLight } = DesignTokens.colors;
-
     doc
       .font(fontBold)
-      .fontSize(10 * fontScaleVal)
-      .fillColor(text)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.text)
       .text(proj.name, { continued: true });
     if (proj.link) {
       doc
         .font(fontRegular)
-        .fillColor(textLight)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
         .text(` | `, { continued: true })
-        .fillColor(primary)
+        .fillColor(UnifiedDesignSystem.colors.primary)
         .text(proj.link, { link: proj.link, continued: false })
-        .fillColor(text);
+        .fillColor(UnifiedDesignSystem.colors.text);
     } else {
       doc.text("");
     }
 
-    doc.font(fontRegular).fontSize(9 * fontScaleVal);
+    doc.font(fontRegular).fontSize(ds.fontSize.body);
     if (proj.technologies) {
       doc
-        .fillColor(secondary)
+        .fillColor(UnifiedDesignSystem.colors.secondary)
         .text(`Stack: ${proj.technologies}`, { oblique: true });
     }
 
-    doc.fillColor(text);
+    doc.fillColor(UnifiedDesignSystem.colors.text);
     if (proj.bullets) {
       proj.bullets.forEach((b: string) => {
-        doc.text(`• ${b}`, { indent: 10, lineGap: 1 * spacingScaleVal });
+        doc.text(`• ${b}`, {
+          indent: ds.spacing.bulletIndent,
+          lineGap: ds.spacing.minimal,
+        });
       });
     } else if (proj.description) {
-      doc.text(proj.description, { lineGap: 1 * spacingScaleVal });
+      doc.text(proj.description, { lineGap: ds.spacing.minimal });
     }
   }
 
@@ -214,29 +333,135 @@ export class ModernRenderer extends BaseTemplateRenderer {
     edu: any,
     fontBold: string,
     fontRegular: string,
-    fontScaleVal: number,
-    spacingScaleVal: number,
+    ds: ScaledDesignSystem,
   ) {
-    const { primary, text, textLight } = DesignTokens.colors;
-
     doc
       .font(fontBold)
-      .fontSize(10 * fontScaleVal)
-      .fillColor(text) // Institution in text color for Modern? Or Primary? Let's stick to Text for consistency
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.primary)
       .text(edu.institution, { continued: true });
     doc
       .font(fontRegular)
-      .fillColor(textLight)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
       .text(` | ${edu.degree} in ${edu.field}`, { continued: false });
 
     doc.moveUp(1);
-    doc.fillColor(textLight).text(edu.dateRange, { align: "right" });
+    doc
+      .fontSize(ds.fontSize.small)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(edu.dateRange, { align: "right" });
 
     if (edu.gpa) {
       doc
-        .fontSize(9 * fontScaleVal)
-        .fillColor(textLight)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
         .text(`GPA: ${edu.gpa}`);
+    }
+  }
+
+  private renderCourseworkModern(
+    doc: PDFKit.PDFDocument,
+    course: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ScaledDesignSystem,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(course.courseName, { continued: true });
+
+    if (course.institution) {
+      doc
+        .font(fontRegular)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(` | ${course.institution}`, { continued: false });
+    } else {
+      doc.text("");
+    }
+
+    doc
+      .font(fontRegular)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(`Topic: ${course.topic}`, { oblique: true });
+  }
+
+  private renderLeadershipModern(
+    doc: PDFKit.PDFDocument,
+    role: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ScaledDesignSystem,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(role.title, { continued: true });
+
+    doc
+      .font(fontRegular)
+      .fillColor(UnifiedDesignSystem.colors.secondary)
+      .text(" | ", { continued: true })
+      .fillColor(UnifiedDesignSystem.colors.primary)
+      .text(role.organization, { continued: true });
+
+    doc
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(role.location ? ` | ${role.location}` : "", { continued: false });
+
+    doc.moveUp(1);
+    doc
+      .fontSize(ds.fontSize.small)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(role.dateRange || "N/A", { align: "right" });
+
+    if (role.description) {
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(`• ${role.description}`, {
+          indent: ds.spacing.bulletIndent,
+          lineGap: ds.spacing.minimal,
+        });
+    }
+  }
+
+  private renderAwardModern(
+    doc: PDFKit.PDFDocument,
+    award: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ScaledDesignSystem,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.h3)
+      .fillColor(UnifiedDesignSystem.colors.primary)
+      .text(award.awardName, { continued: true });
+
+    doc
+      .font(fontRegular)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(` | ${award.organization}`, { continued: false });
+
+    doc.moveUp(1);
+    doc
+      .fontSize(ds.fontSize.small)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(award.awardDate, { align: "right" });
+
+    if (award.description) {
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(award.description, { oblique: true });
     }
   }
 }

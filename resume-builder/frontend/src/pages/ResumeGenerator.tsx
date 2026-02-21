@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import {
@@ -9,6 +9,7 @@ import {
   AlertCircle,
   CheckCircle,
   AlertTriangle,
+  Zap,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ResumePreview from "../components/Resume/ResumePreview";
@@ -17,6 +18,8 @@ import TemplateSelector, {
 } from "../components/Resume/TemplateSelector";
 import KeywordAnalysisPanel from "../components/Resume/KeywordAnalysisPanel";
 import ATSChecklist from "../components/Resume/ATSChecklist";
+
+type DensityLevel = "normal" | "compact" | "ultra-compact";
 
 interface GeneratedResume {
   contactInfo: {
@@ -92,7 +95,57 @@ function ResumeGenerator() {
   const [resumeId, setResumeId] = useState<string | null>(null);
   const [atsReport, setAtsReport] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [density, setDensity] = useState<DensityLevel>("normal");
+  const [isDensityAuto, setIsDensityAuto] = useState(true);
   const navigate = useNavigate();
+
+  // Auto-detect density based on content volume
+  const detectedDensity = useMemo(() => {
+    if (!generatedResume) return "normal";
+
+    // Count words across resume content
+    let wordCount = 0;
+
+    if (generatedResume.summary)
+      wordCount += generatedResume.summary.split(/\s+/).length;
+    if (generatedResume.experiences)
+      generatedResume.experiences.forEach((exp) => {
+        wordCount += (exp.role + exp.company + exp.location).split(
+          /\s+/,
+        ).length;
+        wordCount += exp.bullets.join(" ").split(/\s+/).length;
+      });
+    if (generatedResume.education)
+      generatedResume.education.forEach((edu) => {
+        wordCount += (edu.degree + edu.field + edu.institution).split(
+          /\s+/,
+        ).length;
+      });
+    if (generatedResume.skills)
+      wordCount += generatedResume.skills.join(" ").split(/\s+/).length;
+    if (generatedResume.projects)
+      generatedResume.projects.forEach((proj) => {
+        wordCount += (proj.name + proj.description + proj.technologies).split(
+          /\s+/,
+        ).length;
+      });
+    if (generatedResume.certifications)
+      generatedResume.certifications.forEach((cert) => {
+        wordCount += (cert.name + cert.issuer).split(/\s+/).length;
+      });
+
+    // Map word count to density
+    if (wordCount >= 1100) return "ultra-compact";
+    if (wordCount >= 800) return "compact";
+    return "normal";
+  }, [generatedResume]);
+
+  useEffect(() => {
+    if (!generatedResume) return;
+    if (isDensityAuto) {
+      setDensity(detectedDensity);
+    }
+  }, [generatedResume, detectedDensity, isDensityAuto]);
 
   const handleGenerate = async () => {
     if (!jobDescription.trim()) {
@@ -102,6 +155,7 @@ function ResumeGenerator() {
 
     setStep("generating");
     setError(null);
+    setIsDensityAuto(true);
 
     try {
       const response = await api.post("/resumes/generate", {
@@ -134,7 +188,10 @@ function ResumeGenerator() {
 
     try {
       const response = await api.get(`/resumes/${resumeId}/export/${format}`, {
-        params: format === "pdf" ? { template: selectedTemplate } : undefined,
+        params: {
+          template: selectedTemplate,
+          ...(format === "pdf" && { density }),
+        },
         responseType: "blob",
       });
 
@@ -469,6 +526,89 @@ Required Skills:
                     />
                   </div>
 
+                  {/* Content Density Control */}
+                  <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Zap className="w-4 h-4 text-amber-600" />
+                      <h3 className="text-sm font-medium text-gray-700">
+                        Content Density
+                      </h3>
+                    </div>
+
+                    {/* Density Selector */}
+                    <div className="space-y-2 mb-3">
+                      <label className="flex items-center cursor-pointer group">
+                        <input
+                          type="radio"
+                          name="density"
+                          value="normal"
+                          checked={density === "normal"}
+                          onChange={(e) => {
+                            setDensity(e.target.value as DensityLevel);
+                            setIsDensityAuto(false);
+                          }}
+                          className="w-4 h-4 text-blue-600 cursor-pointer"
+                        />
+                        <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
+                          Normal Spacing
+                        </span>
+                        {detectedDensity === "normal" && (
+                          <span className="ml-auto text-xs bg-white px-2 py-0.5 rounded border border-amber-300 text-amber-700 font-medium">
+                            Recommended
+                          </span>
+                        )}
+                      </label>
+                      <label className="flex items-center cursor-pointer group">
+                        <input
+                          type="radio"
+                          name="density"
+                          value="compact"
+                          checked={density === "compact"}
+                          onChange={(e) => {
+                            setDensity(e.target.value as DensityLevel);
+                            setIsDensityAuto(false);
+                          }}
+                          className="w-4 h-4 text-blue-600 cursor-pointer"
+                        />
+                        <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
+                          Compact (33% less space)
+                        </span>
+                        {detectedDensity === "compact" && (
+                          <span className="ml-auto text-xs bg-white px-2 py-0.5 rounded border border-amber-300 text-amber-700 font-medium">
+                            Recommended
+                          </span>
+                        )}
+                      </label>
+                      <label className="flex items-center cursor-pointer group">
+                        <input
+                          type="radio"
+                          name="density"
+                          value="ultra-compact"
+                          checked={density === "ultra-compact"}
+                          onChange={(e) => {
+                            setDensity(e.target.value as DensityLevel);
+                            setIsDensityAuto(false);
+                          }}
+                          className="w-4 h-4 text-blue-600 cursor-pointer"
+                        />
+                        <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
+                          Ultra-Compact (44% less space)
+                        </span>
+                        {detectedDensity === "ultra-compact" && (
+                          <span className="ml-auto text-xs bg-white px-2 py-0.5 rounded border border-amber-300 text-amber-700 font-medium">
+                            Recommended
+                          </span>
+                        )}
+                      </label>
+                    </div>
+
+                    {/* Info */}
+                    <p className="text-xs text-gray-600 bg-white bg-opacity-50 rounded px-2 py-1.5">
+                      💡 Auto-detected based on content volume. At compact
+                      densities, some optional sections may be hidden.
+                    </p>
+                  </div>
+
                   {/* Export Buttons */}
                   <div className="space-y-3">
                     <button
@@ -498,6 +638,7 @@ Required Skills:
                         setJobDescription("");
                         setTargetRole("");
                         setGeneratedResume(null);
+                        setIsDensityAuto(true);
                       }}
                       className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                     >
@@ -520,6 +661,7 @@ Required Skills:
                 <ResumePreview
                   resume={generatedResume}
                   template={selectedTemplate}
+                  density={density}
                 />
               </div>
             </div>

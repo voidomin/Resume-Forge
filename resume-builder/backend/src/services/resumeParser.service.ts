@@ -2,35 +2,18 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "../lib/logger";
 import mammoth from "mammoth";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const apiKey = process.env.GEMINI_API_KEY || "";
+if (!apiKey) {
+  logger.error("GEMINI_API_KEY environment variable is not set!");
+}
+const genAI = new GoogleGenerativeAI(apiKey);
 
-// Dynamically load pdf-parse to handle ESM/CJS export differences.
-// Dynamically load pdf-parse to handle ESM/CJS export differences.
-let PDFParseClass: any = null;
+// pdf-parse exposes a PDFParse class in this build.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { PDFParse } = require("pdf-parse");
 
-const getPdfParse = async () => {
-  if (PDFParseClass) {
-    return PDFParseClass;
-  }
-
-  try {
-    const mod = await import("pdf-parse");
-    if (mod.PDFParse) {
-      PDFParseClass = mod.PDFParse;
-    } else if (mod.default && mod.default.PDFParse) {
-      PDFParseClass = mod.default.PDFParse;
-    } else {
-      throw new Error("Could not find PDFParse class in export");
-    }
-    return PDFParseClass;
-  } catch (error) {
-    logger.error("Failed to import pdf-parse", error);
-    throw new Error("Failed to load PDF parser library");
-  }
-};
-
-// API timeout configuration (30 seconds)
-const API_TIMEOUT_MS = 30000;
+// API timeout configuration (60 seconds for large resume generation)
+const API_TIMEOUT_MS = 60000;
 
 /**
  * Wrapper to add timeout to async API calls
@@ -92,6 +75,26 @@ export interface ParsedProfile {
     date?: string;
     link?: string;
   }[];
+  coursework?: {
+    courseName: string;
+    topic: string;
+    institution: string;
+  }[];
+  leadership?: {
+    title: string;
+    organization: string;
+    location?: string;
+    startDate?: string;
+    endDate?: string;
+    current?: boolean;
+    description?: string;
+  }[];
+  awards?: {
+    awardName: string;
+    organization: string;
+    awardDate?: string;
+    description?: string;
+  }[];
 }
 
 class ResumeParserService {
@@ -102,10 +105,9 @@ class ResumeParserService {
    */
   async parsePDF(buffer: Buffer): Promise<string> {
     try {
-      const PDFParse = await getPdfParse();
       const parser = new PDFParse({ data: buffer });
       const data = await parser.getText();
-      return data.text;
+      return data.text || "";
     } catch (error) {
       logger.error("PDF parsing error:", error);
       throw new Error("Failed to parse PDF file");
@@ -196,6 +198,32 @@ Extract and return a JSON object with the following structure. Be thorough and e
       "date": "string (year or date)",
       "link": "string (url or null)"
     }
+  ],
+  "coursework": [
+    {
+      "courseName": "string (course/class name)",
+      "topic": "string (subject area or category)",
+      "institution": "string (school/university where taken)"
+    }
+  ],
+  "leadership": [
+    {
+      "title": "string (leadership role/title)",
+      "organization": "string (company/organization name)",
+      "location": "string or null (location)",
+      "startDate": "string or null (e.g. 'Jan 2020')",
+      "endDate": "string or null (null if current)",
+      "current": boolean,
+      "description": "string or null (brief accomplishments/responsibilities)"
+    }
+  ],
+  "awards": [
+    {
+      "awardName": "string (award/honor name)",
+      "organization": "string (organization giving award)",
+      "awardDate": "string or null (date received)",
+      "description": "string or null (why awarded)"
+    }
   ]
 }
 
@@ -203,22 +231,29 @@ IMPORTANT:
 - Extract ALL work experiences, not just recent ones
 - Extract ALL education entries
 - Extract ALL skills, projects, and certifications
+- Extract coursework, leadership roles, and awards if present in resume
 - For bullet points in experiences, keep them as-is with quantifiable metrics if present
 - If the resume has a summary/objective section, include it
 - Parse dates intelligently (handle various formats)
 - Return ONLY valid JSON, no markdown formatting
 
+OPTIONAL SECTIONS:
+- Coursework: Look for "Courses", "Relevant Coursework", "Coursework" sections
+- Leadership: Look for "Leadership", "Volunteer", "Board" sections or leadership-related job titles
+- Awards: Look for "Awards", "Honors", "Recognition" sections
+
 Return the JSON object:`;
 
     // Helper to try generation with fallback
     const generateWithFallback = async (retries = 2) => {
-      // List of models to try in order
+      // List of models to try in order (based on available quota)
       const modelsToTry = [
-        "gemini-2.0-flash-001",
-        "gemini-2.0-flash",
         "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-3-flash",
       ];
 
+      let lastError: any = null;
       for (const modelName of modelsToTry) {
         try {
           logger.debug(`Attempting with model: ${modelName}...`);
@@ -228,7 +263,9 @@ Return the JSON object:`;
           );
           return result.response.text();
         } catch (error: any) {
-          logger.debug(`Failed with ${modelName}: ${error.message}`);
+          lastError = error;
+          logger.error(`Failed with ${modelName}:`, error.message);
+          logger.error(`Full error:`, error);
 
           if (error.message?.includes("429")) {
             logger.debug(`Rate limit hit. Waiting 2s before next model...`);
@@ -243,7 +280,9 @@ Return the JSON object:`;
         }
       }
 
-      throw new Error("All AI models failed. Please try again later.");
+      throw new Error(
+        `All AI models failed. Last error: ${lastError?.message || "Unknown error"}`,
+      );
     };
 
     try {
@@ -307,6 +346,38 @@ Return the JSON object:`;
           date: cert.date || undefined,
           link: cert.link || undefined,
         })),
+        ...(parsed.coursework && parsed.coursework.length > 0
+          ? {
+              coursework: parsed.coursework.map((cw: any) => ({
+                courseName: cw.courseName || "",
+                topic: cw.topic || "",
+                institution: cw.institution || "",
+              })),
+            }
+          : {}),
+        ...(parsed.leadership && parsed.leadership.length > 0
+          ? {
+              leadership: parsed.leadership.map((lead: any) => ({
+                title: lead.title || "",
+                organization: lead.organization || "",
+                location: lead.location || undefined,
+                startDate: lead.startDate || undefined,
+                endDate: lead.endDate || undefined,
+                current: lead.current || false,
+                description: lead.description || undefined,
+              })),
+            }
+          : {}),
+        ...(parsed.awards && parsed.awards.length > 0
+          ? {
+              awards: parsed.awards.map((award: any) => ({
+                awardName: award.awardName || "",
+                organization: award.organization || "",
+                awardDate: award.awardDate || undefined,
+                description: award.description || undefined,
+              })),
+            }
+          : {}),
       };
     } catch (error: any) {
       console.error("AI extraction error details:", error);

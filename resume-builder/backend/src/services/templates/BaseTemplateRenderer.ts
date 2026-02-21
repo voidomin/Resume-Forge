@@ -1,6 +1,12 @@
 import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { TemplateRenderer } from "./TemplateRenderer.interface";
+import {
+  contentDensityEngine,
+  DensityLevel,
+  ScaledDesignSystem,
+  UnifiedDesignSystem,
+} from "../../../../shared/design-system";
 
 export abstract class BaseTemplateRenderer implements TemplateRenderer {
   abstract render(
@@ -9,6 +15,75 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
     fontScale?: number,
     spacingScale?: number,
   ): void;
+
+  abstract renderWithDensity(
+    doc: PDFKit.PDFDocument,
+    resume: GeneratedResume,
+    density: DensityLevel,
+  ): void;
+
+  /**
+   * Helper to move down by exact points, accounting for line height
+   */
+  protected moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
+    const lineHeight = (doc.currentFontSize() || 12) * 1.2;
+    doc.moveDown(points / lineHeight);
+  }
+
+  /**
+   * Apply section-aware spacing adjustment
+   *
+   * Reduces spacing for sparse sections (few items/words)
+   * to eliminate excessive white space while maintaining readability
+   */
+  protected getSectionSpacingAdjustment(
+    doc: PDFKit.PDFDocument,
+    sectionName: string,
+    sectionData: any,
+  ): number {
+    const multiplier = contentDensityEngine.getSectionSpacingMultiplier(
+      sectionName,
+      sectionData,
+    );
+    return multiplier;
+  }
+
+  /**
+   * Move down with section-aware spacing
+   *
+   * Applies the content-aware multiplier to adjust spacing
+   */
+  protected moveDownAdjusted(
+    doc: PDFKit.PDFDocument,
+    basePoints: number,
+    sectionName: string,
+    sectionData: any,
+  ): void {
+    const multiplier = this.getSectionSpacingAdjustment(
+      doc,
+      sectionName,
+      sectionData,
+    );
+    const adjustedPoints = basePoints * multiplier;
+    this.moveDownPoints(doc, adjustedPoints);
+  }
+
+  protected getScaledDesignSystem(
+    doc: PDFKit.PDFDocument,
+    density: DensityLevel,
+  ): ScaledDesignSystem {
+    const injected = (
+      doc as PDFKit.PDFDocument & {
+        __scaledDesignSystem?: ScaledDesignSystem;
+      }
+    ).__scaledDesignSystem;
+
+    if (injected) {
+      return injected;
+    }
+
+    return contentDensityEngine.getScaledDesignSystem(density);
+  }
 
   protected renderContactLine(
     doc: PDFKit.PDFDocument,

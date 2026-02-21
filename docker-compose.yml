@@ -24,8 +24,8 @@ services:
   # Backend API
   backend:
     build:
-      context: ./resume-builder/backend
-      dockerfile: Dockerfile
+      context: ./resume-builder
+      dockerfile: ./backend/Dockerfile
     container_name: resume_builder_api
     environment:
       NODE_ENV: production
@@ -33,6 +33,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       PORT: 3000
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     ports:
       - "3000:3000"
     depends_on:
