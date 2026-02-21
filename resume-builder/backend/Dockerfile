@@ -6,18 +6,17 @@ RUN npm install
 COPY backend ./backend
 COPY shared ./shared
 WORKDIR /app/backend
-RUN npx prisma generate
+RUN node_modules/.bin/prisma generate
 RUN npm run build
 
 # Stage 2: Production
 FROM node:20-bullseye-slim
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm install --only=production
+RUN npm install --omit=dev
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/prisma ./prisma
-# Need prisma client in prod too
-RUN npx prisma generate
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 EXPOSE 3000
 CMD ["node", "dist/backend/src/index.js"]
