@@ -1,6 +1,9 @@
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  transform: {
+    "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.test.json" }],
+  },
   roots: ["<rootDir>/src", "<rootDir>/tests"],
   testMatch: ["**/__tests__/**/*.ts", "**/?(*.)+(spec|test).ts"],
   moduleFileExtensions: ["ts", "js", "json"],
@@ -15,4 +18,8 @@ module.exports = {
     },
   },
   setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
+  // Configure ts-jest for test files to include Jest types
+  transform: {
+    "^.+\\.ts$": ["ts-jest", { tsconfig: { types: ["jest", "node"] } }],
+  },
 };
