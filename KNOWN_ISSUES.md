@@ -2,6 +2,8 @@
 
 This document tracks bugs and issues reported by users during testing and production use of SmartResume Builder v1.0.0.
 
+**🌐 Live Application**: [https://resumeforge2.netlify.app/login](https://resumeforge2.netlify.app/login)
+
 **Last Updated:** February 14, 2026  
 **Version:** v1.0.0
 

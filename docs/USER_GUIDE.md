@@ -1,6 +1,6 @@
-# Resume Forge - User Guide
+# SmartResume Builder - User Guide
 
-Welcome to **Resume Forge**, your AI-powered ATS-optimized resume builder. This guide will walk you through every feature and help you create winning resumes tailored to specific job applications.
+Welcome to **SmartResume Builder**, your AI-powered ATS-optimized resume builder. This guide will walk you through every feature and help you create winning resumes tailored to specific job applications.
 
 ---
 
@@ -20,7 +20,8 @@ Welcome to **Resume Forge**, your AI-powered ATS-optimized resume builder. This 
 ### Creating an Account
 
 1. **Visit the Application**
-   - Navigate to your Resume Forge instance (e.g., `https://your-domain.com`)
+   - Navigate to [SmartResume Builder](https://resumeforge2.netlify.app/login)
+   - Or visit your own deployed instance
 
 2. **Sign Up**
    - Click **"Create Account"** on the login page
@@ -97,7 +98,7 @@ Once your master profile is complete, generate tailored resumes for specific job
    - Click **"Generate"**
 
 3. **AI Processing**:
-   - Resume Forge analyzes the job description
+   - SmartResume Builder analyzes the job description
    - AI model (Gemini 2.5 Flash) selects the most relevant experiences, skills, and projects
    - A one-page, ATS-optimized resume is generated
    - **Model Transparency**: See exactly which AI model was used (primary or fallback)
@@ -227,7 +228,7 @@ Once satisfied with your generated resume:
 
 **A**:
 
-- **Fallback Mode**: Resume Forge has a fallback system
+- **Fallback Mode**: SmartResume Builder has a fallback system
 - Your resume is generated using a template if AI is unavailable
 - You'll see a message indicating fallback mode was used
 - The resume is still professional and downloadable
@@ -378,8 +379,8 @@ Once satisfied with your generated resume:
 
 ### Need Support?
 
-- **Email**: support@resumeforge.com
 - **GitHub Issues**: Report bugs on [GitHub](https://github.com/voidomin/Resume-Forge/issues)
+- **Documentation**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
 - **Documentation**: Review PRD and Design docs for technical details
 
 ### Report a Bug
@@ -414,4 +415,4 @@ Once satisfied with your generated resume:
 
 **Happy job hunting! 🚀**
 
-_Resume Forge – Craft your perfect resume. Every time._
+_SmartResume Builder – Craft your perfect resume. Every time._

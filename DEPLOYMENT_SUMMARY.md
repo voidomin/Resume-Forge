@@ -1,5 +1,7 @@
 # 🎯 SmartResume Builder v1.0 - DEPLOYMENT COMPLETE ✅
 
+**🌐 Live Application**: [https://resumeforge2.netlify.app/login](https://resumeforge2.netlify.app/login)
+
 ## Executive Summary
 
 Your application is **100% production-ready** for v1.0 release with full test coverage, infrastructure automation, and comprehensive documentation.

@@ -3,8 +3,10 @@
 An **ATS-optimized, role-based resume builder** that generates tailored resumes for specific job applications. Simply maintain one master profile and generate customized resumes for each job you apply to!
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Status](https://img.shields.io/badge/status-Production%20v1.0.0-green.svg)
+![Status](https://img.shields.io/badge/status-Production%20v1.1.0-green.svg)
 ![Tests](https://img.shields.io/badge/tests-37%2F37%20passing-brightgreen.svg)
+
+**🌐 [Live Demo](https://resumeforge2.netlify.app/login)** | [GitHub](https://github.com/voidomin/Resume-Forge)
 
 ---
 
@@ -22,7 +24,15 @@ An **ATS-optimized, role-based resume builder** that generates tailored resumes 
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Try It Now
+
+**Live Demo**: [https://resumeforge2.netlify.app/login](https://resumeforge2.netlify.app/login)
+
+No installation required! Create an account and start building your resume immediately.
+
+### Run Locally
+
+#### Prerequisites
 
 - Node.js v18+
 - npm v9+
@@ -30,13 +40,36 @@ An **ATS-optimized, role-based resume builder** that generates tailored resumes 
 
 ### Getting Started
 
-1. **Read the documentation** – Start with [START_HERE_README.md](START_HERE_README.md)
-2. **Run the setup script** (Linux/Mac):
+1. **Clone the repository**:
+
    ```bash
-   chmod +x setup.sh
-   ./setup.sh
+   git clone https://github.com/voidomin/Resume-Forge.git
+   cd Resume-Forge
    ```
-3. **Or follow manual setup** – See [GETTING_STARTED.md](GETTING_STARTED.md)
+
+2. **Install dependencies**:
+
+   ```bash
+   # Backend
+   cd resume-builder/backend
+   npm install
+
+   # Frontend
+   cd ../frontend
+   npm install
+   ```
+
+3. **Set up environment variables** – See [DEPLOYMENT.md](DEPLOYMENT.md) for configuration details
+
+4. **Start development servers**:
+
+   ```bash
+   # Backend (from resume-builder/backend)
+   npm run dev
+
+   # Frontend (from resume-builder/frontend)
+   npm run dev
+   ```
 
 ---
 
@@ -50,25 +83,25 @@ An **ATS-optimized, role-based resume builder** that generates tailored resumes 
 | [Design_Document_Resume_Builder.md](docs/Design_Document_Resume_Builder.md) | Technical architecture, data models, and scaling logic |
 | [Tech_Stack_Resume_Builder.md](docs/Tech_Stack_Resume_Builder.md)           | Technology decisions, costs, and AI service selection  |
 | [USER_GUIDE.md](docs/USER_GUIDE.md)                                         | Complete user guide and feature documentation          |
-| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)                              | Common issues and solutions                            |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)                               | Common issues and solutions                            |
 
 ### Development & Contribution
 
-| Document                                        | Description                                      |
-| ----------------------------------------------- | ------------------------------------------------ |
-| [CHANGELOG.md](CHANGELOG.md)                    | Version history and release notes                |
-| [CONTRIBUTING.md](CONTRIBUTING.md)              | How to contribute, workflow, and guidelines      |
-| [KNOWN_ISSUES.md](KNOWN_ISSUES.md)              | Bug tracking and known issues                    |
+| Document                                                 | Description                                  |
+| -------------------------------------------------------- | -------------------------------------------- |
+| [CHANGELOG.md](CHANGELOG.md)                             | Version history and release notes            |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                       | How to contribute, workflow, and guidelines  |
+| [KNOWN_ISSUES.md](KNOWN_ISSUES.md)                       | Bug tracking and known issues                |
 | [BRANCH_PROTECTION_SETUP.md](BRANCH_PROTECTION_SETUP.md) | GitHub branch protection configuration guide |
-| [V1_RELEASE_CHECKLIST.md](V1_RELEASE_CHECKLIST.md) | v1.0 release verification checklist           |
+| [V1_RELEASE_CHECKLIST.md](V1_RELEASE_CHECKLIST.md)       | v1.0 release verification checklist          |
 
 ### Deployment
 
-| Document                                        | Description                                      |
-| ----------------------------------------------- | ------------------------------------------------ |
-| [DEPLOYMENT.md](DEPLOYMENT.md)                  | Production deployment guide                      |
-| [DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)  | Deployment completion summary                    |
-| [FREE_DEPLOYMENT_GUIDE.md](FREE_DEPLOYMENT_GUIDE.md) | Free hosting options and setup            |
+| Document                                             | Description                    |
+| ---------------------------------------------------- | ------------------------------ |
+| [DEPLOYMENT.md](DEPLOYMENT.md)                       | Production deployment guide    |
+| [DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)       | Deployment completion summary  |
+| [FREE_DEPLOYMENT_GUIDE.md](FREE_DEPLOYMENT_GUIDE.md) | Free hosting options and setup |
 
 ---
 
@@ -102,36 +135,56 @@ An **ATS-optimized, role-based resume builder** that generates tailored resumes 
 ## 📁 Project Structure
 
 ```
-cv-maker/
-├── 📚 Documentation
-│   ├── START_HERE_README.md
-│   ├── INDEX.md
-│   ├── GETTING_STARTED.md
-│   ├── FILE_PLACEMENT_GUIDE.md
-│   ├── PRD_Resume_Builder.md
-│   ├── Design_Document_Resume_Builder.md
-│   └── Tech_Stack_Resume_Builder.md
+Resume-Forge/
+├── 📚 Documentation (root level)
+│   ├── README.md
+│   ├── CHANGELOG.md
+│   ├── CONTRIBUTING.md
+│   ├── DEPLOYMENT.md
+│   ├── TESTING_GUIDE.md
+│   ├── KNOWN_ISSUES.md
+│   └── docs/
+│       ├── PRD_Resume_Builder.md
+│       ├── Design_Document_Resume_Builder.md
+│       ├── Tech_Stack_Resume_Builder.md
+│       ├── USER_GUIDE.md
+│       └── TROUBLESHOOTING.md
 │
-├── 🔧 Setup
-│   └── setup.sh
+├── 🏗️ resume-builder/
+│   ├── backend/
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   ├── controllers/
+│   │   │   ├── routes/
+│   │   │   ├── services/
+│   │   │   ├── middleware/
+│   │   │   └── lib/
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma
+│   │   │   └── migrations/
+│   │   ├── tests/
+│   │   ├── package.json
+│   │   └── Dockerfile
+│   │
+│   ├── frontend/
+│   │   ├── src/
+│   │   │   ├── App.tsx
+│   │   │   ├── main.tsx
+│   │   │   ├── components/
+│   │   │   ├── pages/
+│   │   │   ├── store/
+│   │   │   ├── api/
+│   │   │   └── types/
+│   │   ├── tests/
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   │
+│   └── shared/
+│       ├── design-system.ts
+│       └── unit-converters.ts
 │
-├── ⚙️ Backend Code
-│   ├── backend_index.ts
-│   ├── backend_auth_routes.ts
-│   ├── backend_auth_controller.ts
-│   ├── backend_auth_middleware.ts
-│   ├── backend_profile_routes.ts
-│   └── backend_resume_routes.ts
-│
-└── 🎨 Frontend Code
-    ├── frontend_App.tsx
-    ├── frontend_authStore.ts
-    ├── frontend_Login.tsx
-    ├── frontend_Register.tsx
-    ├── frontend_Dashboard.tsx
-    ├── frontend_Header.tsx
-    ├── frontend_Footer.tsx
-    └── frontend_PlaceholderPages.tsx
+└── 🐳 Docker
+    └── docker-compose.yml
 ```
 
 ---
@@ -147,6 +200,16 @@ cv-maker/
 ---
 
 ## 📋 Development Status
+
+### v1.1.0 (Released - February 21, 2026) ✅
+
+- [x] Content density engine with normal/compact/ultra-compact levels
+- [x] Bidirectional fit scaling
+- [x] Content-aware section spacing
+- [x] Fixed AI selecting first items instead of most relevant
+- [x] Fixed regenerate button using wrong job description
+- [x] Fixed visual inconsistencies between preview, PDF, and DOCX
+- [x] Unified design system across all templates
 
 ### v1.0.0 (Released - February 14, 2026) ✅
 
@@ -164,11 +227,12 @@ cv-maker/
 - [x] Docker deployment setup
 - [x] Production deployment
 
-### v1.1.0 (Planned - Bug Fixes)
+### v1.2.0 (Planned - Enhancements)
 
-- [ ] Bug fixes from user feedback
+- [ ] Additional bug fixes from user feedback
 - [ ] Performance optimizations
 - [ ] Documentation improvements
+- [ ] Optional sections (Coursework, Leadership, Awards)
 
 ### Future Roadmap
 
