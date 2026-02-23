@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive testing guide for the new Optional Sections feature (Coursework, Leadership, Awards) added to the Resume Forge application.
+This document provides a comprehensive testing guide for the new Optional Sections feature (Coursework, Leadership, Awards) added to the SmartResume Builder application.
 
 ## Feature Summary
 

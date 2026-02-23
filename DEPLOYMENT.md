@@ -1,4 +1,4 @@
-# Deployment Guide - Resume Builder v1.0
+# Deployment Guide - SmartResume Builder v1.1
 
 ## Prerequisites
 
@@ -281,5 +281,5 @@ For issues:
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: February 2024
+**Version**: 1.1.0
+**Last Updated**: February 2026

@@ -1,6 +1,6 @@
-# Resume Forge - Troubleshooting Guide
+# SmartResume Builder - Troubleshooting Guide
 
-This guide covers common issues and solutions for Resume Forge users and administrators.
+This guide covers common issues and solutions for SmartResume Builder users and administrators.
 
 ---
 

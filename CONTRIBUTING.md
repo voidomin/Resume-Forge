@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to SmartResume Builder! This document outlines the process and guidelines for contributing to the project.
 
+**🌐 Live Application**: [https://resumeforge2.netlify.app/login](https://resumeforge2.netlify.app/login)
+
 ---
 
 ## Table of Contents
