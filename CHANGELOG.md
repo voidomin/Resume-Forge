@@ -7,44 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-### Changed
-
-### Fixed
+> **In Development**: v1.2.0 - Next feature release
 
 ### Added
 
-- Tracking for user feedback and bug reports from v1.0.0 deployment
-- Comprehensive testing guides (TESTING_GUIDE.md, TESTING_SUMMARY.md)
-- Unified design system (`resume-builder/shared/design-system.ts`)
-- Unit conversion utilities (`resume-builder/shared/unit-converters.ts`)
+- Optional sections support (Coursework, Leadership, Awards)
+- Live demo link in all documentation
 
 ### Changed
 
-- Updated all 4 PDF renderers to use UnifiedDesignSystem
-- Updated DOCX service to use UnifiedDesignSystem
-- Updated all 4 frontend templates to use UnifiedDesignSystem (Standard, Executive, Minimalist, Modern)
-- Improved spacing calculations in PDF generation
-- Achieved 100% visual consistency across preview, PDF, and DOCX for all templates
+- Documentation updates with correct project structure
+- Updated all docs with live demo URL (https://resumeforge2.netlify.app/login)
+- Project naming consistency (SmartResume Builder)
 
 ### Fixed
-
-- **[HIGH]** Fixed AI selecting first items instead of most relevant (#AI-SELECTION-RELEVANCE-001)
-  - Added database ordering for skills, projects, and certifications (most recent first)
-  - Strengthened AI prompt with explicit relevance selection instructions
-  - Added "CRITICAL SELECTION RULE" to emphasize intelligent item selection
-  - AI now analyzes all items and selects based on job description match
-- **[CRITICAL]** Fixed regenerate button using wrong job description (#REGENERATE-JD-BUG-001)
-  - Backend now preserves original job description instead of overwriting it
-  - Frontend properly resets state when navigating between resumes
-  - Added state validation guards to prevent mismatches
-  - Prevents data corruption and ensures regeneration uses correct job posting
-- **[CRITICAL]** Fixed visual inconsistencies between preview, PDF, and DOCX formats (#TEMPLATE-CONSISTENCY-001)
-  - All templates now render identically across all three output formats
-  - Fonts now consistent (Helvetica/Arial) across all formats
-  - Spacing calculations now accurate using proper point-to-line-height conversion
-  - Applied fix to all 4 templates: Modern, Standard, Executive, Minimalist
 
 ### Security
 
