@@ -6,6 +6,12 @@ import { docxService } from "../services/docx.service";
 import { atsCheckerService } from "../services/atsChecker.service";
 import { prisma } from "../lib/prisma";
 import { sanitizeInput } from "../lib/sanitize";
+import { LRUCache } from "lru-cache";
+
+const resumeCache = new LRUCache<string, any>({
+  max: 100,
+  ttl: 1000 * 60 * 5, // 5 minutes
+});
 
 interface GenerateBody {
   jobDescription: string;
@@ -180,6 +186,13 @@ async function resumeRoutes(server: FastifyInstance) {
       try {
         const { userId } = (request as any).user;
 
+        // Check cache first
+        const cacheKey = `resumes_${userId}`;
+        const cachedResumes = resumeCache.get(cacheKey);
+        if (cachedResumes) {
+          return reply.send({ resumes: cachedResumes });
+        }
+
         const resumes = await prisma.resume.findMany({
           where: { userId },
           orderBy: { createdAt: "desc" },
@@ -189,10 +202,23 @@ async function resumeRoutes(server: FastifyInstance) {
             targetRole: true,
             atsScore: true,
             createdAt: true,
+            updatedAt: true,
           },
         });
 
-        return reply.send({ resumes });
+        const formattedResumes = resumes.map((r) => ({
+          id: r.id,
+          name: r.name,
+          targetRole: r.targetRole,
+          atsScore: r.atsScore,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+        }));
+
+        // Cache the formatted resumes
+        resumeCache.set(cacheKey, formattedResumes);
+
+        return reply.send({ resumes: formattedResumes });
       } catch (error) {
         request.log.error(error);
         return reply.status(500).send({ error: "Failed to get resumes" });
@@ -209,9 +235,19 @@ async function resumeRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
 
-        const resume = await prisma.resume.findUnique({ where: { id } });
+        // Check cache first
+        const cacheKey = `resume_${userId}_${id}`;
+        const cachedResume = resumeCache.get(cacheKey);
+        if (cachedResume) {
+          return reply.send({ resume: cachedResume });
+        }
+
+        const resume = await prisma.resume.findFirst({
+          where: { id, userId },
+        });
 
         if (!resume) {
           return reply.status(404).send({ error: "Resume not found" });
@@ -225,11 +261,16 @@ async function resumeRoutes(server: FastifyInstance) {
           resume.jobDescription || "",
         );
 
+        const responseResume = {
+          ...resume,
+          content,
+        };
+
+        // Cache the specific resume
+        resumeCache.set(cacheKey, responseResume);
+
         return reply.send({
-          resume: {
-            ...resume,
-            content,
-          },
+          resume: responseResume,
           atsReport,
         });
       } catch (error) {
@@ -248,9 +289,24 @@ async function resumeRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
+
+        const resume = await prisma.resume.findUnique({
+          where: { id, userId },
+        });
+
+        if (!resume) {
+          return reply.status(404).send({ error: "Resume not found" });
+        }
+
         await prisma.resume.delete({ where: { id } });
-        return reply.send({ message: "Resume deleted" });
+
+        // Invalidate cache
+        resumeCache.delete(`resumes_${userId}`);
+        resumeCache.delete(`resume_${userId}_${id}`);
+
+        return reply.send({ message: "Resume deleted successfully" });
       } catch (error) {
         request.log.error(error);
         return reply.status(500).send({ error: "Failed to delete resume" });
@@ -272,8 +328,11 @@ async function resumeRoutes(server: FastifyInstance) {
       try {
         const { id } = request.params;
         const { template, density } = request.query;
+        const { userId } = (request as any).user;
 
-        const resume = await prisma.resume.findUnique({ where: { id } });
+        const resume = await prisma.resume.findUnique({
+          where: { id, userId },
+        });
 
         if (!resume) {
           return reply.status(404).send({ error: "Resume not found" });
@@ -363,8 +422,11 @@ async function resumeRoutes(server: FastifyInstance) {
     ) => {
       try {
         const { id } = request.params;
+        const { userId } = (request as any).user;
 
-        const resume = await prisma.resume.findUnique({ where: { id } });
+        const resume = await prisma.resume.findUnique({
+          where: { id, userId },
+        });
 
         if (!resume) {
           return reply.status(404).send({ error: "Resume not found" });
@@ -401,8 +463,11 @@ async function resumeRoutes(server: FastifyInstance) {
     ) => {
       try {
         const { id } = request.params;
+        const { userId } = (request as any).user;
 
-        const resume = await prisma.resume.findUnique({ where: { id } });
+        const resume = await prisma.resume.findUnique({
+          where: { id, userId },
+        });
 
         if (!resume) {
           return reply.status(404).send({ error: "Resume not found" });
@@ -436,7 +501,7 @@ async function resumeRoutes(server: FastifyInstance) {
         const { jobDescription } = request.body;
 
         const existingResume = await prisma.resume.findUnique({
-          where: { id },
+          where: { id, userId },
         });
 
         if (!existingResume) {

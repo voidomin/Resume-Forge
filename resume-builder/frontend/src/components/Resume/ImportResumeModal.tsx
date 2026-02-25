@@ -173,6 +173,9 @@ export default function ImportResumeModal({
               <input
                 ref={fileInputRef}
                 type="file"
+                id="resume-upload"
+                name="resume-upload"
+                aria-label="Upload Resume"
                 className="hidden"
                 accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 onChange={handleChange}
