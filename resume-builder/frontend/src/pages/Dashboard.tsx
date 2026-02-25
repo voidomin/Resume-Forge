@@ -179,12 +179,12 @@ function Dashboard() {
         {/* Stats Card */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
           <div className="flex items-start justify-between mb-4">
-            <div className="bg-purple-100 p-3 rounded-xl">
-              <FileText className="w-6 h-6 text-purple-600" />
+            <div className="bg-indigo-100 p-3 rounded-xl">
+              <FileText className="w-6 h-6 text-indigo-600" />
             </div>
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Your Resumes</h2>
-          <p className="text-4xl font-bold text-purple-600 mb-2">
+          <p className="text-4xl font-bold text-indigo-600 mb-2">
             {resumes.length}
           </p>
           <p className="text-gray-600 text-sm">

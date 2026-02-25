@@ -33,6 +33,7 @@
     "fastify": "^5.7.4",
     "html-to-docx": "^1.8.0",
     "jsonwebtoken": "^9.0.2",
+    "lru-cache": "^11.2.6",
     "mammoth": "^1.11.0",
     "pdf-parse": "^2.4.5",
     "pdfkit": "^0.13.0"

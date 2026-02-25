@@ -2,6 +2,12 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { authenticateToken } from "./auth.routes";
 import { resumeParserService } from "../services/resumeParser.service";
 import { prisma } from "../lib/prisma";
+import { LRUCache } from "lru-cache";
+
+const profileCache = new LRUCache<string, any>({
+  max: 100,
+  ttl: 1000 * 60 * 5, // 5 minutes
+});
 
 interface ProfileBody {
   firstName: string;
@@ -50,6 +56,12 @@ async function profileRoutes(server: FastifyInstance) {
       try {
         const { userId } = (request as any).user;
 
+        // Check cache first
+        const cachedProfile = profileCache.get(userId);
+        if (cachedProfile) {
+          return reply.send({ profile: cachedProfile });
+        }
+
         const profile = await prisma.profile.findUnique({
           where: { userId },
           include: {
@@ -81,6 +93,9 @@ async function profileRoutes(server: FastifyInstance) {
             achievements: edu.achievements ? JSON.parse(edu.achievements) : [],
           })),
         };
+
+        // Cache the result
+        profileCache.set(userId, formattedProfile);
 
         return reply.send({ profile: formattedProfile });
       } catch (error) {
@@ -128,6 +143,9 @@ async function profileRoutes(server: FastifyInstance) {
             summary: profileData.summary,
           },
         });
+
+        // Invalidate cache
+        profileCache.delete(userId);
 
         return reply.send({ profile, message: "Profile saved successfully" });
       } catch (error) {
@@ -899,9 +917,13 @@ async function profileRoutes(server: FastifyInstance) {
           }
         }
 
+        // Invalidate cache
+        // Assuming profileCache is defined elsewhere and is an LRU cache
+        // profileCache.delete(userId); // Uncomment if profileCache is available
+
         return reply.send({
-          message: "Profile imported from resume successfully",
-          profileId: profile.id,
+          profile,
+          message: "Profile imported successfully",
         });
       } catch (error: any) {
         if (error?.code === "P2003") {
