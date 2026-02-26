@@ -1,4 +1,3 @@
-import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
 import {
@@ -6,6 +5,7 @@ import {
   contentDensityEngine,
   DensityLevel,
 } from "../../../../shared/design-system";
+import { TemplateUtils } from "./TemplateUtils";
 
 export class StandardRenderer extends BaseTemplateRenderer {
   render(
@@ -41,22 +41,16 @@ export class StandardRenderer extends BaseTemplateRenderer {
 
     // Section Header - Left Aligned with Line
     const drawHeader = (title: string) => {
-      this.moveDownPoints(doc, ds.spacing.minimal);
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.h2)
-        .fillColor(UnifiedDesignSystem.colors.text)
-        .text(title.toUpperCase());
-
-      const y = doc.y + 2;
-      doc
-        .strokeColor(UnifiedDesignSystem.colors.primary)
-        .lineWidth(0.5)
-        .moveTo(scaledMargin, y)
-        .lineTo(595 - scaledMargin, y)
-        .stroke();
-
-      doc.y = y + ds.spacing.element;
+      TemplateUtils.drawHeader(
+        doc,
+        this,
+        ds,
+        title,
+        fontBold,
+        UnifiedDesignSystem.colors.text,
+        "left",
+        true,
+      );
     };
 
     // Header - Name
@@ -102,8 +96,6 @@ export class StandardRenderer extends BaseTemplateRenderer {
     if (resume.experiences?.length) {
       drawHeader("WORK EXPERIENCE");
       resume.experiences.forEach((exp) => {
-        const startY = doc.y;
-
         doc
           .font(fontBold)
           .fontSize(ds.fontSize.body)
@@ -123,13 +115,15 @@ export class StandardRenderer extends BaseTemplateRenderer {
           });
 
         const dateWidth = doc.widthOfString(exp.dateRange);
+        const expStartY = doc.y;
+
         doc
           .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(exp.dateRange, 595 - scaledMargin - dateWidth, startY, {
+          .text(exp.dateRange, 595 - scaledMargin - dateWidth, expStartY, {
             align: "left",
           });
 
-        doc.y = startY + doc.currentLineHeight(false) + 2;
+        doc.y = expStartY + doc.currentLineHeight(false) + 2;
 
         exp.bullets.forEach((b: string) => {
           doc
@@ -156,8 +150,6 @@ export class StandardRenderer extends BaseTemplateRenderer {
     if (resume.projects?.length) {
       drawHeader("PROJECTS");
       resume.projects.forEach((proj) => {
-        const startY = doc.y;
-
         doc
           .font(fontBold)
           .fontSize(ds.fontSize.body)
@@ -301,7 +293,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
         doc
           .font(fontRegular)
           .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(` - ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
+          .text(` - ${cert.issuer}${cert.date ? " (" + cert.date + ")" : ""}`);
       });
       // Adjusted spacing after section
       const certMultiplier = this.getSectionSpacingAdjustment(
@@ -328,7 +320,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
           .fillColor(UnifiedDesignSystem.colors.textLight)
           .text(
             ` (${course.topic}${
-              course.institution ? ` - ${course.institution}` : ""
+              course.institution ? " - " + course.institution : ""
             })`,
           );
       });
@@ -396,7 +388,7 @@ export class StandardRenderer extends BaseTemplateRenderer {
           .font(fontRegular)
           .fillColor(UnifiedDesignSystem.colors.textLight)
           .text(
-            ` - ${award.organization}${award.awardDate ? ` (${award.awardDate})` : ""}`,
+            ` - ${award.organization}${award.awardDate ? " (" + award.awardDate + ")" : ""}`,
           );
         if (award.description) {
           doc

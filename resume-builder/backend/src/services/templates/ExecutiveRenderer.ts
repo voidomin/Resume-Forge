@@ -1,4 +1,3 @@
-import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
 import {
@@ -6,6 +5,7 @@ import {
   contentDensityEngine,
   DensityLevel,
 } from "../../../../shared/design-system";
+import { TemplateUtils } from "./TemplateUtils";
 
 export class ExecutiveRenderer extends BaseTemplateRenderer {
   render(
@@ -42,22 +42,16 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
 
     // Helper: Section Headers (Centered, Uppercase, Primary Color)
     const drawHeader = (title: string) => {
-      this.moveDownPoints(doc, ds.spacing.tight);
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.h2)
-        .fillColor(UnifiedDesignSystem.colors.primary)
-        .text(title.toUpperCase(), { align: "center", characterSpacing: 1 });
-
-      const y = doc.y + 2;
-      doc
-        .strokeColor(UnifiedDesignSystem.colors.secondary)
-        .lineWidth(0.5)
-        .moveTo(scaledMargin + 64, y)
-        .lineTo(595 - scaledMargin - 64, y)
-        .stroke();
-
-      doc.y = y + ds.spacing.element;
+      TemplateUtils.drawHeader(
+        doc,
+        this,
+        ds,
+        title,
+        fontBold,
+        UnifiedDesignSystem.colors.primary,
+        "center",
+        true,
+      );
     };
 
     // 1. Header Name

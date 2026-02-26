@@ -1,62 +1,54 @@
 import { Fragment } from "react";
 import { TemplateProps } from "../../../types/resume";
 import { UnifiedDesignSystem } from "@shared/design-system";
+import { ContactItem } from "./shared/TemplateHelpers";
+import {
+  ExperienceSection,
+  EducationSection,
+  ProjectSection,
+} from "./shared/SectionRenderers";
 
 export function ModernTemplate({ resume }: TemplateProps) {
   // Use Unified Design System
   const ds = UnifiedDesignSystem;
 
-  // Helper functions
-  const formatUrl = (url: string) => {
-    return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
-  };
-
-  const isValid = (val: string | undefined) =>
-    val &&
-    val.trim().toLowerCase() !== "n/a" &&
-    val.trim().toLowerCase() !== "none";
-
-  const renderContactItem = (
-    label: string,
-    value: string | undefined,
-    isLink: boolean = false,
-    href?: string,
-  ) => {
-    if (!isValid(value)) return null;
-    return (
-      <Fragment key={label}>
-        {isLink ? (
-          <a
-            href={href || value}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: ds.colors.primary,
-              textDecoration: "none",
-              borderBottom: "1px dotted currentColor",
-            }}
-          >
-            {label === "Email" || label === "Phone" ? value : formatUrl(value!)}
-          </a>
-        ) : (
-          <span>{value}</span>
-        )}
-      </Fragment>
-    );
-  };
-
   const contactParts = [
-    renderContactItem("Phone", resume.contactInfo.phone),
-    renderContactItem(
-      "Email",
-      resume.contactInfo.email,
-      true,
-      `mailto:${resume.contactInfo.email}`,
-    ),
-    renderContactItem("LinkedIn", resume.contactInfo.linkedin, true),
-    renderContactItem("GitHub", resume.contactInfo.github, true),
-    renderContactItem("Portfolio", resume.contactInfo.portfolio, true),
-  ].filter(Boolean);
+    <ContactItem key="phone" label="Phone" value={resume.contactInfo.phone} />,
+    <ContactItem
+      key="email"
+      label="Email"
+      value={resume.contactInfo.email}
+      isLink
+      href={`mailto:${resume.contactInfo.email}`}
+      linkColor={ds.colors.primary}
+    />,
+    <ContactItem
+      key="linkedin"
+      label="LinkedIn"
+      value={resume.contactInfo.linkedin}
+      isLink
+      linkColor={ds.colors.primary}
+    />,
+    <ContactItem
+      key="github"
+      label="GitHub"
+      value={resume.contactInfo.github}
+      isLink
+      linkColor={ds.colors.primary}
+    />,
+    <ContactItem
+      key="portfolio"
+      label="Portfolio"
+      value={resume.contactInfo.portfolio}
+      isLink
+      linkColor={ds.colors.primary}
+    />,
+  ].filter(
+    (item) =>
+      item.props.value &&
+      item.props.value.trim().toLowerCase() !== "n/a" &&
+      item.props.value.trim().toLowerCase() !== "none",
+  );
 
   // Section header using design system
   const sectionHeaderStyle: React.CSSProperties = {
@@ -144,83 +136,7 @@ export function ModernTemplate({ resume }: TemplateProps) {
       {resume.experiences && resume.experiences.length > 0 && (
         <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Work Experience</h2>
-          {resume.experiences.map((exp, index) => (
-            <div
-              key={index}
-              style={{ marginBottom: `${ds.spacing.element}pt` }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                  marginBottom: `${ds.spacing.minimal}pt`,
-                }}
-              >
-                <div>
-                  <span
-                    style={{
-                      fontWeight: ds.fontWeights.bold,
-                      fontSize: `${ds.fontSize.h3}pt`,
-                      color: ds.colors.text,
-                    }}
-                  >
-                    {exp.role}
-                  </span>
-                  <span style={{ color: ds.colors.secondary }}> | </span>
-                  <span
-                    style={{
-                      fontWeight: ds.fontWeights.semibold,
-                      color: ds.colors.primary,
-                    }}
-                  >
-                    {exp.company}
-                  </span>
-                  {exp.location && (
-                    <span
-                      style={{
-                        fontSize: `${ds.fontSize.small}pt`,
-                        color: ds.colors.textLight,
-                        marginLeft: `${ds.spacing.tight}pt`,
-                      }}
-                    >
-                      ({exp.location})
-                    </span>
-                  )}
-                </div>
-                <span
-                  style={{
-                    fontSize: `${ds.fontSize.small}pt`,
-                    fontWeight: ds.fontWeights.semibold,
-                    color: ds.colors.text,
-                    flexShrink: 0,
-                  }}
-                >
-                  {exp.dateRange}
-                </span>
-              </div>
-              <ul
-                style={{
-                  margin: `${ds.spacing.tight}pt 0 0 0`,
-                  paddingLeft: `${ds.spacing.bulletIndent}pt`,
-                  listStyleType: "disc",
-                }}
-              >
-                {exp.bullets.map((bullet, bIndex) => (
-                  <li
-                    key={bIndex}
-                    style={{
-                      marginBottom: `${ds.spacing.minimal}pt`,
-                      fontSize: `${ds.fontSize.body}pt`,
-                      paddingLeft: `${ds.spacing.tight}pt`,
-                    }}
-                  >
-                    {bullet}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <ExperienceSection experiences={resume.experiences} layout="modern" />
         </section>
       )}
 
@@ -228,67 +144,7 @@ export function ModernTemplate({ resume }: TemplateProps) {
       {resume.projects && resume.projects.length > 0 && (
         <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Projects</h2>
-          {resume.projects.map((proj, index) => (
-            <div
-              key={index}
-              style={{ marginBottom: `${ds.spacing.element}pt` }}
-            >
-              <div style={{ marginBottom: `${ds.spacing.minimal}pt` }}>
-                <span
-                  style={{
-                    fontWeight: ds.fontWeights.bold,
-                    fontSize: `${ds.fontSize.h3}pt`,
-                  }}
-                >
-                  {proj.name}
-                </span>
-                {proj.technologies && (
-                  <span
-                    style={{
-                      fontSize: `${ds.fontSize.body}pt`,
-                      color: ds.colors.secondary,
-                      fontStyle: "italic",
-                      marginLeft: `${ds.spacing.tight + 2}pt`,
-                    }}
-                  >
-                    — {proj.technologies}
-                  </span>
-                )}
-              </div>
-              <ul
-                style={{
-                  margin: `${ds.spacing.tight}pt 0 0 0`,
-                  paddingLeft: `${ds.spacing.bulletIndent}pt`,
-                  listStyleType: "disc",
-                }}
-              >
-                {proj.bullets && proj.bullets.length > 0
-                  ? proj.bullets.map((bullet, bIndex) => (
-                      <li
-                        key={bIndex}
-                        style={{
-                          marginBottom: `${ds.spacing.minimal}pt`,
-                          fontSize: `${ds.fontSize.body}pt`,
-                          paddingLeft: `${ds.spacing.tight}pt`,
-                        }}
-                      >
-                        {bullet}
-                      </li>
-                    ))
-                  : proj.description && (
-                      <li
-                        style={{
-                          marginBottom: `${ds.spacing.minimal}pt`,
-                          fontSize: `${ds.fontSize.body}pt`,
-                          paddingLeft: `${ds.spacing.tight}pt`,
-                        }}
-                      >
-                        {proj.description}
-                      </li>
-                    )}
-              </ul>
-            </div>
-          ))}
+          <ProjectSection projects={resume.projects} layout="modern" />
         </section>
       )}
 
@@ -296,51 +152,7 @@ export function ModernTemplate({ resume }: TemplateProps) {
       {resume.education && resume.education.length > 0 && (
         <section style={{ marginBottom: `${ds.spacing.section}pt` }}>
           <h2 style={sectionHeaderStyle}>Education</h2>
-          {resume.education.map((edu, index) => (
-            <div
-              key={index}
-              style={{ marginBottom: `${ds.spacing.tight + 2}pt` }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                }}
-              >
-                <div>
-                  <span
-                    style={{
-                      fontWeight: ds.fontWeights.bold,
-                      color: ds.colors.primary,
-                    }}
-                  >
-                    {edu.institution}
-                  </span>
-                </div>
-                <span
-                  style={{
-                    fontSize: `${ds.fontSize.small}pt`,
-                    fontWeight: ds.fontWeights.semibold,
-                    flexShrink: 0,
-                  }}
-                >
-                  {edu.dateRange}
-                </span>
-              </div>
-              <div style={{ fontSize: `${ds.fontSize.body}pt` }}>
-                <span style={{ fontWeight: ds.fontWeights.medium }}>
-                  {edu.degree} in {edu.field}
-                </span>
-                {edu.gpa && (
-                  <span style={{ color: ds.colors.textLight }}>
-                    {" "}
-                    | GPA: {edu.gpa}
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
+          <EducationSection education={resume.education} layout="modern" />
         </section>
       )}
 
@@ -405,9 +217,9 @@ export function ModernTemplate({ resume }: TemplateProps) {
           style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}
         >
           <h2 style={sectionHeaderStyle}>Certifications</h2>
-          {resume.certifications.map((cert, index) => (
+          {resume.certifications.map((cert) => (
             <div
-              key={index}
+              key={cert.name}
               style={{
                 fontSize: `${ds.fontSize.body}pt`,
                 marginBottom: `${ds.spacing.minimal}pt`,
@@ -437,9 +249,9 @@ export function ModernTemplate({ resume }: TemplateProps) {
           style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}
         >
           <h2 style={sectionHeaderStyle}>Coursework</h2>
-          {resume.coursework.map((course, index) => (
+          {resume.coursework.map((course) => (
             <div
-              key={index}
+              key={course.courseName}
               style={{
                 fontSize: `${ds.fontSize.body}pt`,
                 marginBottom: `${ds.spacing.minimal}pt`,
@@ -471,8 +283,11 @@ export function ModernTemplate({ resume }: TemplateProps) {
           style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}
         >
           <h2 style={sectionHeaderStyle}>Leadership</h2>
-          {resume.leadership.map((role, index) => (
-            <div key={index} style={{ marginBottom: `${ds.spacing.tight}pt` }}>
+          {resume.leadership.map((role) => (
+            <div
+              key={role.title}
+              style={{ marginBottom: `${ds.spacing.tight}pt` }}
+            >
               <div
                 style={{
                   display: "flex",
@@ -530,9 +345,9 @@ export function ModernTemplate({ resume }: TemplateProps) {
           style={{ marginTop: `${ds.spacing.section}pt`, marginBottom: "0" }}
         >
           <h2 style={sectionHeaderStyle}>Awards</h2>
-          {resume.awards.map((award, index) => (
+          {resume.awards.map((award) => (
             <div
-              key={index}
+              key={award.awardName}
               style={{
                 fontSize: `${ds.fontSize.body}pt`,
                 marginBottom: `${ds.spacing.minimal}pt`,

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { AuthHeroBackground } from "../components/common/AuthHeroBackground";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -25,18 +26,9 @@ function Login() {
 
   return (
     <div className="min-h-[calc(100vh-180px)] flex items-center justify-center py-12 px-4 relative overflow-hidden bg-slate-900">
-      {/* Dynamic Animated Background */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
-      <div className="absolute top-0 -left-1/4 w-[150%] h-[150%] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/40 via-purple-900/20 to-slate-900 animate-slow-spin origin-center pointer-events-none"></div>
+      <AuthHeroBackground />
 
       <div className="w-full max-w-md relative z-10">
-        {/* Floating gradient orbs */}
-        <div className="absolute -top-16 -left-16 w-48 h-48 bg-blue-500 rounded-full mix-blend-screen filter blur-[64px] opacity-40 animate-pulse"></div>
-        <div
-          className="absolute -bottom-16 -right-16 w-48 h-48 bg-purple-500 rounded-full mix-blend-screen filter blur-[64px] opacity-40 animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-
         {/* Header */}
         <div className="text-center mb-10 relative">
           <div className="inline-flex items-center justify-center p-3 bg-white/5 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-xl mb-4">

@@ -232,14 +232,14 @@ export interface ScaledDesignSystem {
  */
 export class ContentDensityEngine {
   // ATS and readability safety bounds
-  private readonly MIN_FONT_SIZE = 8.5; // Minimum font size (pt)
+  private readonly MIN_FONT_SIZE = 7.5; // Minimum font size (pt)
   private readonly MAX_FONT_SCALE = 1.18; // Max expansion vs scaled base
-  private readonly MIN_MARGIN = 18; // Minimum page margin (pt)
+  private readonly MIN_MARGIN = 12; // Minimum page margin (pt)
   private readonly MAX_MARGIN = 48; // Maximum page margin (pt)
   private readonly MIN_LINE_HEIGHT = 1.2; // Minimum line height multiplier
   private readonly MAX_LINE_HEIGHT = 1.6; // Maximum line height multiplier
   private readonly MIN_FIT_MULTIPLIER = 0.6;
-  private readonly MAX_FIT_MULTIPLIER = 1.15;
+  private readonly MAX_FIT_MULTIPLIER = 1.25;
 
   // Heuristics for density detection
   private readonly NORMAL_WORD_THRESHOLD = 800; // Max words for NORMAL density

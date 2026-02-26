@@ -1,4 +1,3 @@
-import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
 import {
@@ -7,6 +6,7 @@ import {
   DensityLevel,
   ScaledDesignSystem,
 } from "../../../../shared/design-system";
+import { TemplateUtils } from "./TemplateUtils";
 
 export class ModernRenderer extends BaseTemplateRenderer {
   render(
@@ -222,22 +222,29 @@ export class ModernRenderer extends BaseTemplateRenderer {
   ) {
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
 
-    doc
-      .font(fontBold)
-      .fontSize(ds.fontSize.h2)
-      .fillColor(UnifiedDesignSystem.colors.primary)
-      .text(title.toUpperCase());
+    TemplateUtils.drawHeader(
+      doc,
+      this,
+      ds,
+      title,
+      fontBold,
+      UnifiedDesignSystem.colors.primary,
+      "left",
+      false, // Modern has its own specific underline logic below
+    );
 
-    // Underline with design system border width
+    // Modern has its own specific full-width underline logic, so we draw it separately
     doc
       .strokeColor(UnifiedDesignSystem.colors.primary)
       .lineWidth(UnifiedDesignSystem.borders.sectionUnderline.width)
-      .moveTo(doc.x, doc.y + 2)
-      .lineTo(doc.page.width - doc.page.margins.right, doc.y + 2)
+      .moveTo(doc.page.margins.left, doc.y - ds.spacing.element + 2)
+      .lineTo(
+        doc.page.width - doc.page.margins.right,
+        doc.y - ds.spacing.element + 2,
+      )
       .stroke();
 
     doc.fillColor(UnifiedDesignSystem.colors.text); // Reset to standard text color
-    this.moveDownPoints(doc, ds.spacing.element);
   }
 
   private renderExperienceModern(

@@ -1,61 +1,50 @@
 import { Fragment } from "react";
 import { TemplateProps } from "../../../types/resume";
 import { UnifiedDesignSystem } from "@shared/design-system";
+import { ContactItem } from "./shared/TemplateHelpers";
+import {
+  ExperienceSection,
+  EducationSection,
+  ProjectSection,
+} from "./shared/SectionRenderers";
 
 export function MinimalistTemplate({ resume }: TemplateProps) {
   const ds = UnifiedDesignSystem;
   const borderStyle = "none";
-  const linkColor = ds.colors.primary;
-
-  const formatUrl = (url: string) => {
-    return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
-  };
-
-  const isValid = (val: string | undefined) =>
-    val &&
-    val.trim().toLowerCase() !== "n/a" &&
-    val.trim().toLowerCase() !== "none";
-
-  const renderContactItem = (
-    label: string,
-    value: string | undefined,
-    isLink: boolean = false,
-    href?: string,
-  ) => {
-    if (!isValid(value)) return null;
-    return (
-      <Fragment key={label}>
-        {isLink ? (
-          <a
-            href={href || value}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: linkColor,
-              textDecoration: "none",
-            }}
-          >
-            {label === "Email" || label === "Phone" ? value : formatUrl(value!)}
-          </a>
-        ) : (
-          <span>{value}</span>
-        )}
-      </Fragment>
-    );
-  };
 
   const contactParts = [
-    renderContactItem("Phone", resume.contactInfo.phone),
-    renderContactItem(
-      "Email",
-      resume.contactInfo.email,
-      true,
-      `mailto:${resume.contactInfo.email}`,
-    ),
-    renderContactItem("LinkedIn", resume.contactInfo.linkedin, true),
-    renderContactItem("GitHub", resume.contactInfo.github, true),
-    renderContactItem("Portfolio", resume.contactInfo.portfolio, true),
-  ].filter(Boolean);
+    <ContactItem key="phone" label="Phone" value={resume.contactInfo.phone} />,
+    <ContactItem
+      key="email"
+      label="Email"
+      value={resume.contactInfo.email}
+      isLink
+      href={`mailto:${resume.contactInfo.email}`}
+    />,
+    <ContactItem
+      key="linkedin"
+      label="LinkedIn"
+      value={resume.contactInfo.linkedin}
+      isLink
+    />,
+    <ContactItem
+      key="github"
+      label="GitHub"
+      value={resume.contactInfo.github}
+      isLink
+    />,
+    <ContactItem
+      key="portfolio"
+      label="Portfolio"
+      value={resume.contactInfo.portfolio}
+      isLink
+    />,
+  ].filter(
+    (item) =>
+      item.props.value &&
+      item.props.value.trim().toLowerCase() !== "n/a" &&
+      item.props.value.trim().toLowerCase() !== "none",
+  );
 
   const sectionHeaderStyle = {
     fontSize: `${ds.fontSize.contact}pt`,
@@ -150,73 +139,10 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
       {resume.experiences && resume.experiences.length > 0 && (
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Experience</h2>
-          {resume.experiences.map((exp, index) => (
-            <div
-              key={index}
-              style={{ marginBottom: `${ds.spacing.section + 4}pt` }}
-            >
-              <div
-                style={{
-                  marginBottom: `${ds.spacing.tight}pt`,
-                }}
-              >
-                <span
-                  style={{
-                    fontWeight: "700",
-                    fontSize: `${ds.fontSize.body}pt`,
-                    color: ds.colors.text,
-                    display: "block",
-                  }}
-                >
-                  {exp.role}
-                </span>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: `${ds.fontSize.contact}pt`,
-                    color: ds.colors.textLight,
-                  }}
-                >
-                  <span>
-                    {exp.company}
-                    {exp.location ? `, ${exp.location}` : ""}
-                  </span>
-                  <span>{exp.dateRange}</span>
-                </div>
-              </div>
-              <ul
-                style={{
-                  margin: `${ds.spacing.tight}pt 0 0 0`,
-                  paddingLeft: "14px",
-                  listStyleType: "none",
-                }}
-              >
-                {exp.bullets.map((bullet, bIndex) => (
-                  <li
-                    key={bIndex}
-                    style={{
-                      marginBottom: `${ds.spacing.tight}pt`,
-                      fontSize: `${ds.fontSize.body}pt`,
-                      paddingLeft: "0",
-                      position: "relative",
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: "-12px",
-                        color: ds.colors.primary,
-                      }}
-                    >
-                      •
-                    </span>
-                    {bullet}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <ExperienceSection
+            experiences={resume.experiences}
+            layout="minimalist"
+          />
         </section>
       )}
 
@@ -224,75 +150,7 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
       {resume.projects && resume.projects.length > 0 && (
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Projects</h2>
-          {resume.projects.map((proj, index) => (
-            <div
-              key={index}
-              style={{ marginBottom: `${ds.spacing.section}pt` }}
-            >
-              <div style={{ marginBottom: `${ds.spacing.minimal}pt` }}>
-                <span
-                  style={{
-                    fontWeight: "700",
-                    fontSize: `${ds.fontSize.body}pt`,
-                  }}
-                >
-                  {proj.name}
-                </span>
-                {proj.technologies && (
-                  <span
-                    style={{
-                      fontSize: `${ds.fontSize.contact}pt`,
-                      color: ds.colors.textLight,
-                      marginLeft: `${ds.spacing.element}pt`,
-                    }}
-                  >
-                    {proj.technologies}
-                  </span>
-                )}
-              </div>
-              <p
-                style={{
-                  fontSize: `${ds.fontSize.body}pt`,
-                  margin: `${ds.spacing.tight}pt 0`,
-                  color: ds.colors.text,
-                }}
-              >
-                {proj.description}
-              </p>
-              {/* Bullets for projects if any */}
-              {proj.bullets && (
-                <ul
-                  style={{
-                    margin: `${ds.spacing.tight}pt 0 0 0`,
-                    paddingLeft: "14px",
-                    listStyle: "none",
-                  }}
-                >
-                  {proj.bullets.map((b, i) => (
-                    <li
-                      key={i}
-                      style={{
-                        fontSize: `${ds.fontSize.contact}pt`,
-                        marginBottom: `${ds.spacing.minimal}pt`,
-                        position: "relative",
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: "absolute",
-                          left: "-12px",
-                          color: ds.colors.primary,
-                        }}
-                      >
-                        •
-                      </span>
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
+          <ProjectSection projects={resume.projects} layout="minimalist" />
         </section>
       )}
 
@@ -300,33 +158,7 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
       {resume.education && resume.education.length > 0 && (
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Education</h2>
-          {resume.education.map((edu, index) => (
-            <div
-              key={index}
-              style={{ marginBottom: `${ds.spacing.element}pt` }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontWeight: "700" }}>{edu.institution}</span>
-                <span
-                  style={{
-                    color: ds.colors.textLight,
-                    fontSize: `${ds.fontSize.contact}pt`,
-                  }}
-                >
-                  {edu.dateRange}
-                </span>
-              </div>
-              <div style={{ fontSize: `${ds.fontSize.body}pt` }}>
-                {edu.degree} in {edu.field}
-                {edu.gpa && (
-                  <span style={{ color: ds.colors.textLight }}>
-                    {" "}
-                    (GPA: {edu.gpa})
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
+          <EducationSection education={resume.education} layout="minimalist" />
         </section>
       )}
 
@@ -380,9 +212,9 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
       {resume.certifications && resume.certifications.length > 0 && (
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Certifications</h2>
-          {resume.certifications.map((cert, index) => (
+          {resume.certifications.map((cert) => (
             <div
-              key={index}
+              key={cert.name}
               style={{
                 marginBottom: `${ds.spacing.element}pt`,
                 fontSize: `${ds.fontSize.body}pt`,
@@ -410,9 +242,9 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
       {resume.coursework && resume.coursework.length > 0 && (
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Coursework</h2>
-          {resume.coursework.map((course, index) => (
+          {resume.coursework.map((course) => (
             <div
-              key={index}
+              key={course.courseName}
               style={{
                 marginBottom: `${ds.spacing.element}pt`,
                 fontSize: `${ds.fontSize.body}pt`,
@@ -440,9 +272,9 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
       {resume.leadership && resume.leadership.length > 0 && (
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Leadership</h2>
-          {resume.leadership.map((role, index) => (
+          {resume.leadership.map((role) => (
             <div
-              key={index}
+              key={role.title}
               style={{ marginBottom: `${ds.spacing.element}pt` }}
             >
               <div
@@ -500,9 +332,9 @@ export function MinimalistTemplate({ resume }: TemplateProps) {
       {resume.awards && resume.awards.length > 0 && (
         <section style={{ marginBottom: `${ds.spacing.section + 4}pt` }}>
           <h2 style={sectionHeaderStyle}>Awards</h2>
-          {resume.awards.map((award, index) => (
+          {resume.awards.map((award) => (
             <div
-              key={index}
+              key={award.awardName}
               style={{
                 marginBottom: `${ds.spacing.element}pt`,
                 fontSize: `${ds.fontSize.body}pt`,
