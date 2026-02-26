@@ -1,4 +1,3 @@
-import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
 import {
@@ -6,6 +5,7 @@ import {
   contentDensityEngine,
   DensityLevel,
 } from "../../../../shared/design-system";
+import { TemplateUtils } from "./TemplateUtils";
 
 export class MinimalistRenderer extends BaseTemplateRenderer {
   render(
@@ -42,14 +42,19 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
 
     // Helper: Section Headers (Uppercase, Tracking, TextLight Color)
     const drawHeader = (title: string) => {
-      this.moveDownPoints(doc, ds.spacing.minimal);
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.textLight)
-        .text(title.toUpperCase(), { characterSpacing: 2 });
+      // Minimalist gets a specific minimal stroke color from utility logic, we can pass our own wrapper.
+      TemplateUtils.drawHeader(
+        doc,
+        this,
+        ds,
+        title,
+        fontBold,
+        UnifiedDesignSystem.colors.textLight,
+        "left",
+        false, // Minimalist draws its own specific 30% opacity line
+      );
 
-      const y = doc.y + 2;
+      const y = doc.y - ds.spacing.element + 2;
       doc
         .strokeColor(UnifiedDesignSystem.colors.secondary)
         .opacity(0.3)
@@ -58,8 +63,6 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         .lineTo(scaledMargin + 64, y)
         .stroke()
         .opacity(1);
-
-      doc.y = y + ds.spacing.element;
     };
 
     // 1. Header - Name
@@ -108,7 +111,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         doc
           .fontSize(ds.fontSize.small)
           .text(
-            `  •  ${exp.dateRange}${exp.location ? ` — ${exp.location}` : ""}`,
+            `  •  ${exp.dateRange}${exp.location ? " — " + exp.location : ""}`,
             { continued: false },
           );
 
@@ -271,7 +274,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
         doc
           .font(fontRegular)
           .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(` — ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
+          .text(` — ${cert.issuer}${cert.date ? " (" + cert.date + ")" : ""}`);
       });
       // Adjusted spacing after section
       const certMultiplier = this.getSectionSpacingAdjustment(
@@ -298,7 +301,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
           .fillColor(UnifiedDesignSystem.colors.textLight)
           .text(
             ` — ${course.topic}${
-              course.institution ? ` (${course.institution})` : ""
+              course.institution ? " (" + course.institution + ")" : ""
             }`,
           );
       });
@@ -360,7 +363,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
           .fillColor(UnifiedDesignSystem.colors.textLight)
           .text(
             ` — ${award.organization}${
-              award.awardDate ? ` (${award.awardDate})` : ""
+              award.awardDate ? " (" + award.awardDate + ")" : ""
             }`,
           );
         if (award.description) {

@@ -397,33 +397,33 @@ Return this exact JSON structure:
   } {
     if (estimatedLines <= 30) {
       return {
-        summarySentencesMax: 4,
-        experienceBulletsMax: 4,
-        projectBulletsMax: 4,
+        summarySentencesMax: 5,
+        experienceBulletsMax: 5,
+        projectBulletsMax: 5,
         projectsMax: 3,
         totalBulletMin: 18,
-        totalBulletMax: 24,
+        totalBulletMax: 28,
       };
     }
 
     if (estimatedLines <= 42) {
       return {
-        summarySentencesMax: 3,
-        experienceBulletsMax: 3,
-        projectBulletsMax: 3,
+        summarySentencesMax: 4,
+        experienceBulletsMax: 4,
+        projectBulletsMax: 4,
         projectsMax: 3,
         totalBulletMin: 15,
-        totalBulletMax: 20,
+        totalBulletMax: 24,
       };
     }
 
     return {
-      summarySentencesMax: 3,
-      experienceBulletsMax: 2,
-      projectBulletsMax: 2,
-      projectsMax: 2,
+      summarySentencesMax: 4,
+      experienceBulletsMax: 4,
+      projectBulletsMax: 3,
+      projectsMax: 3,
       totalBulletMin: 12,
-      totalBulletMax: 16,
+      totalBulletMax: 20,
     };
   }
 
