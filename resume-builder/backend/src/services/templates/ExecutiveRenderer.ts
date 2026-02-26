@@ -148,9 +148,23 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
             .fillColor(UnifiedDesignSystem.colors.textLight)
             .text(` | ${proj.technologies}`, {
               oblique: true,
+              continued: !!proj.link,
+            });
+        }
+
+        if (proj.link) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.small)
+            .fillColor(UnifiedDesignSystem.colors.primary)
+            .text(proj.technologies ? ` | ${proj.link}` : ` | ${proj.link}`, {
+              link: proj.link.startsWith("http")
+                ? proj.link
+                : `https://${proj.link}`,
+              underline: true,
               continued: false,
             });
-        } else {
+        } else if (!proj.technologies) {
           doc.text("");
         }
 
