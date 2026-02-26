@@ -10,12 +10,12 @@ import {
   Sparkles,
   Download,
   ChevronRight,
-  Loader2,
   Trash2,
   Upload,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ImportResumeModal from "../components/Resume/ImportResumeModal";
+import { DashboardSkeleton } from "../components/common/SkeletonLoader";
 
 interface Resume {
   id: string;
@@ -70,8 +70,8 @@ function Dashboard() {
       await api.delete(`/resumes/${id}`);
       setResumes(resumes.filter((r) => r.id !== id));
       toast.success("Resume deleted");
-    } catch (error) {
-      toast.error("Failed to delete resume");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to delete resume");
     }
   };
 
@@ -89,11 +89,7 @@ function Dashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -115,7 +111,7 @@ function Dashboard() {
       </div>
 
       {/* Quick Action Cards */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
         {/* Profile Card */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
           <div className="flex items-start justify-between mb-4">
@@ -161,14 +157,14 @@ function Dashboard() {
           <div className="flex space-x-2">
             <Link
               to="/resume/new"
-              className="inline-flex items-center bg-white text-blue-600 font-semibold px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors text-sm"
+              className="inline-flex items-center justify-center flex-1 bg-white text-blue-600 font-semibold px-4 py-2.5 rounded-lg hover:bg-blue-50 transition-colors text-sm min-h-[44px]"
             >
               <Plus className="w-4 h-4 mr-2" />
               New Resume
             </Link>
             <button
               onClick={() => setIsImportModalOpen(true)}
-              className="inline-flex items-center bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-400 transition-colors text-sm border border-blue-400"
+              className="inline-flex items-center justify-center flex-1 bg-blue-500 text-white font-semibold px-4 py-2.5 rounded-lg hover:bg-blue-400 transition-colors text-sm border border-blue-400 min-h-[44px]"
             >
               <Upload className="w-4 h-4 mr-2" />
               Import
@@ -188,11 +184,9 @@ function Dashboard() {
             {resumes.length}
           </p>
           <p className="text-gray-600 text-sm">
-            {resumes.length === 0
-              ? "No resumes yet"
-              : resumes.length === 1
-                ? "resume generated"
-                : "resumes generated"}
+            {resumes.length === 0 && "No resumes yet"}
+            {resumes.length === 1 && "resume generated"}
+            {resumes.length > 1 && "resumes generated"}
           </p>
         </div>
       </div>
@@ -205,17 +199,17 @@ function Dashboard() {
             <div className="flex space-x-2">
               <button
                 onClick={() => setIsImportModalOpen(true)}
-                className="text-gray-600 font-medium text-sm hover:text-blue-600 flex items-center px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
+                className="text-gray-600 font-medium text-sm hover:text-blue-600 flex items-center justify-center px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200 min-h-[44px]"
               >
                 <Upload className="w-4 h-4 mr-1" />
-                Import
+                <span className="hidden sm:inline">Import</span>
               </button>
               <Link
                 to="/resume/new"
-                className="text-blue-600 font-medium text-sm hover:text-blue-700 flex items-center px-3 py-1.5 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                className="text-blue-600 font-medium text-sm hover:text-blue-700 flex items-center justify-center px-4 py-2.5 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors min-h-[44px]"
               >
                 <Plus className="w-4 h-4 mr-1" />
-                New Resume
+                <span className="hidden sm:inline">New Resume</span>
               </Link>
             </div>
           )}
@@ -232,17 +226,17 @@ function Dashboard() {
             <p className="text-gray-600 mb-6">
               Generate your first resume by pasting a job description.
             </p>
-            <div className="flex justify-center space-x-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
               <button
                 onClick={() => setIsImportModalOpen(true)}
-                className="inline-flex items-center bg-white text-gray-700 border border-gray-300 font-semibold px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center justify-center bg-white text-gray-700 border border-gray-300 font-semibold px-6 py-3.5 rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto min-h-[48px]"
               >
                 <Upload className="w-5 h-5 mr-2" />
                 Import Resume
               </button>
               <Link
                 to="/resume/new"
-                className="inline-flex items-center bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center justify-center bg-blue-600 text-white font-semibold px-6 py-3.5 rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto min-h-[48px]"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
                 Generate First Resume

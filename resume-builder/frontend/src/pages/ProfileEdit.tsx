@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { ProfileSkeleton } from "../components/common/SkeletonLoader";
 
 interface Experience {
   id?: string;
@@ -707,11 +708,7 @@ function ProfileEdit() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   const tabs = [
@@ -989,7 +986,32 @@ function ProfileEdit() {
 
       {/* Tabs */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="flex border-b border-gray-200 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        {/* Top Mobile Tabs (Shows only on mobile) */}
+        <div className="md:hidden overflow-x-auto -mx-4 px-4 pb-4 mb-2 scrollbar-none">
+          <div className="flex space-x-2 min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center space-x-2 px-4 py-2.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap min-h-[44px] ${
+                  activeTab === tab.id
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                    : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:text-blue-600"
+                }`}
+              >
+                <tab.icon className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                {tab.optional && (
+                  <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                    Optional
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="hidden md:flex border-b border-gray-200 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           {tabs.map((tab) => (
             <button
               key={tab.id}
