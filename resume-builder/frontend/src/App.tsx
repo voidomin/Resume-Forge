@@ -9,6 +9,7 @@ import { useAuthStore } from "./store/authStore";
 import Header from "./components/common/Header";
 import Footer from "./components/common/Footer";
 import React, { Suspense } from "react";
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
 
 // Lazy-loaded components
 const Login = React.lazy(() => import("./pages/Login"));
@@ -34,67 +35,73 @@ function App() {
         <Toaster position="top-right" />
         <Header />
         <main className="flex-1">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Public routes */}
-              <Route
-                path="/login"
-                element={
-                  !isAuthenticated ? <Login /> : <Navigate to="/dashboard" />
-                }
-              />
-              <Route
-                path="/register"
-                element={
-                  !isAuthenticated ? <Register /> : <Navigate to="/dashboard" />
-                }
-              />
+          <ErrorBoundary>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public routes */}
+                <Route
+                  path="/login"
+                  element={
+                    !isAuthenticated ? <Login /> : <Navigate to="/dashboard" />
+                  }
+                />
+                <Route
+                  path="/register"
+                  element={
+                    !isAuthenticated ? (
+                      <Register />
+                    ) : (
+                      <Navigate to="/dashboard" />
+                    )
+                  }
+                />
 
-              {/* Protected routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  isAuthenticated ? <Dashboard /> : <Navigate to="/login" />
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  isAuthenticated ? <ProfileEdit /> : <Navigate to="/login" />
-                }
-              />
-              <Route
-                path="/resume/new"
-                element={
-                  isAuthenticated ? (
-                    <ResumeGenerator />
-                  ) : (
-                    <Navigate to="/login" />
-                  )
-                }
-              />
-              <Route
-                path="/resume/:id"
-                element={
-                  isAuthenticated ? <ResumeView /> : <Navigate to="/login" />
-                }
-              />
+                {/* Protected routes */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    isAuthenticated ? <Dashboard /> : <Navigate to="/login" />
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    isAuthenticated ? <ProfileEdit /> : <Navigate to="/login" />
+                  }
+                />
+                <Route
+                  path="/resume/new"
+                  element={
+                    isAuthenticated ? (
+                      <ResumeGenerator />
+                    ) : (
+                      <Navigate to="/login" />
+                    )
+                  }
+                />
+                <Route
+                  path="/resume/:id"
+                  element={
+                    isAuthenticated ? <ResumeView /> : <Navigate to="/login" />
+                  }
+                />
 
-              {/* Default redirect */}
-              <Route
-                path="/"
-                element={
-                  <Navigate to={isAuthenticated ? "/dashboard" : "/login"} />
-                }
-              />
-              <Route
-                path="*"
-                element={
-                  <Navigate to={isAuthenticated ? "/dashboard" : "/login"} />
-                }
-              />
-            </Routes>
-          </Suspense>
+                {/* Default redirect */}
+                <Route
+                  path="/"
+                  element={
+                    <Navigate to={isAuthenticated ? "/dashboard" : "/login"} />
+                  }
+                />
+                <Route
+                  path="*"
+                  element={
+                    <Navigate to={isAuthenticated ? "/dashboard" : "/login"} />
+                  }
+                />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
         </main>
         <Footer />
       </div>
