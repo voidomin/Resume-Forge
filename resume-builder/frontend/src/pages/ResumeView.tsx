@@ -16,6 +16,7 @@ import TemplateSelector, {
 } from "../components/Resume/TemplateSelector";
 import KeywordAnalysisPanel from "../components/Resume/KeywordAnalysisPanel";
 import ATSChecklist from "../components/Resume/ATSChecklist";
+import { ResumeSkeleton } from "../components/common/SkeletonLoader";
 
 interface GeneratedResume {
   contactInfo: {
@@ -222,11 +223,7 @@ function ResumeView() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
+    return <ResumeSkeleton />;
   }
 
   if (!resume) {
