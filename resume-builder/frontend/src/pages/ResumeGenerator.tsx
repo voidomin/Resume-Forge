@@ -555,7 +555,7 @@ Required Skills:
 
                     {/* Density Selector */}
                     <div className="space-y-2 mb-3">
-                      <label className="flex items-center cursor-pointer group">
+                      <label className="flex items-center cursor-pointer group py-2">
                         <input
                           type="radio"
                           name="density"
@@ -576,7 +576,7 @@ Required Skills:
                           </span>
                         )}
                       </label>
-                      <label className="flex items-center cursor-pointer group">
+                      <label className="flex items-center cursor-pointer group py-2">
                         <input
                           type="radio"
                           name="density"
@@ -597,7 +597,7 @@ Required Skills:
                           </span>
                         )}
                       </label>
-                      <label className="flex items-center cursor-pointer group">
+                      <label className="flex items-center cursor-pointer group py-2">
                         <input
                           type="radio"
                           name="density"

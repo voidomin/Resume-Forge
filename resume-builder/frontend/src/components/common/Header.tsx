@@ -45,7 +45,7 @@ function Header() {
                   <span className="text-sm text-gray-600">{user?.email}</span>
                   <button
                     onClick={logout}
-                    className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                    className="flex items-center justify-center min-w-[44px] min-h-[44px] space-x-1 text-gray-600 hover:text-red-600 transition-colors p-2.5 rounded-lg hover:bg-gray-100"
                     title="Logout"
                   >
                     <LogOut className="w-5 h-5" />
@@ -72,7 +72,7 @@ function Header() {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+            className="md:hidden p-3 -mr-1 rounded-lg hover:bg-gray-100"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? (
