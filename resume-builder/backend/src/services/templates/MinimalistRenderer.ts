@@ -350,6 +350,12 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       resume.awards?.length &&
       contentDensityEngine.isSectionVisible(density, "awards")
     ) {
+      // Space check: Header + 1st item
+      const estimatedHeight = 40;
+      if (!this.hasEnoughSpace(doc, estimatedHeight)) {
+        doc.addPage();
+      }
+
       drawHeader("HONORS & AWARDS");
       resume.awards.forEach((award) => {
         doc

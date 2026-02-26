@@ -30,7 +30,6 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
     const ds = this.getScaledDesignSystem(doc, density);
     const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
-    const scaledMargin = ds.margins.pageLeft;
 
     // Apply scaled margins to document
     doc.page.margins = {
@@ -248,10 +247,11 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
           .fontSize(ds.fontSize.body)
           .fillColor(UnifiedDesignSystem.colors.text)
           .text(`${cert.name}`, { continued: true });
+        const certDateStr = cert.date ? ` (${cert.date})` : "";
         doc
           .font(fontRegular)
           .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(` | ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
+          .text(` | ${cert.issuer}${certDateStr}`);
       });
       // Adjusted spacing after section
       const certMultiplier = this.getSectionSpacingAdjustment(
@@ -337,6 +337,12 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
       resume.awards?.length &&
       contentDensityEngine.isSectionVisible(density, "awards")
     ) {
+      // Space check: Header + 1st item
+      const estimatedHeight = 40;
+      if (!this.hasEnoughSpace(doc, estimatedHeight)) {
+        doc.addPage();
+      }
+
       drawHeader("HONORS & AWARDS");
       resume.awards.forEach((award) => {
         doc

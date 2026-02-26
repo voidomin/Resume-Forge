@@ -377,6 +377,13 @@ export class StandardRenderer extends BaseTemplateRenderer {
       resume.awards?.length &&
       contentDensityEngine.isSectionVisible(density, "awards")
     ) {
+      // Small adjustment: ensure header + at least one award fits, or move to next page
+      // Header (~25pt) + 1 award item (~15pt) = ~40pt buffer
+      const estimatedHeight = 40;
+      if (!this.hasEnoughSpace(doc, estimatedHeight)) {
+        doc.addPage();
+      }
+
       drawHeader("HONORS & AWARDS");
       resume.awards.forEach((award) => {
         doc

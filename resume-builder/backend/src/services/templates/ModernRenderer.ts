@@ -30,7 +30,6 @@ export class ModernRenderer extends BaseTemplateRenderer {
     const ds = this.getScaledDesignSystem(doc, density);
     const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
-    const scaledMargin = ds.margins.pageLeft;
 
     // Apply scaled margins to document
     doc.page.margins = {
@@ -148,11 +147,12 @@ export class ModernRenderer extends BaseTemplateRenderer {
           .fontSize(ds.fontSize.h3)
           .fillColor(UnifiedDesignSystem.colors.primary)
           .text(cert.name, { continued: true });
+        const certDateStr = cert.date ? ` (${cert.date})` : "";
         doc
           .font(fontRegular)
           .fontSize(ds.fontSize.body)
           .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(` | ${cert.issuer}${cert.date ? ` (${cert.date})` : ""}`);
+          .text(` | ${cert.issuer}${certDateStr}`);
         this.moveDownPoints(doc, ds.spacing.tight);
       });
       // Adjusted spacing after section
@@ -206,6 +206,12 @@ export class ModernRenderer extends BaseTemplateRenderer {
       resume.awards?.length &&
       contentDensityEngine.isSectionVisible(density, "awards")
     ) {
+      // Space check for Modern: Header (~30pt) + 1st item (~15pt) = ~45pt
+      const estimatedHeight = 45;
+      if (!this.hasEnoughSpace(doc, estimatedHeight)) {
+        doc.addPage();
+      }
+
       this.drawModernHeader(doc, "HONORS & AWARDS", ds);
       resume.awards.forEach((award) => {
         this.renderAwardModern(doc, award, fontBold, fontRegular, ds);
