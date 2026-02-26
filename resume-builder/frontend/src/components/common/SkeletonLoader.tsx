@@ -2,13 +2,14 @@ export function SkeletonLoader({
   className = "",
   count = 1,
 }: {
-  className?: string;
-  count?: number;
+  readonly className?: string;
+  readonly count?: number;
 }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
         <div
+          // eslint-disable-next-line react/no-array-index-key
           key={i}
           className={`bg-gray-200 rounded-xl animate-pulse ${className}`}
         />
