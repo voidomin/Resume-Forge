@@ -259,7 +259,30 @@ export class StandardRenderer extends BaseTemplateRenderer {
       doc.y = doc.y - ds.spacing.element + ds.spacing.section * eduMultiplier;
     }
 
-    if (resume.skills?.length) {
+    if (
+      resume.skillsCategories &&
+      Object.keys(resume.skillsCategories).length > 0
+    ) {
+      drawHeader("SKILLS");
+      Object.entries(resume.skillsCategories).forEach(([category, skills]) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(`${category}: `, { continued: true })
+          .font(fontRegular)
+          .text(Array.isArray(skills) ? skills.join(", ") : skills, {
+            lineGap: ds.spacing.minimal,
+          });
+      });
+      // Adjusted spacing after section
+      const skillsMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "skills",
+        resume.skillsCategories,
+      );
+      doc.y += ds.spacing.section * skillsMultiplier;
+    } else if (resume.skills?.length) {
       drawHeader("SKILLS");
       doc
         .font(fontRegular)

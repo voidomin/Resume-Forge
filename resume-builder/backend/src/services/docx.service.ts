@@ -138,9 +138,15 @@ export class DocxService {
               : []),
 
             // Skills
-            ...(resume.skills.length > 0
-              ? this.createSkillsSection(resume.skills, bodyFont)
-              : []),
+            ...(resume.skillsCategories &&
+            Object.keys(resume.skillsCategories).length > 0
+              ? this.createSkillsCategoriesSection(
+                  resume.skillsCategories,
+                  bodyFont,
+                )
+              : resume.skills && resume.skills.length > 0
+                ? this.createSkillsSection(resume.skills, bodyFont)
+                : []),
           ],
         },
       ],
@@ -496,6 +502,44 @@ export class DocxService {
           }),
         );
       }
+    });
+
+    return paragraphs;
+  }
+
+  private createSkillsCategoriesSection(
+    categories: Record<string, string[] | string>,
+    font: string,
+  ): Paragraph[] {
+    const ds = UnifiedDesignSystem;
+    const paragraphs: Paragraph[] = [this.createSectionHeader("SKILLS", font)];
+
+    Object.entries(categories).forEach(([category, skills], index) => {
+      const isLast = index === Object.keys(categories).length - 1;
+      paragraphs.push(
+        new Paragraph({
+          spacing: {
+            after: UnitConverter.ptToTwip(
+              isLast ? ds.spacing.element : ds.spacing.minimal,
+            ),
+          },
+          children: [
+            new TextRun({
+              text: `${category}: `,
+              bold: true,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+              font: font,
+              color: getCleanColor(ds.colors.text),
+            }),
+            new TextRun({
+              text: Array.isArray(skills) ? skills.join(", ") : skills,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+              font: font,
+              color: getCleanColor(ds.colors.text),
+            }),
+          ],
+        }),
+      );
     });
 
     return paragraphs;

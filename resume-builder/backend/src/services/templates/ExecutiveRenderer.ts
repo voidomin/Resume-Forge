@@ -216,14 +216,37 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
     }
 
     // 7. Skills
-    if (resume.skills?.length) {
+    if (
+      resume.skillsCategories &&
+      Object.keys(resume.skillsCategories).length > 0
+    ) {
+      drawHeader("COMPETENCIES");
+      Object.entries(resume.skillsCategories).forEach(([category, skills]) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(`${category}: `, { continued: true })
+          .font(fontRegular)
+          .text(Array.isArray(skills) ? skills.join(", ") : skills, {
+            lineGap: ds.spacing.minimal,
+          });
+      });
+      // Adjusted spacing after section
+      const skillsMultiplier = this.getSectionSpacingAdjustment(
+        doc,
+        "skills",
+        resume.skillsCategories,
+      );
+      doc.y += ds.spacing.section * skillsMultiplier;
+    } else if (resume.skills?.length) {
       drawHeader("COMPETENCIES");
       doc
         .font(fontRegular)
         .fontSize(ds.fontSize.body)
         .fillColor(UnifiedDesignSystem.colors.text)
         .text(resume.skills.join("  •  "), {
-          align: "center",
+          align: "left",
           lineGap: ds.spacing.minimal,
         });
       // Adjusted spacing after section

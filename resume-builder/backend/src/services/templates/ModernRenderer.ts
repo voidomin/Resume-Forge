@@ -121,7 +121,29 @@ export class ModernRenderer extends BaseTemplateRenderer {
       );
     }
 
-    if (resume.skills?.length) {
+    if (
+      resume.skillsCategories &&
+      Object.keys(resume.skillsCategories).length > 0
+    ) {
+      this.drawModernHeader(doc, "SKILLS", ds);
+      Object.entries(resume.skillsCategories).forEach(([category, skills]) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(`${category}: `, { continued: true })
+          .font(fontRegular)
+          .text(Array.isArray(skills) ? skills.join(", ") : skills, {
+            lineGap: ds.spacing.minimal,
+          });
+      });
+      this.moveDownAdjusted(
+        doc,
+        ds.spacing.section,
+        "skills",
+        resume.skillsCategories,
+      );
+    } else if (resume.skills?.length) {
       this.drawModernHeader(doc, "SKILLS", ds);
       doc
         .font(fontRegular)
