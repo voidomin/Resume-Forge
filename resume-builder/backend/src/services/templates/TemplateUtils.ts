@@ -28,8 +28,7 @@ export class TemplateUtils {
     // moveDownPoints is protected, so this will either need to be implemented within
     // the calling class or be worked around by having the renderer pass a callback.
     // Instead we can just do raw moveDown since we know the current doc context
-    const lineHeight = (doc.currentFontSize() || 12) * 1.2;
-    doc.moveDown(ds.spacing.tight / lineHeight);
+    doc.y += ds.spacing.tight;
 
     doc
       .font(fontBold)

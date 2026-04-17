@@ -24,8 +24,7 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
    * Helper to move down by exact points, accounting for line height
    */
   protected moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
-    const lineHeight = (doc.currentFontSize() || 12) * 1.2;
-    doc.moveDown(points / lineHeight);
+    doc.y += points;
   }
 
   /**
