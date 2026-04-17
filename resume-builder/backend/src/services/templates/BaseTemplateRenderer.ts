@@ -114,8 +114,8 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
 
     const addPart = (val: string | undefined, linkPrefix?: string) => {
       if (!isValid(val)) return;
-      const text = linkPrefix ? this.formatUrl(val!) : val!;
-      const link = linkPrefix ? this.ensureProtocol(val!, linkPrefix) : undefined;
+      const text = linkPrefix ? this.formatUrl(val) : val;
+      const link = linkPrefix ? this.ensureProtocol(val, linkPrefix) : undefined;
       parts.push({ text, link });
     };
 
@@ -124,7 +124,7 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
     addPart(contactInfo.phone, "tel:");
 
     if (isValid(contactInfo.location)) {
-      parts.push({ text: contactInfo.location! });
+      parts.push({ text: contactInfo.location });
     }
 
     addPart(contactInfo.linkedin, "https://");

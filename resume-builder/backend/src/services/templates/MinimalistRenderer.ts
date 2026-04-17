@@ -4,6 +4,7 @@ import {
   UnifiedDesignSystem,
   contentDensityEngine,
   DensityLevel,
+  ScaledDesignSystem,
 } from "../../../../shared/design-system";
 import { TemplateUtils } from "./TemplateUtils";
 
@@ -26,13 +27,10 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
     resume: GeneratedResume,
     density: DensityLevel,
   ): void {
-    // Get scaled design system for this density
     const ds = this.getScaledDesignSystem(doc, density);
     const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
-    const scaledMargin = ds.margins.pageLeft;
 
-    // Apply scaled margins to document
     doc.page.margins = {
       top: ds.margins.pageTop,
       bottom: ds.margins.pageBottom,
@@ -40,212 +38,225 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       right: ds.margins.pageRight,
     };
 
-    // Helper: Section Headers (Uppercase, Tracking, TextLight Color)
-    const drawHeader = (title: string) => {
-      // Minimalist gets a specific minimal stroke color from utility logic, we can pass our own wrapper.
-      TemplateUtils.drawHeader({
-        doc,
-        renderer: this,
-        ds,
-        title,
-        fontBold,
-        color: UnifiedDesignSystem.colors.textLight,
-        align: "left",
-        drawLine: false, // Minimalist draws its own specific 30% opacity line
-      });
+    this.renderHeaderMinimalist(doc, resume, ds, fontBold, fontRegular);
 
-      const y = doc.y - ds.spacing.element + 2;
-      doc
-        .strokeColor(UnifiedDesignSystem.colors.secondary)
-        .opacity(0.3)
-        .lineWidth(0.5)
-        .moveTo(scaledMargin, y)
-        .lineTo(scaledMargin + 64, y)
-        .stroke()
-        .opacity(1);
-    };
+    this.renderSummary(doc, resume, ds, fontRegular, fontBold);
+    this.renderExperience(doc, resume, ds, fontBold, fontRegular);
+    this.renderProjects(doc, resume, ds, fontBold, fontRegular);
+    this.renderEducation(doc, resume, ds, fontBold, fontRegular);
+    this.renderSkills(doc, resume, ds, fontBold, fontRegular);
 
-    // 1. Header - Name
+    // Optional Sections
+    this.renderCertifications(doc, resume, ds, fontBold, fontRegular, density);
+    this.renderCoursework(doc, resume, ds, fontBold, fontRegular, density);
+    this.renderLeadership(doc, resume, ds, fontBold, fontRegular, density);
+    this.renderAwards(doc, resume, ds, fontBold, fontRegular, density);
+  }
+
+  private renderHeaderMinimalist(
+    doc: PDFKit.PDFDocument,
+    resume: GeneratedResume,
+    ds: ScaledDesignSystem,
+    fontBold: string,
+    fontRegular: string,
+  ) {
     doc
       .font(fontBold)
       .fontSize(ds.fontSize.h1)
-      .fillColor(UnifiedDesignSystem.colors.text)
-      .text(resume.contactInfo.name.toUpperCase());
+      .fillColor(UnifiedDesignSystem.colors.primary)
+      .text(resume.contactInfo.name.toUpperCase(), { align: "left" });
 
     this.moveDownPoints(doc, ds.spacing.tight);
 
-    // 2. Contact Line
-    this.renderContactLine(doc, resume, fontRegular, ds.fontSize.body, false);
+    this.renderContactLine(
+      doc,
+      resume,
+      fontRegular,
+      ds.fontSize.contact,
+      false,
+      "left",
+    );
 
     this.moveDownPoints(doc, ds.spacing.element);
+  }
 
-    // 3. Professional Summary / Tagline
-    if (resume.summary) {
+  private renderSummary(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontRegular: string, fontBold: string) {
+    if (!resume.summary) return;
+
+    this.drawMinimalistHeader(doc, "SUMMARY", ds, fontBold);
+    doc
+      .font(fontRegular)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(resume.summary, { align: "justify", lineGap: ds.spacing.minimal });
+
+    const summaryMultiplier = this.getSectionSpacingAdjustment(doc, "summary", resume.summary);
+    doc.y += ds.spacing.section * summaryMultiplier;
+  }
+
+  private renderExperience(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
+    if (!resume.experiences?.length) return;
+
+    this.drawMinimalistHeader(doc, "EXPERIENCE", ds, fontBold);
+    resume.experiences.forEach((exp) => {
+      this.renderExperienceMinimalist(doc, exp, fontBold, fontRegular, ds);
+      this.moveDownPoints(doc, ds.spacing.element);
+    });
+
+    const expMultiplier = this.getSectionSpacingAdjustment(doc, "experiences", resume.experiences);
+    doc.y += ds.spacing.section * expMultiplier;
+  }
+
+  private renderExperienceMinimalist(
+    doc: PDFKit.PDFDocument,
+    exp: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ScaledDesignSystem,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(exp.role, { continued: true });
+
+    doc
+      .font(fontRegular)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(`  •  ${exp.company}`, { continued: true });
+
+    doc
+      .fontSize(ds.fontSize.small)
+      .text(`  •  ${exp.dateRange}${exp.location ? " — " + exp.location : ""}`, {
+        continued: false,
+      });
+
+    exp.bullets.forEach((b: string) => {
       doc
         .font(fontRegular)
         .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.textLight)
-        .text(resume.summary, {
-          align: "left",
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(`• ${b}`, {
+          indent: ds.spacing.bulletIndent,
           lineGap: ds.spacing.minimal,
         });
-      // Adjusted spacing after section
-      this.moveDownAdjusted(doc, ds.spacing.section, "summary", resume.summary);
-    }
+    });
+  }
 
-    // 4. Work Experience
-    if (resume.experiences?.length) {
-      drawHeader("EXPERIENCE");
-      resume.experiences.forEach((exp) => {
-        doc
-          .font(fontBold)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(exp.role, { continued: true });
+  private renderProjects(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
+    if (!resume.projects?.length) return;
 
-        doc
-          .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(`  •  ${exp.company}`, { continued: true });
+    this.drawMinimalistHeader(doc, "PROJECTS", ds, fontBold);
+    resume.projects.forEach((proj) => {
+      this.renderProjectMinimalist(doc, proj, fontBold, fontRegular, ds);
+      this.moveDownPoints(doc, ds.spacing.element);
+    });
 
-        doc
-          .fontSize(ds.fontSize.small)
-          .text(
-            `  •  ${exp.dateRange}${exp.location ? " — " + exp.location : ""}`,
-            { continued: false },
-          );
+    const projMultiplier = this.getSectionSpacingAdjustment(doc, "projects", resume.projects);
+    doc.y += ds.spacing.section * projMultiplier;
+  }
 
-        exp.bullets.forEach((b: string) => {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.body)
-            .fillColor(UnifiedDesignSystem.colors.text)
-            .text(`• ${b}`, {
-              indent: ds.spacing.bulletIndent,
-              lineGap: ds.spacing.minimal,
-            });
+  private renderProjectMinimalist(
+    doc: PDFKit.PDFDocument,
+    proj: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ScaledDesignSystem,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(proj.name, { continued: true });
+
+    if (proj.link) {
+      doc
+        .font(fontRegular)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text("  •  ", { continued: true })
+        .fillColor(UnifiedDesignSystem.colors.primary)
+        .text(proj.link, {
+          link: proj.link.startsWith("http") ? proj.link : `https://${proj.link}`,
+          underline: true,
+          continued: false,
         });
-
-        doc.y += ds.spacing.element;
-      });
-      // Adjusted spacing after section
-      const expMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "experiences",
-        resume.experiences,
-      );
-      doc.y += ds.spacing.section * expMultiplier;
+    } else {
+      doc.text("");
     }
 
-    // 5. Projects
-    if (resume.projects?.length) {
-      drawHeader("PROJECTS");
-      resume.projects.forEach((proj) => {
+    if (proj.technologies) {
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.small)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(`Tech: ${proj.technologies}`, { oblique: true });
+    }
+
+    if (proj.bullets) {
+      proj.bullets.forEach((b: string) => {
         doc
-          .font(fontBold)
+          .font(fontRegular)
           .fontSize(ds.fontSize.body)
           .fillColor(UnifiedDesignSystem.colors.text)
-          .text(proj.name, { continued: true });
-
-        if (proj.link) {
-          doc
-            .font(fontRegular)
-            .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text("  •  ", { continued: true })
-            .fillColor(UnifiedDesignSystem.colors.primary)
-            .text(proj.link, {
-              link: proj.link.startsWith("http")
-                ? proj.link
-                : `https://${proj.link}`,
-              underline: true,
-              continued: false,
-            });
-        } else {
-          doc.text("");
-        }
-
-        if (proj.technologies) {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.small)
-            .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text(`Tech: ${proj.technologies}`, { oblique: true });
-        }
-
-        if (proj.bullets) {
-          proj.bullets.forEach((b: string) => {
-            doc
-              .font(fontRegular)
-              .fontSize(ds.fontSize.body)
-              .fillColor(UnifiedDesignSystem.colors.text)
-              .text(`• ${b}`, {
-                indent: ds.spacing.bulletIndent,
-                lineGap: ds.spacing.minimal,
-              });
+          .text(`• ${b}`, {
+            indent: ds.spacing.bulletIndent,
+            lineGap: ds.spacing.minimal,
           });
-        } else if (proj.description) {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.body)
-            .fillColor(UnifiedDesignSystem.colors.text)
-            .text(proj.description, { lineGap: ds.spacing.minimal });
-        }
-
-        doc.y += ds.spacing.element;
       });
-      // Adjusted spacing after section
-      const projMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "projects",
-        resume.projects,
-      );
-      doc.y += ds.spacing.section * projMultiplier;
+    } else if (proj.description) {
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(proj.description, { lineGap: ds.spacing.minimal });
+    }
+  }
+
+  private renderEducation(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
+    if (!resume.education?.length) return;
+
+    this.drawMinimalistHeader(doc, "EDUCATION", ds, fontBold);
+    resume.education.forEach((edu) => {
+      this.renderEducationMinimalist(doc, edu, fontBold, fontRegular, ds);
+      this.moveDownPoints(doc, ds.spacing.tight);
+    });
+
+    const eduMultiplier = this.getSectionSpacingAdjustment(doc, "education", resume.education);
+    doc.y += ds.spacing.section * eduMultiplier;
+  }
+
+  private renderEducationMinimalist(
+    doc: PDFKit.PDFDocument,
+    edu: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ScaledDesignSystem,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(edu.institution, { continued: true });
+
+    doc
+      .font(fontRegular)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(`  •  ${edu.degree} in ${edu.field}`);
+
+    if (edu.dateRange) {
+      doc
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(`  •  ${edu.dateRange}`);
     }
 
-    // 6. Education
-    if (resume.education?.length) {
-      drawHeader("EDUCATION");
-      resume.education.forEach((edu) => {
-        // Institution
-        doc
-          .font(fontBold)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(edu.institution, { continued: true });
-
-        doc
-          .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(`  |  ${edu.dateRange}`, { continued: false });
-
-        // Degree
-        doc
-          .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(`${edu.degree} in ${edu.field}`);
-
-        if (edu.gpa) {
-          doc
-            .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text(`GPA: ${edu.gpa}`);
-        }
-        doc.y += ds.spacing.element;
-      });
-      // Adjusted spacing after section
-      const eduMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "education",
-        resume.education,
-      );
-      doc.y += ds.spacing.section * eduMultiplier;
+    if (edu.gpa) {
+      doc.fillColor(UnifiedDesignSystem.colors.textLight).text(`  •  GPA: ${edu.gpa}`);
     }
+  }
 
-    // 7. Skills
-    if (
-      resume.skillsCategories &&
-      Object.keys(resume.skillsCategories).length > 0
-    ) {
-      drawHeader("SKILLS");
+  private renderSkills(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
+    if (resume.skillsCategories && Object.keys(resume.skillsCategories).length > 0) {
+      this.drawMinimalistHeader(doc, "SKILLS", ds, fontBold);
       Object.entries(resume.skillsCategories).forEach(([category, skills]) => {
         doc
           .font(fontBold)
@@ -257,159 +268,163 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
             lineGap: ds.spacing.minimal,
           });
       });
-      const skillsMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "skills",
-        resume.skillsCategories,
-      );
+      const skillsMultiplier = this.getSectionSpacingAdjustment(doc, "skills", resume.skillsCategories);
       doc.y += ds.spacing.section * skillsMultiplier;
     } else if (resume.skills?.length) {
-      drawHeader("SKILLS");
+      this.drawMinimalistHeader(doc, "SKILLS", ds, fontBold);
       doc
         .font(fontRegular)
         .fontSize(ds.fontSize.body)
         .fillColor(UnifiedDesignSystem.colors.text)
-        .text(resume.skills.join(", "), {
+        .text(resume.skills.join("  •  "), {
           align: "left",
           lineGap: ds.spacing.minimal,
         });
-      // Adjusted spacing after section
-      const skillsMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "skills",
-        resume.skills,
-      );
+      const skillsMultiplier = this.getSectionSpacingAdjustment(doc, "skills", resume.skills);
       doc.y += ds.spacing.section * skillsMultiplier;
     }
+  }
 
-    // Optional Sections - Only show if visible at this density
-    if (
-      resume.certifications?.length &&
-      contentDensityEngine.isSectionVisible(density, "certifications")
-    ) {
-      drawHeader("CERTIFICATIONS");
-      resume.certifications.forEach((cert) => {
-        doc
-          .font(fontBold)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(cert.name, { continued: true });
-        doc
-          .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(` — ${cert.issuer}${cert.date ? " (" + cert.date + ")" : ""}`);
-      });
-      // Adjusted spacing after section
-      const certMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "certifications",
-        resume.certifications,
-      );
-      doc.y += ds.spacing.section * certMultiplier;
+  private renderCertifications(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
+    if (!resume.certifications?.length || !contentDensityEngine.isSectionVisible(density, "certifications")) return;
+
+    this.drawMinimalistHeader(doc, "CERTIFICATIONS", ds, fontBold);
+    resume.certifications.forEach((cert) => {
+      doc
+        .font(fontBold)
+        .fontSize(ds.fontSize.h3)
+        .fillColor(UnifiedDesignSystem.colors.primary)
+        .text(cert.name, { continued: true });
+      const certDateStr = cert.date ? ` (${cert.date})` : "";
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(` | ${cert.issuer}${certDateStr}`);
+      this.moveDownPoints(doc, ds.spacing.tight);
+    });
+    const certMultiplier = this.getSectionSpacingAdjustment(doc, "certifications", resume.certifications);
+    doc.y += ds.spacing.section * certMultiplier;
+  }
+
+  private renderCoursework(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
+    if (!resume.coursework?.length || !contentDensityEngine.isSectionVisible(density, "coursework")) return;
+
+    this.drawMinimalistHeader(doc, "COURSEWORK", ds, fontBold);
+    resume.coursework.forEach((course) => {
+      this.renderCourseworkMinimalist(doc, course, fontBold, fontRegular, ds);
+    });
+    const courseMultiplier = this.getSectionSpacingAdjustment(doc, "coursework", resume.coursework);
+    doc.y += ds.spacing.section * courseMultiplier;
+  }
+
+  private renderCourseworkMinimalist(
+    doc: PDFKit.PDFDocument,
+    course: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ScaledDesignSystem,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(course.courseName, { continued: true });
+    doc
+      .font(fontRegular)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(` | ${course.topic}${course.institution ? ` (${course.institution})` : ""}`);
+  }
+
+  private renderLeadership(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
+    if (!resume.leadership?.length || !contentDensityEngine.isSectionVisible(density, "leadership")) return;
+
+    this.drawMinimalistHeader(doc, "LEADERSHIP", ds, fontBold);
+    resume.leadership.forEach((role) => {
+      this.renderLeadershipMinimalist(doc, role, fontBold, fontRegular, ds);
+    });
+    const leadMultiplier = this.getSectionSpacingAdjustment(doc, "leadership", resume.leadership);
+    doc.y += ds.spacing.section * leadMultiplier;
+  }
+
+  private renderLeadershipMinimalist(
+    doc: PDFKit.PDFDocument,
+    role: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ScaledDesignSystem,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(role.title, { continued: true });
+    doc
+      .font(fontRegular)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(` — ${role.organization}`);
+    if (role.description) {
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.small)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(role.description, { lineGap: ds.spacing.minimal });
     }
+  }
 
-    if (
-      resume.coursework?.length &&
-      contentDensityEngine.isSectionVisible(density, "coursework")
-    ) {
-      drawHeader("RELEVANT COURSEWORK");
-      resume.coursework.forEach((course) => {
-        doc
-          .font(fontBold)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(course.courseName, { continued: true });
-        doc
-          .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(
-            ` — ${course.topic}${
-              course.institution ? " (" + course.institution + ")" : ""
-            }`,
-          );
-      });
-      // Adjusted spacing after section
-      const courseMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "coursework",
-        resume.coursework,
-      );
-      doc.y += ds.spacing.section * courseMultiplier;
+  private renderAwards(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
+    if (!resume.awards?.length || !contentDensityEngine.isSectionVisible(density, "awards")) return;
+
+    this.drawMinimalistHeader(doc, "AWARDS", ds, fontBold);
+    resume.awards.forEach((award) => {
+      this.renderAwardMinimalist(doc, award, fontBold, fontRegular, ds);
+    });
+    const awardMultiplier = this.getSectionSpacingAdjustment(doc, "awards", resume.awards);
+    doc.y += ds.spacing.section * awardMultiplier;
+  }
+
+  private renderAwardMinimalist(
+    doc: PDFKit.PDFDocument,
+    award: any,
+    fontBold: string,
+    fontRegular: string,
+    ds: ScaledDesignSystem,
+  ) {
+    doc
+      .font(fontBold)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.primary)
+      .text(award.awardName, { continued: true });
+    const dateStr = award.awardDate ? ` (${award.awardDate})` : "";
+    doc
+      .font(fontRegular)
+      .fontSize(ds.fontSize.small)
+      .fillColor(UnifiedDesignSystem.colors.textLight)
+      .text(` — ${award.organization}${dateStr}`);
+    if (award.description) {
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.small)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(award.description, { lineGap: ds.spacing.minimal });
     }
+  }
 
-    if (
-      resume.leadership?.length &&
-      contentDensityEngine.isSectionVisible(density, "leadership")
-    ) {
-      drawHeader("LEADERSHIP & EXTRACURRICULAR");
-      resume.leadership.forEach((role) => {
-        doc
-          .font(fontBold)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(role.title, { continued: true });
-        doc
-          .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(` — ${role.organization}`);
-        if (role.description) {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.small)
-            .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text(role.description, { lineGap: ds.spacing.minimal });
-        }
-      });
-      // Adjusted spacing after section
-      const leadMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "leadership",
-        resume.leadership,
-      );
-      doc.y += ds.spacing.section * leadMultiplier;
-    }
-
-    if (
-      resume.awards?.length &&
-      contentDensityEngine.isSectionVisible(density, "awards")
-    ) {
-      // Space check: Header + 1st item
-      const estimatedHeight = 40;
-      if (!this.hasEnoughSpace(doc, estimatedHeight)) {
-        doc.addPage();
-      }
-
-      drawHeader("HONORS & AWARDS");
-      resume.awards.forEach((award) => {
-        doc
-          .font(fontBold)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.primary)
-          .text(award.awardName, { continued: true });
-        doc
-          .font(fontRegular)
-          .fontSize(ds.fontSize.small)
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(
-            ` — ${award.organization}${
-              award.awardDate ? " (" + award.awardDate + ")" : ""
-            }`,
-          );
-        if (award.description) {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.small)
-            .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text(award.description, { lineGap: ds.spacing.minimal });
-        }
-      });
-      // Adjusted spacing after section
-      const awardMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "awards",
-        resume.awards,
-      );
-      doc.y += ds.spacing.section * awardMultiplier;
-    }
+  private drawMinimalistHeader(
+    doc: PDFKit.PDFDocument,
+    title: string,
+    ds: ScaledDesignSystem,
+    fontBold: string,
+  ) {
+    TemplateUtils.drawHeader({
+      doc,
+      renderer: this,
+      ds,
+      title,
+      fontBold,
+      color: UnifiedDesignSystem.colors.primary,
+      align: "left",
+      drawLine: true,
+    });
   }
 }
