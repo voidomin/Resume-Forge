@@ -189,4 +189,45 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
     // Reset to separate line
     doc.text(" ", { continued: false });
   }
+
+  /**
+   * Generic helper to render a resume section with a header and a loop of items.
+   * Helps reduce code duplication across templates.
+   */
+  protected renderSection<T>(
+    doc: PDFKit.PDFDocument,
+    title: string,
+    items: T[] | undefined,
+    ds: ScaledDesignSystem,
+    sectionName: string,
+    options: {
+      density?: DensityLevel;
+      itemSpacing?: number;
+      drawHeader: (title: string) => void;
+      renderItem: (item: T) => void;
+    },
+  ) {
+    // 1. Visibility Check
+    if (!items?.length) return;
+    if (
+      options.density &&
+      !contentDensityEngine.isSectionVisible(options.density, sectionName)
+    ) {
+      return;
+    }
+
+    // 2. Draw Header
+    options.drawHeader(title);
+
+    // 3. Render Items
+    items.forEach((item) => {
+      options.renderItem(item);
+      if (options.itemSpacing) {
+        this.moveDownPoints(doc, options.itemSpacing);
+      }
+    });
+
+    // 4. Section Spacing
+    this.moveDownAdjusted(doc, ds.spacing.section, sectionName, items);
+  }
 }

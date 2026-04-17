@@ -39,8 +39,9 @@ export default defineConfig({
     },
 
     // Only run Firefox and Webkit locally to save CI time
-    ...(!process.env.CI
-      ? [
+    ...(process.env.CI
+      ? []
+      : [
           {
             name: "firefox",
             use: { ...devices["Desktop Firefox"] },
@@ -50,7 +51,7 @@ export default defineConfig({
             use: { ...devices["Desktop Safari"] },
           },
         ]
-      : []),
+    ),
   ],
 
   /* Run your local dev server before starting the tests */

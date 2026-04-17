@@ -95,16 +95,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
   }
 
   private renderExperience(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
-    if (!resume.experiences?.length) return;
-
-    this.drawMinimalistHeader(doc, "EXPERIENCE", ds, fontBold);
-    resume.experiences.forEach((exp) => {
-      this.renderExperienceMinimalist(doc, exp, fontBold, fontRegular, ds);
-      this.moveDownPoints(doc, ds.spacing.element);
+    this.renderSection(doc, "EXPERIENCE", resume.experiences, ds, "experiences", {
+      itemSpacing: ds.spacing.element,
+      drawHeader: (t) => this.drawMinimalistHeader(doc, t, ds, fontBold),
+      renderItem: (exp) => this.renderExperienceMinimalist(doc, exp, fontBold, fontRegular, ds),
     });
-
-    const expMultiplier = this.getSectionSpacingAdjustment(doc, "experiences", resume.experiences);
-    doc.y += ds.spacing.section * expMultiplier;
   }
 
   private renderExperienceMinimalist(
@@ -144,16 +139,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
   }
 
   private renderProjects(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
-    if (!resume.projects?.length) return;
-
-    this.drawMinimalistHeader(doc, "PROJECTS", ds, fontBold);
-    resume.projects.forEach((proj) => {
-      this.renderProjectMinimalist(doc, proj, fontBold, fontRegular, ds);
-      this.moveDownPoints(doc, ds.spacing.element);
+    this.renderSection(doc, "PROJECTS", resume.projects, ds, "projects", {
+      itemSpacing: ds.spacing.element,
+      drawHeader: (t) => this.drawMinimalistHeader(doc, t, ds, fontBold),
+      renderItem: (proj) => this.renderProjectMinimalist(doc, proj, fontBold, fontRegular, ds),
     });
-
-    const projMultiplier = this.getSectionSpacingAdjustment(doc, "projects", resume.projects);
-    doc.y += ds.spacing.section * projMultiplier;
   }
 
   private renderProjectMinimalist(
@@ -213,16 +203,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
   }
 
   private renderEducation(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
-    if (!resume.education?.length) return;
-
-    this.drawMinimalistHeader(doc, "EDUCATION", ds, fontBold);
-    resume.education.forEach((edu) => {
-      this.renderEducationMinimalist(doc, edu, fontBold, fontRegular, ds);
-      this.moveDownPoints(doc, ds.spacing.tight);
+    this.renderSection(doc, "EDUCATION", resume.education, ds, "education", {
+      itemSpacing: ds.spacing.tight,
+      drawHeader: (t) => this.drawMinimalistHeader(doc, t, ds, fontBold),
+      renderItem: (edu) => this.renderEducationMinimalist(doc, edu, fontBold, fontRegular, ds),
     });
-
-    const eduMultiplier = this.getSectionSpacingAdjustment(doc, "education", resume.education);
-    doc.y += ds.spacing.section * eduMultiplier;
   }
 
   private renderEducationMinimalist(
@@ -268,54 +253,51 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
             lineGap: ds.spacing.minimal,
           });
       });
-      const skillsMultiplier = this.getSectionSpacingAdjustment(doc, "skills", resume.skillsCategories);
-      doc.y += ds.spacing.section * skillsMultiplier;
+      this.moveDownAdjusted(doc, ds.spacing.section, "skills", resume.skillsCategories);
     } else if (resume.skills?.length) {
-      this.drawMinimalistHeader(doc, "SKILLS", ds, fontBold);
-      doc
-        .font(fontRegular)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.text)
-        .text(resume.skills.join("  •  "), {
-          align: "left",
-          lineGap: ds.spacing.minimal,
-        });
-      const skillsMultiplier = this.getSectionSpacingAdjustment(doc, "skills", resume.skills);
-      doc.y += ds.spacing.section * skillsMultiplier;
+      this.renderSection(doc, "SKILLS", resume.skills, ds, "skills", {
+        drawHeader: (t) => this.drawMinimalistHeader(doc, t, ds, fontBold),
+        renderItem: (skill) => {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(resume.skills.join("  •  "), {
+              align: "left",
+              lineGap: ds.spacing.minimal,
+            });
+        },
+      });
     }
   }
 
   private renderCertifications(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.certifications?.length || !contentDensityEngine.isSectionVisible(density, "certifications")) return;
-
-    this.drawMinimalistHeader(doc, "CERTIFICATIONS", ds, fontBold);
-    resume.certifications.forEach((cert) => {
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.h3)
-        .fillColor(UnifiedDesignSystem.colors.primary)
-        .text(cert.name, { continued: true });
-      const certDateStr = cert.date ? ` (${cert.date})` : "";
-      doc
-        .font(fontRegular)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.textLight)
-        .text(` | ${cert.issuer}${certDateStr}`);
-      this.moveDownPoints(doc, ds.spacing.tight);
+    this.renderSection(doc, "CERTIFICATIONS", resume.certifications, ds, "certifications", {
+      density,
+      itemSpacing: ds.spacing.tight,
+      drawHeader: (t) => this.drawMinimalistHeader(doc, t, ds, fontBold),
+      renderItem: (cert) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(cert.name, { continued: true });
+        const certDateStr = cert.date ? ` (${cert.date})` : "";
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(` | ${cert.issuer}${certDateStr}`);
+      },
     });
-    const certMultiplier = this.getSectionSpacingAdjustment(doc, "certifications", resume.certifications);
-    doc.y += ds.spacing.section * certMultiplier;
   }
 
   private renderCoursework(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.coursework?.length || !contentDensityEngine.isSectionVisible(density, "coursework")) return;
-
-    this.drawMinimalistHeader(doc, "COURSEWORK", ds, fontBold);
-    resume.coursework.forEach((course) => {
-      this.renderCourseworkMinimalist(doc, course, fontBold, fontRegular, ds);
+    this.renderSection(doc, "COURSEWORK", resume.coursework, ds, "coursework", {
+      density,
+      drawHeader: (t) => this.drawMinimalistHeader(doc, t, ds, fontBold),
+      renderItem: (course) => this.renderCourseworkMinimalist(doc, course, fontBold, fontRegular, ds),
     });
-    const courseMultiplier = this.getSectionSpacingAdjustment(doc, "coursework", resume.coursework);
-    doc.y += ds.spacing.section * courseMultiplier;
   }
 
   private renderCourseworkMinimalist(
@@ -330,21 +312,20 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       .fontSize(ds.fontSize.body)
       .fillColor(UnifiedDesignSystem.colors.text)
       .text(course.courseName, { continued: true });
+    
+    const institutionStr = course.institution ? ` (${course.institution})` : "";
     doc
       .font(fontRegular)
       .fillColor(UnifiedDesignSystem.colors.textLight)
-      .text(` | ${course.topic}${course.institution ? ` (${course.institution})` : ""}`);
+      .text(` | ${course.topic}${institutionStr}`);
   }
 
   private renderLeadership(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.leadership?.length || !contentDensityEngine.isSectionVisible(density, "leadership")) return;
-
-    this.drawMinimalistHeader(doc, "LEADERSHIP", ds, fontBold);
-    resume.leadership.forEach((role) => {
-      this.renderLeadershipMinimalist(doc, role, fontBold, fontRegular, ds);
+    this.renderSection(doc, "LEADERSHIP", resume.leadership, ds, "leadership", {
+      density,
+      drawHeader: (t) => this.drawMinimalistHeader(doc, t, ds, fontBold),
+      renderItem: (role) => this.renderLeadershipMinimalist(doc, role, fontBold, fontRegular, ds),
     });
-    const leadMultiplier = this.getSectionSpacingAdjustment(doc, "leadership", resume.leadership);
-    doc.y += ds.spacing.section * leadMultiplier;
   }
 
   private renderLeadershipMinimalist(
@@ -373,14 +354,11 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
   }
 
   private renderAwards(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.awards?.length || !contentDensityEngine.isSectionVisible(density, "awards")) return;
-
-    this.drawMinimalistHeader(doc, "AWARDS", ds, fontBold);
-    resume.awards.forEach((award) => {
-      this.renderAwardMinimalist(doc, award, fontBold, fontRegular, ds);
+    this.renderSection(doc, "AWARDS", resume.awards, ds, "awards", {
+      density,
+      drawHeader: (t) => this.drawMinimalistHeader(doc, t, ds, fontBold),
+      renderItem: (award) => this.renderAwardMinimalist(doc, award, fontBold, fontRegular, ds),
     });
-    const awardMultiplier = this.getSectionSpacingAdjustment(doc, "awards", resume.awards);
-    doc.y += ds.spacing.section * awardMultiplier;
   }
 
   private renderAwardMinimalist(
@@ -395,6 +373,7 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       .fontSize(ds.fontSize.body)
       .fillColor(UnifiedDesignSystem.colors.primary)
       .text(award.awardName, { continued: true });
+    
     const dateStr = award.awardDate ? ` (${award.awardDate})` : "";
     doc
       .font(fontRegular)

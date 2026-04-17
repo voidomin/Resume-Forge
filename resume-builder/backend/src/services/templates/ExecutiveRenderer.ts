@@ -98,128 +98,119 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
   }
 
   private renderExperience(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
-    if (!resume.experiences?.length) return;
-
-    this.drawSectionHeader(doc, "PROFESSIONAL EXPERIENCE", ds, fontBold);
-    resume.experiences.forEach((exp) => {
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.h3)
-        .fillColor(UnifiedDesignSystem.colors.primary)
-        .text(exp.role, { continued: true });
-      doc
-        .font(fontRegular)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.secondary)
-        .text(` | ${exp.company}`);
-      doc
-        .fillColor(UnifiedDesignSystem.colors.textLight)
-        .text(`${exp.location} | ${exp.dateRange}`, {
-          oblique: true,
-        });
-
-      exp.bullets.forEach((b: string) => {
+    this.renderSection(doc, "PROFESSIONAL EXPERIENCE", resume.experiences, ds, "experiences", {
+      itemSpacing: ds.spacing.element,
+      drawHeader: (t) => this.drawSectionHeader(doc, t, ds, fontBold),
+      renderItem: (exp) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(exp.role, { continued: true });
         doc
           .font(fontRegular)
           .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(`• ${b}`, { lineGap: ds.spacing.minimal });
-      });
-      doc.y += ds.spacing.element;
-    });
-
-    const expMultiplier = this.getSectionSpacingAdjustment(doc, "experiences", resume.experiences);
-    doc.y += ds.spacing.section * expMultiplier;
-  }
-
-  private renderProjects(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
-    if (!resume.projects?.length) return;
-
-    this.drawSectionHeader(doc, "NOTABLE PROJECTS", ds, fontBold);
-    resume.projects.forEach((proj) => {
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.h3)
-        .fillColor(UnifiedDesignSystem.colors.text)
-        .text(proj.name, { continued: true });
-
-      if (proj.technologies) {
+          .fillColor(UnifiedDesignSystem.colors.secondary)
+          .text(` | ${exp.company}`);
         doc
-          .font(fontRegular)
-          .fontSize(ds.fontSize.small)
           .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(` | ${proj.technologies}`, {
+          .text(`${exp.location} | ${exp.dateRange}`, {
             oblique: true,
-            continued: !!proj.link,
           });
-      }
 
-      if (proj.link) {
-        doc
-          .font(fontRegular)
-          .fontSize(ds.fontSize.small)
-          .fillColor(UnifiedDesignSystem.colors.primary)
-          .text(` | ${proj.link}`, {
-            link: proj.link.startsWith("http") ? proj.link : `https://${proj.link}`,
-            underline: true,
-            continued: false,
-          });
-      } else if (!proj.technologies) {
-        doc.text("");
-      }
-
-      if (proj.bullets) {
-        proj.bullets.forEach((b: string) => {
+        exp.bullets.forEach((b: string) => {
           doc
             .font(fontRegular)
             .fontSize(ds.fontSize.body)
             .fillColor(UnifiedDesignSystem.colors.text)
             .text(`• ${b}`, { lineGap: ds.spacing.minimal });
         });
-      } else if (proj.description) {
-        doc
-          .font(fontRegular)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(proj.description, { lineGap: ds.spacing.minimal });
-      }
-      doc.y += ds.spacing.element;
+      },
     });
+  }
 
-    const projMultiplier = this.getSectionSpacingAdjustment(doc, "projects", resume.projects);
-    doc.y += ds.spacing.section * projMultiplier;
+  private renderProjects(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
+    this.renderSection(doc, "NOTABLE PROJECTS", resume.projects, ds, "projects", {
+      itemSpacing: ds.spacing.element,
+      drawHeader: (t) => this.drawSectionHeader(doc, t, ds, fontBold),
+      renderItem: (proj) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(proj.name, { continued: true });
+
+        if (proj.technologies) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.small)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(` | ${proj.technologies}`, {
+              oblique: true,
+              continued: !!proj.link,
+            });
+        }
+
+        if (proj.link) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.small)
+            .fillColor(UnifiedDesignSystem.colors.primary)
+            .text(` | ${proj.link}`, {
+              link: proj.link.startsWith("http") ? proj.link : `https://${proj.link}`,
+              underline: true,
+              continued: false,
+            });
+        } else if (!proj.technologies) {
+          doc.text("");
+        }
+
+        if (proj.bullets) {
+          proj.bullets.forEach((b: string) => {
+            doc
+              .font(fontRegular)
+              .fontSize(ds.fontSize.body)
+              .fillColor(UnifiedDesignSystem.colors.text)
+              .text(`• ${b}`, { lineGap: ds.spacing.minimal });
+          });
+        } else if (proj.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(proj.description, { lineGap: ds.spacing.minimal });
+        }
+      },
+    });
   }
 
   private renderEducation(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
-    if (!resume.education?.length) return;
-
-    this.drawSectionHeader(doc, "EDUCATION", ds, fontBold);
-    resume.education.forEach((edu) => {
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.h3)
-        .fillColor(UnifiedDesignSystem.colors.primary)
-        .text(edu.institution, { continued: true });
-      doc
-        .font(fontRegular)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.textLight)
-        .text(` | ${edu.degree} in ${edu.field}`);
-      if (edu.dateRange) {
+    this.renderSection(doc, "EDUCATION", resume.education, ds, "education", {
+      itemSpacing: ds.spacing.element,
+      drawHeader: (t) => this.drawSectionHeader(doc, t, ds, fontBold),
+      renderItem: (edu) => {
         doc
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(edu.dateRange, { oblique: true });
-      }
-      if (edu.gpa) {
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(edu.institution, { continued: true });
         doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.body)
           .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(`GPA: ${edu.gpa}`);
-      }
-      doc.y += ds.spacing.element;
+          .text(` | ${edu.degree} in ${edu.field}`);
+        if (edu.dateRange) {
+          doc
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(edu.dateRange, { oblique: true });
+        }
+        if (edu.gpa) {
+          doc
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(`GPA: ${edu.gpa}`);
+        }
+      },
     });
-
-    const eduMultiplier = this.getSectionSpacingAdjustment(doc, "education", resume.education);
-    doc.y += ds.spacing.section * eduMultiplier;
   }
 
   private renderSkills(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
@@ -239,126 +230,128 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
       const skillsMultiplier = this.getSectionSpacingAdjustment(doc, "skills", resume.skillsCategories);
       doc.y += ds.spacing.section * skillsMultiplier;
     } else if (resume.skills?.length) {
-      this.drawSectionHeader(doc, "COMPETENCIES", ds, fontBold);
-      doc
-        .font(fontRegular)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.text)
-        .text(resume.skills.join("  •  "), {
-          align: "left",
-          lineGap: ds.spacing.minimal,
-        });
-      const skillsMultiplier = this.getSectionSpacingAdjustment(doc, "skills", resume.skills);
-      doc.y += ds.spacing.section * skillsMultiplier;
+      this.renderSection(doc, "COMPETENCIES", resume.skills, ds, "skills", {
+        drawHeader: (t) => this.drawSectionHeader(doc, t, ds, fontBold),
+        renderItem: (skill) => {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(resume.skills.join("  •  "), {
+              align: "left",
+              lineGap: ds.spacing.minimal,
+            });
+        },
+      });
     }
   }
 
   private renderCertifications(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.certifications?.length || !contentDensityEngine.isSectionVisible(density, "certifications")) return;
-
-    this.drawSectionHeader(doc, "CERTIFICATIONS", ds, fontBold);
-    resume.certifications.forEach((cert) => {
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.text)
-        .text(`${cert.name}`, { continued: true });
-      const certDateStr = cert.date ? ` (${cert.date})` : "";
-      doc
-        .font(fontRegular)
-        .fillColor(UnifiedDesignSystem.colors.textLight)
-        .text(` | ${cert.issuer}${certDateStr}`);
-    });
-    const certMultiplier = this.getSectionSpacingAdjustment(doc, "certifications", resume.certifications);
-    doc.y += ds.spacing.section * certMultiplier;
-  }
-
-  private renderCoursework(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.coursework?.length || !contentDensityEngine.isSectionVisible(density, "coursework")) return;
-
-    this.drawSectionHeader(doc, "RELEVANT COURSEWORK", ds, fontBold);
-    resume.coursework.forEach((course) => {
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.text)
-        .text(`${course.courseName}`, { continued: true });
-      const institutionStr = course.institution ? ` (${course.institution})` : "";
-      doc
-        .font(fontRegular)
-        .fillColor(UnifiedDesignSystem.colors.textLight)
-        .text(` | ${course.topic}${institutionStr}`);
-    });
-    const courseMultiplier = this.getSectionSpacingAdjustment(doc, "coursework", resume.coursework);
-    doc.y += ds.spacing.section * courseMultiplier;
-  }
-
-  private renderLeadership(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.leadership?.length || !contentDensityEngine.isSectionVisible(density, "leadership")) return;
-
-    this.drawSectionHeader(doc, "LEADERSHIP & EXTRACURRICULAR", ds, fontBold);
-    resume.leadership.forEach((role) => {
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.h3)
-        .fillColor(UnifiedDesignSystem.colors.text)
-        .text(role.title, { continued: true });
-      doc
-        .font(fontRegular)
-        .fillColor(UnifiedDesignSystem.colors.secondary)
-        .text(" | ", { continued: true })
-        .fillColor(UnifiedDesignSystem.colors.primary)
-        .text(role.organization);
-      if (role.location) {
+    this.renderSection(doc, "CERTIFICATIONS", resume.certifications, ds, "certifications", {
+      density,
+      itemSpacing: ds.spacing.tight,
+      drawHeader: (t) => this.drawSectionHeader(doc, t, ds, fontBold),
+      renderItem: (cert) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(`${cert.name}`, { continued: true });
+        const certDateStr = cert.date ? ` (${cert.date})` : "";
         doc
           .font(fontRegular)
           .fontSize(ds.fontSize.body)
           .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(role.location);
-      }
-      if (role.description) {
+          .text(` | ${cert.issuer}${certDateStr}`);
+      },
+    });
+  }
+
+  private renderCoursework(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
+    this.renderSection(doc, "RELEVANT COURSEWORK", resume.coursework, ds, "coursework", {
+      density,
+      drawHeader: (t) => this.drawSectionHeader(doc, t, ds, fontBold),
+      renderItem: (course) => {
         doc
-          .font(fontRegular)
+          .font(fontBold)
           .fontSize(ds.fontSize.body)
           .fillColor(UnifiedDesignSystem.colors.text)
-          .text(role.description, { lineGap: ds.spacing.minimal });
-      }
-      doc.y += ds.spacing.tight;
+          .text(`${course.courseName}`, { continued: true });
+        const institutionStr = course.institution ? ` (${course.institution})` : "";
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(` | ${course.topic}${institutionStr}`);
+      },
     });
-    const leadMultiplier = this.getSectionSpacingAdjustment(doc, "leadership", resume.leadership);
-    doc.y += ds.spacing.section * leadMultiplier;
+  }
+
+  private renderLeadership(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
+    this.renderSection(doc, "LEADERSHIP & EXTRACURRICULAR", resume.leadership, ds, "leadership", {
+      density,
+      itemSpacing: ds.spacing.tight,
+      drawHeader: (t) => this.drawSectionHeader(doc, t, ds, fontBold),
+      renderItem: (role) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(role.title, { continued: true });
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.secondary)
+          .text(" | ", { continued: true })
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(role.organization);
+        if (role.location) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(role.location);
+        }
+        if (role.description) {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(role.description, { lineGap: ds.spacing.minimal });
+        }
+      },
+    });
   }
 
   private renderAwards(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.awards?.length || !contentDensityEngine.isSectionVisible(density, "awards")) return;
+    if (!resume.awards?.length) return;
 
     const estimatedHeight = 40;
     if (!this.hasEnoughSpace(doc, estimatedHeight)) {
       doc.addPage();
     }
 
-    this.drawSectionHeader(doc, "HONORS & AWARDS", ds, fontBold);
-    resume.awards.forEach((award) => {
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.h3)
-        .fillColor(UnifiedDesignSystem.colors.primary)
-        .text(award.awardName, { continued: true });
-      const dateStr = award.awardDate ? ` (${award.awardDate})` : "";
-      doc
-        .font(fontRegular)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.textLight)
-        .text(` | ${award.organization}${dateStr}`);
-      if (award.description) {
+    this.renderSection(doc, "HONORS & AWARDS", resume.awards, ds, "awards", {
+      density,
+      itemSpacing: ds.spacing.tight,
+      drawHeader: (t) => this.drawSectionHeader(doc, t, ds, fontBold),
+      renderItem: (award) => {
         doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(award.awardName, { continued: true });
+        const dateStr = award.awardDate ? ` (${award.awardDate})` : "";
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.body)
           .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(award.description, { oblique: true });
-      }
-      doc.y += ds.spacing.tight;
+          .text(` | ${award.organization}${dateStr}`);
+        if (award.description) {
+          doc
+            .fillColor(UnifiedDesignSystem.colors.textLight)
+            .text(award.description, { oblique: true });
+        }
+      },
     });
-    const awardMultiplier = this.getSectionSpacingAdjustment(doc, "awards", resume.awards);
-    doc.y += ds.spacing.section * awardMultiplier;
   }
 
   private drawSectionHeader(doc: PDFKit.PDFDocument, title: string, ds: ScaledDesignSystem, fontBold: string) {

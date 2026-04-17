@@ -95,39 +95,27 @@ export class ModernRenderer extends BaseTemplateRenderer {
   }
 
   private renderExperience(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
-    if (!resume.experiences?.length) return;
-
-    this.drawModernHeader(doc, "WORK EXPERIENCE", ds);
-    resume.experiences.forEach((exp) => {
-      this.renderExperienceModern(doc, exp, fontBold, fontRegular, ds);
-      this.moveDownPoints(doc, ds.spacing.element);
+    this.renderSection(doc, "WORK EXPERIENCE", resume.experiences, ds, "experiences", {
+      itemSpacing: ds.spacing.element,
+      drawHeader: (t) => this.drawModernHeader(doc, t, ds),
+      renderItem: (exp) => this.renderExperienceModern(doc, exp, fontBold, fontRegular, ds),
     });
-
-    this.moveDownAdjusted(doc, ds.spacing.section, "experiences", resume.experiences);
   }
 
   private renderProjects(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
-    if (!resume.projects?.length) return;
-
-    this.drawModernHeader(doc, "PROJECTS", ds);
-    resume.projects.forEach((proj) => {
-      this.renderProjectModern(doc, proj, fontBold, fontRegular, ds);
-      this.moveDownPoints(doc, ds.spacing.element);
+    this.renderSection(doc, "PROJECTS", resume.projects, ds, "projects", {
+      itemSpacing: ds.spacing.element,
+      drawHeader: (t) => this.drawModernHeader(doc, t, ds),
+      renderItem: (proj) => this.renderProjectModern(doc, proj, fontBold, fontRegular, ds),
     });
-
-    this.moveDownAdjusted(doc, ds.spacing.section, "projects", resume.projects);
   }
 
   private renderEducation(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
-    if (!resume.education?.length) return;
-
-    this.drawModernHeader(doc, "EDUCATION", ds);
-    resume.education.forEach((edu) => {
-      this.renderEducationModern(doc, edu, fontBold, fontRegular, ds);
-      this.moveDownPoints(doc, ds.spacing.tight);
+    this.renderSection(doc, "EDUCATION", resume.education, ds, "education", {
+      itemSpacing: ds.spacing.tight,
+      drawHeader: (t) => this.drawModernHeader(doc, t, ds),
+      renderItem: (edu) => this.renderEducationModern(doc, edu, fontBold, fontRegular, ds),
     });
-
-    this.moveDownAdjusted(doc, ds.spacing.section, "education", resume.education);
   }
 
   private renderSkills(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string) {
@@ -146,74 +134,74 @@ export class ModernRenderer extends BaseTemplateRenderer {
       });
       this.moveDownAdjusted(doc, ds.spacing.section, "skills", resume.skillsCategories);
     } else if (resume.skills?.length) {
-      this.drawModernHeader(doc, "SKILLS", ds);
-      doc
-        .font(fontRegular)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.text)
-        .text(resume.skills.join("  •  "), {
-          align: "left",
-          lineGap: ds.spacing.minimal,
-        });
-      this.moveDownAdjusted(doc, ds.spacing.section, "skills", resume.skills);
+      this.renderSection(doc, "SKILLS", resume.skills, ds, "skills", {
+        drawHeader: (t) => this.drawModernHeader(doc, t, ds),
+        renderItem: (skill) => {
+          doc
+            .font(fontRegular)
+            .fontSize(ds.fontSize.body)
+            .fillColor(UnifiedDesignSystem.colors.text)
+            .text(resume.skills.join("  •  "), {
+              align: "left",
+              lineGap: ds.spacing.minimal,
+            });
+        },
+      });
     }
   }
 
   private renderCertifications(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.certifications?.length || !contentDensityEngine.isSectionVisible(density, "certifications")) return;
-
-    this.drawModernHeader(doc, "CERTIFICATIONS", ds);
-    resume.certifications.forEach((cert) => {
-      doc
-        .font(fontBold)
-        .fontSize(ds.fontSize.h3)
-        .fillColor(UnifiedDesignSystem.colors.primary)
-        .text(cert.name, { continued: true });
-      const certDateStr = cert.date ? ` (${cert.date})` : "";
-      doc
-        .font(fontRegular)
-        .fontSize(ds.fontSize.body)
-        .fillColor(UnifiedDesignSystem.colors.textLight)
-        .text(` | ${cert.issuer}${certDateStr}`);
-      this.moveDownPoints(doc, ds.spacing.tight);
+    this.renderSection(doc, "CERTIFICATIONS", resume.certifications, ds, "certifications", {
+      density,
+      itemSpacing: ds.spacing.tight,
+      drawHeader: (t) => this.drawModernHeader(doc, t, ds),
+      renderItem: (cert) => {
+        doc
+          .font(fontBold)
+          .fontSize(ds.fontSize.h3)
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(cert.name, { continued: true });
+        const certDateStr = cert.date ? ` (${cert.date})` : "";
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(` | ${cert.issuer}${certDateStr}`);
+      },
     });
-    this.moveDownAdjusted(doc, ds.spacing.section, "certifications", resume.certifications);
   }
 
   private renderCoursework(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.coursework?.length || !contentDensityEngine.isSectionVisible(density, "coursework")) return;
-
-    this.drawModernHeader(doc, "RELEVANT COURSEWORK", ds);
-    resume.coursework.forEach((course) => {
-      this.renderCourseworkModern(doc, course, fontBold, fontRegular, ds);
+    this.renderSection(doc, "RELEVANT COURSEWORK", resume.coursework, ds, "coursework", {
+      density,
+      drawHeader: (t) => this.drawModernHeader(doc, t, ds),
+      renderItem: (course) => this.renderCourseworkModern(doc, course, fontBold, fontRegular, ds),
     });
-    this.moveDownAdjusted(doc, ds.spacing.section, "coursework", resume.coursework);
   }
 
   private renderLeadership(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.leadership?.length || !contentDensityEngine.isSectionVisible(density, "leadership")) return;
-
-    this.drawModernHeader(doc, "LEADERSHIP & EXTRACURRICULAR", ds);
-    resume.leadership.forEach((role) => {
-      this.renderLeadershipModern(doc, role, fontBold, fontRegular, ds);
-      this.moveDownPoints(doc, ds.spacing.tight);
+    this.renderSection(doc, "LEADERSHIP & EXTRACURRICULAR", resume.leadership, ds, "leadership", {
+      density,
+      itemSpacing: ds.spacing.tight,
+      drawHeader: (t) => this.drawModernHeader(doc, t, ds),
+      renderItem: (role) => this.renderLeadershipModern(doc, role, fontBold, fontRegular, ds),
     });
-    this.moveDownAdjusted(doc, ds.spacing.section, "leadership", resume.leadership);
   }
 
   private renderAwards(doc: PDFKit.PDFDocument, resume: GeneratedResume, ds: ScaledDesignSystem, fontBold: string, fontRegular: string, density: DensityLevel) {
-    if (!resume.awards?.length || !contentDensityEngine.isSectionVisible(density, "awards")) return;
-
+    if (!resume.awards?.length) return;
+    
+    // Custom check for space as Modern has specific logic here
     const estimatedHeight = 45;
     if (!this.hasEnoughSpace(doc, estimatedHeight)) {
       doc.addPage();
     }
 
-    this.drawModernHeader(doc, "HONORS & AWARDS", ds);
-    resume.awards.forEach((award) => {
-      this.renderAwardModern(doc, award, fontBold, fontRegular, ds);
+    this.renderSection(doc, "HONORS & AWARDS", resume.awards, ds, "awards", {
+      density,
+      drawHeader: (t) => this.drawModernHeader(doc, t, ds),
+      renderItem: (award) => this.renderAwardModern(doc, award, fontBold, fontRegular, ds),
     });
-    this.moveDownAdjusted(doc, ds.spacing.section, "awards", resume.awards);
   }
 
   private drawModernHeader(
