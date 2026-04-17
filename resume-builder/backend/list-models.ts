@@ -5,8 +5,7 @@ config();
 const API_KEY = process.env.GEMINI_API_KEY;
 
 if (!API_KEY) {
-  console.error("Error: GEMINI_API_KEY not found in .env file.");
-  process.exit(1);
+  throw new Error("GEMINI_API_KEY not found in .env file.");
 }
 
 async function listModels() {
