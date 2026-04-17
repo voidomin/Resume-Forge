@@ -2,7 +2,6 @@ import { GeneratedResume } from "../gemini.service";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
 import {
   UnifiedDesignSystem,
-  contentDensityEngine,
   DensityLevel,
   ScaledDesignSystem,
 } from "../../../../shared/design-system";
