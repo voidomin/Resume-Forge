@@ -21,8 +21,18 @@ function Register() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    const validatePassword = (pass: string) => {
+      if (pass.length < 8) return "Password must be at least 8 characters";
+      if (!/[A-Z]/.test(pass)) return "Password must contain at least one uppercase letter";
+      if (!/[a-z]/.test(pass)) return "Password must contain at least one lowercase letter";
+      if (!/[0-9]/.test(pass)) return "Password must contain at least one number";
+      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pass)) return "Password must contain at least one special character (!@#$%^&*)";
+      return null;
+    };
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      toast.error(passwordError);
       return;
     }
 

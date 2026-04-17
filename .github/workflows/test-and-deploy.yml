@@ -47,8 +47,26 @@ jobs:
         run: cd resume-builder/backend && npm test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/resume_builder_test
-          JWT_SECRET: test-secret
-          GEMINI_API_KEY: test-key
+          JWT_SECRET: test-secret-key-minimum-32-characters-long
+          GEMINI_API_KEY: test-key-value-for-ci
+
+      # Frontend Tests
+      - name: Install Frontend Dependencies
+        run: cd resume-builder/frontend && npm ci
+
+      - name: Install Playwright Browsers
+        run: cd resume-builder/frontend && npx playwright install --with-deps
+
+      - name: Run Frontend Tests
+        run: cd resume-builder/frontend && npm test
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: playwright-report
+          path: resume-builder/frontend/playwright-report/
+          retention-days: 30
 
   deploy:
     needs: test
@@ -60,6 +78,7 @@ jobs:
 
       - name: Deploy to Production
         run: |
-          echo "Deploying to production..."
-          # Add your deployment commands here
-          # Example: deploy to Railway, Vercel, or your hosting provider
+          echo "🚀 Deploying to production environment..."
+          # Placeholder for deployment logic (e.g., Vercel, Render, Railway CLI)
+          # echo "Verifying deployment readiness..."
+          # npm run deploy
