@@ -3,8 +3,9 @@
 An **ATS-optimized, role-based resume builder** that generates tailored resumes for specific job applications. Simply maintain one master profile and generate customized resumes for each job you apply to!
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Status](https://img.shields.io/badge/status-Production%20v1.1.0-green.svg)
-![Tests](https://img.shields.io/badge/tests-37%2F37%20passing-brightgreen.svg)
+![Status](https://img.shields.io/badge/status-Production%20v1.2.0-green.svg)
+![CI/CD](https://github.com/voidomin/Resume-Forge/actions/workflows/test-and-deploy.yml/badge.svg)
+![Netlify Status](https://api.netlify.com/api/v1/badges/99867c29-5d25-4c6e-8126-5b9123282fc2/deploy-status)
 
 **🌐 [Live Demo](https://resumeforge2.netlify.app/login)** | [GitHub](https://github.com/voidomin/Resume-Forge)
 
@@ -59,7 +60,7 @@ No installation required! Create an account and start building your resume immed
    npm install
    ```
 
-3. **Set up environment variables** – See [DEPLOYMENT.md](DEPLOYMENT.md) for configuration details
+3. **Set up environment variables** – Create `.env` files in both frontend and backend using the `.env.example` templates.
 
 4. **Start development servers**:
 
@@ -85,23 +86,10 @@ No installation required! Create an account and start building your resume immed
 | [USER_GUIDE.md](docs/USER_GUIDE.md)                                         | Complete user guide and feature documentation          |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)                               | Common issues and solutions                            |
 
-### Development & Contribution
+### Development
 
-| Document                                                 | Description                                  |
-| -------------------------------------------------------- | -------------------------------------------- |
-| [CHANGELOG.md](CHANGELOG.md)                             | Version history and release notes            |
-| [CONTRIBUTING.md](CONTRIBUTING.md)                       | How to contribute, workflow, and guidelines  |
-| [KNOWN_ISSUES.md](KNOWN_ISSUES.md)                       | Bug tracking and known issues                |
-| [BRANCH_PROTECTION_SETUP.md](BRANCH_PROTECTION_SETUP.md) | GitHub branch protection configuration guide |
-| [V1_RELEASE_CHECKLIST.md](V1_RELEASE_CHECKLIST.md)       | v1.0 release verification checklist          |
+Please refer to the [docs/](docs/) folder for detailed technical documentation.
 
-### Deployment
-
-| Document                                             | Description                    |
-| ---------------------------------------------------- | ------------------------------ |
-| [DEPLOYMENT.md](DEPLOYMENT.md)                       | Production deployment guide    |
-| [DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)       | Deployment completion summary  |
-| [FREE_DEPLOYMENT_GUIDE.md](FREE_DEPLOYMENT_GUIDE.md) | Free hosting options and setup |
 
 ---
 
@@ -138,11 +126,6 @@ No installation required! Create an account and start building your resume immed
 Resume-Forge/
 ├── 📚 Documentation (root level)
 │   ├── README.md
-│   ├── CHANGELOG.md
-│   ├── CONTRIBUTING.md
-│   ├── DEPLOYMENT.md
-│   ├── TESTING_GUIDE.md
-│   ├── KNOWN_ISSUES.md
 │   └── docs/
 │       ├── PRD_Resume_Builder.md
 │       ├── Design_Document_Resume_Builder.md
@@ -242,7 +225,6 @@ Resume-Forge/
 - [ ] AI interview coach
 - [ ] Collaborative resume reviews
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
 ---
 
