@@ -37,5 +37,5 @@ While the UX and Performance tasks are nearly complete, the repository is missin
 - [x] **Environment Templates**: Create `.env.example` files in both the frontend and backend to document required secrets (e.g., Gemini API keys, Database URLs, JWT secrets) without leaking actual keys.
 - [ ] **Frontend Linting Setup**: Install and configure ESLint for the `frontend` React application (Deferred due to ESM/CJS compatibility hurdles).
 - [ ] **Pre-commit Hooks (Husky)**: Set up Husky and lint-staged to automatically run formatters (Prettier) and linters before allowing a git commit.
-- [ ] **CI/CD Pipeline**: Create GitHub Actions workflows (`.github/workflows/ci.yml`) to automatically build and run tests (Jest & Playwright) on pull requests to the `main` branch.
+- [x] **CI/CD Pipeline**: Created GitHub Actions workflow (`.github/workflows/test-and-deploy.yml`) to automatically build and run tests (Jest & Playwright).
 - [ ] **Lighthouse Baseline Audit**: Run the final Lighthouse test to ensure the performance score passes > 90 (carried over from Performance Optimization).
