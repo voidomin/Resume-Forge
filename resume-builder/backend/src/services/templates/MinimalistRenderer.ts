@@ -43,16 +43,16 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
     // Helper: Section Headers (Uppercase, Tracking, TextLight Color)
     const drawHeader = (title: string) => {
       // Minimalist gets a specific minimal stroke color from utility logic, we can pass our own wrapper.
-      TemplateUtils.drawHeader(
+      TemplateUtils.drawHeader({
         doc,
-        this,
+        renderer: this,
         ds,
         title,
         fontBold,
-        UnifiedDesignSystem.colors.textLight,
-        "left",
-        false, // Minimalist draws its own specific 30% opacity line
-      );
+        color: UnifiedDesignSystem.colors.textLight,
+        align: "left",
+        drawLine: false, // Minimalist draws its own specific 30% opacity line
+      });
 
       const y = doc.y - ds.spacing.element + 2;
       doc

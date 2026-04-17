@@ -105,51 +105,42 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
     resume: GeneratedResume,
   ): { text: string; link?: string }[] {
     const parts: { text: string; link?: string }[] = [];
+    const { contactInfo } = resume;
+
     const isValid = (val: string | undefined) =>
       val &&
       val.trim().toLowerCase() !== "n/a" &&
       val.trim().toLowerCase() !== "none";
 
-    // Helper to strip protocol for display
-    const formatUrl = (url: string) =>
-      url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+    const addPart = (val: string | undefined, linkPrefix?: string) => {
+      if (!isValid(val)) return;
+      const text = linkPrefix ? this.formatUrl(val!) : val!;
+      const link = linkPrefix ? this.ensureProtocol(val!, linkPrefix) : undefined;
+      parts.push({ text, link });
+    };
 
-    if (resume.contactInfo.email && isValid(resume.contactInfo.email))
-      parts.push({
-        text: resume.contactInfo.email,
-        link: `mailto:${resume.contactInfo.email}`,
-      });
-    if (resume.contactInfo.phone && isValid(resume.contactInfo.phone))
-      parts.push({
-        text: resume.contactInfo.phone,
-        link: `tel:${resume.contactInfo.phone}`,
-      });
-    if (resume.contactInfo.location && isValid(resume.contactInfo.location))
-      parts.push({ text: resume.contactInfo.location });
+    // Process each field
+    addPart(contactInfo.email, "mailto:");
+    addPart(contactInfo.phone, "tel:");
 
-    if (resume.contactInfo.linkedin && isValid(resume.contactInfo.linkedin))
-      parts.push({
-        text: formatUrl(resume.contactInfo.linkedin),
-        link: resume.contactInfo.linkedin.startsWith("http")
-          ? resume.contactInfo.linkedin
-          : `https://${resume.contactInfo.linkedin}`,
-      });
-    if (resume.contactInfo.github && isValid(resume.contactInfo.github))
-      parts.push({
-        text: formatUrl(resume.contactInfo.github),
-        link: resume.contactInfo.github.startsWith("http")
-          ? resume.contactInfo.github
-          : `https://${resume.contactInfo.github}`,
-      });
-    if (resume.contactInfo.portfolio && isValid(resume.contactInfo.portfolio))
-      parts.push({
-        text: formatUrl(resume.contactInfo.portfolio),
-        link: resume.contactInfo.portfolio.startsWith("http")
-          ? resume.contactInfo.portfolio
-          : `https://${resume.contactInfo.portfolio}`,
-      });
+    if (isValid(contactInfo.location)) {
+      parts.push({ text: contactInfo.location! });
+    }
+
+    addPart(contactInfo.linkedin, "https://");
+    addPart(contactInfo.github, "https://");
+    addPart(contactInfo.portfolio, "https://");
 
     return parts;
+  }
+
+  private formatUrl(url: string): string {
+    return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+  }
+
+  private ensureProtocol(val: string, prefix: string): string {
+    if (prefix === "mailto:" || prefix === "tel:") return prefix + val;
+    return val.startsWith("http") ? val : prefix + val;
   }
 
   protected renderContactLine(

@@ -250,16 +250,16 @@ export class ModernRenderer extends BaseTemplateRenderer {
   ) {
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
 
-    TemplateUtils.drawHeader(
+    TemplateUtils.drawHeader({
       doc,
-      this,
+      renderer: this,
       ds,
       title,
       fontBold,
-      UnifiedDesignSystem.colors.primary,
-      "left",
-      false, // Modern has its own specific underline logic below
-    );
+      color: UnifiedDesignSystem.colors.primary,
+      align: "left",
+      drawLine: false, // Modern has its own specific underline logic below
+    });
 
     // Modern has its own specific full-width underline logic, so we draw it separately
     doc

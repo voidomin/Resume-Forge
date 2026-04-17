@@ -41,16 +41,16 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
 
     // Helper: Section Headers (Centered, Uppercase, Primary Color)
     const drawHeader = (title: string) => {
-      TemplateUtils.drawHeader(
+      TemplateUtils.drawHeader({
         doc,
-        this,
+        renderer: this,
         ds,
         title,
         fontBold,
-        UnifiedDesignSystem.colors.primary,
-        "center",
-        true,
-      );
+        color: UnifiedDesignSystem.colors.primary,
+        align: "center",
+        drawLine: true,
+      });
     };
 
     // 1. Header Name
