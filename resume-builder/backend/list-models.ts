@@ -2,15 +2,13 @@ import { config } from "dotenv";
 
 config();
 
-const API_KEY = process.env.GEMINI_API_KEY;
-
-if (!API_KEY) {
-  console.error("Error: GEMINI_API_KEY not found in .env file.");
-  process.exit(1);
-}
-
 async function listModels() {
-  console.log(`Fetching models for API Key: ${API_KEY!.slice(0, 5)}...`);
+  const API_KEY = process.env.GEMINI_API_KEY;
+  if (!API_KEY) {
+    throw new Error("GEMINI_API_KEY not found in .env file.");
+  }
+
+  console.log(`Fetching models for API Key: ${API_KEY.slice(0, 5)}...`);
   const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${API_KEY}`;
 
   try {
@@ -20,7 +18,7 @@ async function listModels() {
         `HTTP error! status: ${response.status} ${response.statusText}`,
       );
     }
-    const data = (await response.json()) as any;
+    const data = await response.json();
 
     console.log("\n=== Available Gemini Models ===");
     if (data.models) {

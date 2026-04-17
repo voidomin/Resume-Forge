@@ -746,9 +746,9 @@ async function profileRoutes(server: FastifyInstance) {
         const profile = await prisma.profile.upsert({
           where: { userId },
           update: {
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
+            firstName: data.firstName || "-",
+            lastName: data.lastName || "-",
+            email: data.email || "-",
             phone: data.phone,
             location: data.location,
             linkedin: data.linkedin,
@@ -758,9 +758,9 @@ async function profileRoutes(server: FastifyInstance) {
           },
           create: {
             userId,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
+            firstName: data.firstName || "-",
+            lastName: data.lastName || "-",
+            email: data.email || "-",
             phone: data.phone,
             location: data.location,
             linkedin: data.linkedin,
@@ -770,7 +770,6 @@ async function profileRoutes(server: FastifyInstance) {
           },
         });
 
-        // Delete existing data and add new
         // Delete existing data and add new
         await prisma.experience.deleteMany({
           where: { profileId: profile.id },
@@ -797,10 +796,10 @@ async function profileRoutes(server: FastifyInstance) {
             await prisma.experience.create({
               data: {
                 profileId: profile.id,
-                company: exp.company,
-                role: exp.role,
+                company: exp.company || "Unknown Company",
+                role: exp.role || "Professional",
                 location: exp.location,
-                startDate: exp.startDate,
+                startDate: exp.startDate || "N/A",
                 endDate: exp.endDate,
                 current: exp.current || false,
                 bullets: JSON.stringify(exp.bullets || []),
@@ -815,9 +814,9 @@ async function profileRoutes(server: FastifyInstance) {
             await prisma.education.create({
               data: {
                 profileId: profile.id,
-                institution: edu.institution,
-                degree: edu.degree,
-                field: edu.field,
+                institution: edu.institution || "Unknown Institution",
+                degree: edu.degree || "Degree",
+                field: edu.field || "General",
                 location: edu.location,
                 startDate: edu.startDate,
                 endDate: edu.endDate,
@@ -908,9 +907,9 @@ async function profileRoutes(server: FastifyInstance) {
             await prisma.award.create({
               data: {
                 profileId: profile.id,
-                awardName: award.awardName,
-                organization: award.organization,
-                awardDate: award.awardDate,
+                awardName: award.awardName || "Award",
+                organization: award.organization || "N/A",
+                awardDate: award.awardDate || "N/A",
                 description: award.description,
               },
             });
@@ -931,8 +930,13 @@ async function profileRoutes(server: FastifyInstance) {
             error: "Invalid or expired session. Please log in again.",
           });
         }
+        console.error("Profile import error:", error);
         request.log.error(error);
-        return reply.status(500).send({ error: "Failed to import profile" });
+        return reply.status(500).send({
+          error: "Failed to import profile",
+          message: error.message,
+          type: error.constructor.name,
+        });
       }
     },
   );
