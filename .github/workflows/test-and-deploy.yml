@@ -61,16 +61,20 @@ jobs:
         run: |
           cd resume-builder/backend
           npx prisma db push --accept-data-loss
-          nohup npm run dev > backend.log 2>&1 &
+          nohup npx ts-node src/index.ts > backend.log 2>&1 &
           # Wait for backend to be ready
+          echo "Waiting for backend on 127.0.0.1:3000..."
           for i in {1..20}; do
-            if curl -s http://localhost:3000/health > /dev/null; then
-              echo "Backend is ready!"
-              break
+            if curl -s http://127.0.0.1:3000/health > /dev/null; then
+              echo "✅ Backend is ready!"
+              exit 0
             fi
-            echo "Waiting for backend..."
+            echo "Attempt $i: Still waiting..."
             sleep 3
           done
+          echo "❌ Backend failed to start in time. Logs:"
+          cat backend.log
+          exit 1
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/resume_builder_test
           JWT_SECRET: test-secret-key-minimum-32-characters-long
@@ -78,6 +82,16 @@ jobs:
 
       - name: Run Frontend Tests
         run: cd resume-builder/frontend && npm test
+
+      - name: Print Backend Logs on Failure
+        if: failure()
+        run: |
+          if [ -f resume-builder/backend/backend.log ]; then
+            echo "--- Backend Logs ---"
+            cat resume-builder/backend/backend.log
+          else
+            echo "Backend log file not found."
+          fi
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
