@@ -25,13 +25,11 @@ export class StandardRenderer extends BaseTemplateRenderer {
     resume: GeneratedResume,
     density: DensityLevel,
   ): void {
-    // Get scaled design system for this density
     const ds = this.getScaledDesignSystem(doc, density);
     const fontRegular = UnifiedDesignSystem.fonts.primary.pdf;
     const fontBold = UnifiedDesignSystem.fonts.primary.pdfBold;
-    const scaledMargin = ds.margins.pageLeft;
 
-    // Apply scaled margins to document
+    // Set page margins once
     doc.page.margins = {
       top: ds.margins.pageTop,
       bottom: ds.margins.pageBottom,
@@ -39,21 +37,30 @@ export class StandardRenderer extends BaseTemplateRenderer {
       right: ds.margins.pageRight,
     };
 
-    // Section Header - Left Aligned with Line
-    const drawHeader = (title: string) => {
-      TemplateUtils.drawHeader(
-        doc,
-        this,
-        ds,
-        title,
-        fontBold,
-        UnifiedDesignSystem.colors.text,
-        "left",
-        true,
-      );
-    };
+    // Header - Name & Contact
+    this.renderHeader(doc, ds, resume, fontBold, fontRegular);
 
-    // Header - Name
+    // Sections
+    this.renderSummary(doc, ds, resume, fontRegular, fontBold);
+    this.renderExperience(doc, ds, resume, fontRegular, fontBold);
+    this.renderProjects(doc, ds, resume, fontRegular, fontBold);
+    this.renderEducation(doc, ds, resume, fontRegular, fontBold);
+    this.renderSkills(doc, ds, resume, fontRegular, fontBold);
+
+    // Optional Sections
+    this.renderCertifications(doc, ds, resume, fontRegular, fontBold, density);
+    this.renderCoursework(doc, ds, resume, fontRegular, fontBold, density);
+    this.renderLeadership(doc, ds, resume, fontRegular, fontBold, density);
+    this.renderAwards(doc, ds, resume, fontRegular, fontBold, density);
+  }
+
+  private renderHeader(
+    doc: PDFKit.PDFDocument,
+    ds: any,
+    resume: GeneratedResume,
+    fontBold: string,
+    fontRegular: string,
+  ) {
     doc
       .font(fontBold)
       .fontSize(ds.fontSize.h1)
@@ -62,7 +69,6 @@ export class StandardRenderer extends BaseTemplateRenderer {
 
     this.moveDownPoints(doc, ds.spacing.minimal);
 
-    // Contact Line
     this.renderContactLine(
       doc,
       resume,
@@ -73,59 +79,140 @@ export class StandardRenderer extends BaseTemplateRenderer {
     );
 
     this.moveDownPoints(doc, ds.spacing.tight);
+  }
 
-    if (resume.summary) {
-      drawHeader("PROFESSIONAL SUMMARY");
+  private drawHeader(doc: PDFKit.PDFDocument, ds: any, title: string, fontBold: string) {
+    TemplateUtils.drawHeader({
+      doc,
+      renderer: this,
+      ds,
+      title,
+      fontBold,
+      color: UnifiedDesignSystem.colors.text,
+      align: "left",
+      drawLine: true,
+    });
+  }
+
+  private renderSummary(doc: PDFKit.PDFDocument, ds: any, resume: GeneratedResume, fontRegular: string, fontBold: string) {
+    if (!resume.summary) return;
+
+    this.drawHeader(doc, ds, "PROFESSIONAL SUMMARY", fontBold);
+    doc
+      .font(fontRegular)
+      .fontSize(ds.fontSize.body)
+      .fillColor(UnifiedDesignSystem.colors.text)
+      .text(resume.summary, {
+        align: "justify",
+        lineGap: ds.spacing.minimal,
+      });
+
+    const summaryMultiplier = this.getSectionSpacingAdjustment(doc, "summary", resume.summary);
+    doc.y += ds.spacing.section * summaryMultiplier;
+  }
+
+  private renderExperience(doc: PDFKit.PDFDocument, ds: any, resume: GeneratedResume, fontRegular: string, fontBold: string) {
+    if (!resume.experiences?.length) return;
+
+    this.drawHeader(doc, ds, "WORK EXPERIENCE", fontBold);
+    const scaledMargin = ds.margins.pageLeft;
+
+    resume.experiences.forEach((exp) => {
+      doc
+        .font(fontBold)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(exp.role, { continued: true, align: "left" });
+
+      doc
+        .font(fontRegular)
+        .fillColor(UnifiedDesignSystem.colors.secondary)
+        .text("  |  ", { continued: true })
+        .fillColor(UnifiedDesignSystem.colors.primary)
+        .text(exp.company, { continued: true })
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(exp.location ? `  |  ${exp.location}` : "", {
+          continued: false,
+          align: "left",
+        });
+
+      const dateWidth = doc.widthOfString(exp.dateRange);
+      const expStartY = doc.y;
+
+      doc
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(exp.dateRange, 595 - scaledMargin - dateWidth, expStartY, {
+          align: "left",
+        });
+
+      doc.y = expStartY + doc.currentLineHeight(false) + 2;
+
+      exp.bullets.forEach((b: string) => {
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.body)
+          .fillColor(UnifiedDesignSystem.colors.text)
+          .text(`•  ${b}`, 42, doc.y, {
+            width: 595 - scaledMargin * 2 - 16,
+            lineGap: ds.spacing.minimal,
+            align: "left",
+          });
+      });
+      doc.y += ds.spacing.element;
+    });
+
+    const expMultiplier = this.getSectionSpacingAdjustment(doc, "experiences", resume.experiences);
+    doc.y = doc.y - ds.spacing.element + ds.spacing.section * expMultiplier;
+  }
+
+  private renderProjects(doc: PDFKit.PDFDocument, ds: any, resume: GeneratedResume, fontRegular: string, fontBold: string) {
+    if (!resume.projects?.length) return;
+
+    this.drawHeader(doc, ds, "PROJECTS", fontBold);
+    const scaledMargin = ds.margins.pageLeft;
+
+    resume.projects.forEach((proj) => {
+      doc
+        .font(fontBold)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(proj.name, { continued: true, align: "left" });
+
+      if (proj.link) {
+        doc
+          .font(fontRegular)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text("  |  ", { continued: true })
+          .fillColor(UnifiedDesignSystem.colors.primary)
+          .text(proj.link, {
+            link: proj.link.startsWith("http") ? proj.link : `https://${proj.link}`,
+            underline: true,
+            align: "left",
+            continued: false,
+          });
+      } else {
+        doc.text("");
+      }
+
+      if (proj.technologies) {
+        doc
+          .font(fontRegular)
+          .fontSize(ds.fontSize.body - 1)
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(proj.technologies, { align: "left", oblique: true });
+      }
+
       doc
         .font(fontRegular)
         .fontSize(ds.fontSize.body)
         .fillColor(UnifiedDesignSystem.colors.text)
-        .text(resume.summary, {
-          align: "justify",
+        .text(proj.bullets ? "" : proj.description || "", {
+          align: "left",
           lineGap: ds.spacing.minimal,
         });
-      // Adjusted spacing after section
-      const summaryMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "summary",
-        resume.summary,
-      );
-      doc.y += ds.spacing.section * summaryMultiplier;
-    }
 
-    if (resume.experiences?.length) {
-      drawHeader("WORK EXPERIENCE");
-      resume.experiences.forEach((exp) => {
-        doc
-          .font(fontBold)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(exp.role, { continued: true, align: "left" });
-
-        doc
-          .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.secondary)
-          .text("  |  ", { continued: true })
-          .fillColor(UnifiedDesignSystem.colors.primary)
-          .text(exp.company, { continued: true })
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(exp.location ? `  |  ${exp.location}` : "", {
-            continued: false,
-            align: "left",
-          });
-
-        const dateWidth = doc.widthOfString(exp.dateRange);
-        const expStartY = doc.y;
-
-        doc
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(exp.dateRange, 595 - scaledMargin - dateWidth, expStartY, {
-            align: "left",
-          });
-
-        doc.y = expStartY + doc.currentLineHeight(false) + 2;
-
-        exp.bullets.forEach((b: string) => {
+      if (proj.bullets) {
+        proj.bullets.forEach((b: string) => {
           doc
             .font(fontRegular)
             .fontSize(ds.fontSize.body)
@@ -136,131 +223,73 @@ export class StandardRenderer extends BaseTemplateRenderer {
               align: "left",
             });
         });
-        doc.y += ds.spacing.element;
-      });
-      // Adjusted spacing after section
-      const expMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "experiences",
-        resume.experiences,
-      );
-      doc.y = doc.y - ds.spacing.element + ds.spacing.section * expMultiplier;
-    }
+      }
+      doc.y += ds.spacing.element;
+    });
 
-    if (resume.projects?.length) {
-      drawHeader("PROJECTS");
-      resume.projects.forEach((proj) => {
+    const projMultiplier = this.getSectionSpacingAdjustment(doc, "projects", resume.projects);
+    doc.y = doc.y - ds.spacing.element + ds.spacing.section * projMultiplier;
+  }
+
+  private renderEducation(doc: PDFKit.PDFDocument, ds: any, resume: GeneratedResume, fontRegular: string, fontBold: string) {
+    if (!resume.education?.length) return;
+
+    this.drawHeader(doc, ds, "EDUCATION", fontBold);
+    const scaledMargin = ds.margins.pageLeft;
+
+    resume.education.forEach((edu) => {
+      const startY = doc.y;
+      doc
+        .font(fontBold)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(`${edu.degree} in ${edu.field}`, { continued: true });
+
+      doc
+        .font(fontRegular)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text("  |  ", { continued: true })
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(edu.institution);
+
+      if (edu.dateRange) {
+        const w = doc.widthOfString(edu.dateRange);
+        doc
+          .fillColor(UnifiedDesignSystem.colors.textLight)
+          .text(edu.dateRange, 595 - scaledMargin - w, startY, {
+            align: "left",
+          });
+        doc.y = startY + doc.currentLineHeight(false) + 2;
+      }
+
+      if (edu.gpa) {
+        doc.fillColor(UnifiedDesignSystem.colors.textLight).text(`CGPA: ${edu.gpa}`);
+      }
+      doc.y += ds.spacing.element;
+    });
+
+    const eduMultiplier = this.getSectionSpacingAdjustment(doc, "education", resume.education);
+    doc.y = doc.y - ds.spacing.element + ds.spacing.section * eduMultiplier;
+  }
+
+  private renderSkills(doc: PDFKit.PDFDocument, ds: any, resume: GeneratedResume, fontRegular: string, fontBold: string) {
+    if (resume.skillsCategories && Object.keys(resume.skillsCategories).length > 0) {
+      this.drawHeader(doc, ds, "SKILLS", fontBold);
+      Object.entries(resume.skillsCategories).forEach(([category, skills]) => {
         doc
           .font(fontBold)
           .fontSize(ds.fontSize.body)
           .fillColor(UnifiedDesignSystem.colors.text)
-          .text(proj.name, { continued: true, align: "left" });
-
-        if (proj.link) {
-          doc
-            .font(fontRegular)
-            .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text("  |  ", { continued: true })
-            .fillColor(UnifiedDesignSystem.colors.primary)
-            .text(proj.link, {
-              link: proj.link.startsWith("http")
-                ? proj.link
-                : `https://${proj.link}`,
-              underline: true,
-              align: "left",
-              continued: false,
-            });
-        } else {
-          doc.text("");
-        }
-
-        if (proj.technologies) {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.body - 1)
-            .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text(proj.technologies, { align: "left", oblique: true });
-        }
-
-        doc
+          .text(`${category}: `, { continued: true })
           .font(fontRegular)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(proj.bullets ? "" : proj.description || "", {
-            align: "left",
+          .text(Array.isArray(skills) ? skills.join(", ") : skills, {
             lineGap: ds.spacing.minimal,
           });
-
-        if (proj.bullets) {
-          proj.bullets.forEach((b: string) => {
-            doc
-              .font(fontRegular)
-              .fontSize(ds.fontSize.body)
-              .fillColor(UnifiedDesignSystem.colors.text)
-              .text(`•  ${b}`, 42, doc.y, {
-                width: 595 - scaledMargin * 2 - 16,
-                lineGap: ds.spacing.minimal,
-                align: "left",
-              });
-          });
-        }
-        doc.y += ds.spacing.element;
       });
-      // Adjusted spacing after section
-      const projMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "projects",
-        resume.projects,
-      );
-      doc.y = doc.y - ds.spacing.element + ds.spacing.section * projMultiplier;
-    }
-
-    if (resume.education?.length) {
-      drawHeader("EDUCATION");
-      resume.education.forEach((edu) => {
-        const startY = doc.y;
-
-        doc
-          .font(fontBold)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(`${edu.degree} in ${edu.field}`, { continued: true });
-
-        doc
-          .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text("  |  ", { continued: true })
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(edu.institution);
-
-        if (edu.dateRange) {
-          const w = doc.widthOfString(edu.dateRange);
-          doc
-            .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text(edu.dateRange, 595 - scaledMargin - w, startY, {
-              align: "left",
-            });
-          doc.y = startY + doc.currentLineHeight(false) + 2;
-        }
-
-        if (edu.gpa) {
-          doc
-            .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text(`CGPA: ${edu.gpa}`);
-        }
-        doc.y += ds.spacing.element;
-      });
-      // Adjusted spacing after section
-      const eduMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "education",
-        resume.education,
-      );
-      doc.y = doc.y - ds.spacing.element + ds.spacing.section * eduMultiplier;
-    }
-
-    if (resume.skills?.length) {
-      drawHeader("SKILLS");
+      const skillsMultiplier = this.getSectionSpacingAdjustment(doc, "skills", resume.skillsCategories);
+      doc.y += ds.spacing.section * skillsMultiplier;
+    } else if (resume.skills?.length) {
+      this.drawHeader(doc, ds, "SKILLS", fontBold);
       doc
         .font(fontRegular)
         .fontSize(ds.fontSize.body)
@@ -269,142 +298,107 @@ export class StandardRenderer extends BaseTemplateRenderer {
           align: "left",
           lineGap: ds.spacing.minimal,
         });
-      // Adjusted spacing after section
-      const skillsMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "skills",
-        resume.skills,
-      );
+      const skillsMultiplier = this.getSectionSpacingAdjustment(doc, "skills", resume.skills);
       doc.y += ds.spacing.section * skillsMultiplier;
     }
+  }
 
-    // Optional Sections - Only show if visible at this density
-    if (
-      resume.certifications?.length &&
-      contentDensityEngine.isSectionVisible(density, "certifications")
-    ) {
-      drawHeader("CERTIFICATIONS");
-      resume.certifications.forEach((cert) => {
+  private renderCertifications(doc: PDFKit.PDFDocument, ds: any, resume: GeneratedResume, fontRegular: string, fontBold: string, density: DensityLevel) {
+    if (!resume.certifications?.length || !contentDensityEngine.isSectionVisible(density, "certifications")) return;
+
+    this.drawHeader(doc, ds, "CERTIFICATIONS", fontBold);
+    resume.certifications.forEach((cert) => {
+      doc
+        .font(fontBold)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(`• ${cert.name}`, { continued: true });
+      doc
+        .font(fontRegular)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(` - ${cert.issuer}${cert.date ? " (" + cert.date + ")" : ""}`);
+    });
+    const certMultiplier = this.getSectionSpacingAdjustment(doc, "certifications", resume.certifications);
+    doc.y += ds.spacing.section * certMultiplier;
+  }
+
+  private renderCoursework(doc: PDFKit.PDFDocument, ds: any, resume: GeneratedResume, fontRegular: string, fontBold: string, density: DensityLevel) {
+    if (!resume.coursework?.length || !contentDensityEngine.isSectionVisible(density, "coursework")) return;
+
+    this.drawHeader(doc, ds, "RELEVANT COURSEWORK", fontBold);
+    resume.coursework.forEach((course) => {
+      doc
+        .font(fontBold)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(`• ${course.courseName}`, { continued: true });
+      doc
+        .font(fontRegular)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(` (${course.topic}${course.institution ? " - " + course.institution : ""})`);
+    });
+    const courseMultiplier = this.getSectionSpacingAdjustment(doc, "coursework", resume.coursework);
+    doc.y += ds.spacing.section * courseMultiplier;
+  }
+
+  private renderLeadership(doc: PDFKit.PDFDocument, ds: any, resume: GeneratedResume, fontRegular: string, fontBold: string, density: DensityLevel) {
+    if (!resume.leadership?.length || !contentDensityEngine.isSectionVisible(density, "leadership")) return;
+
+    this.drawHeader(doc, ds, "LEADERSHIP & EXTRACURRICULAR", fontBold);
+    resume.leadership.forEach((role) => {
+      doc
+        .font(fontBold)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(role.title, { continued: true });
+      doc
+        .font(fontRegular)
+        .fillColor(UnifiedDesignSystem.colors.secondary)
+        .text(" | ", { continued: true })
+        .fillColor(UnifiedDesignSystem.colors.primary)
+        .text(role.organization, { continued: true });
+      doc.fillColor(UnifiedDesignSystem.colors.textLight).text(role.location ? ` | ${role.location}` : "");
+      if (role.description) {
         doc
-          .font(fontBold)
+          .font(fontRegular)
           .fontSize(ds.fontSize.body)
           .fillColor(UnifiedDesignSystem.colors.text)
-          .text(`• ${cert.name}`, { continued: true });
-        doc
-          .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(` - ${cert.issuer}${cert.date ? " (" + cert.date + ")" : ""}`);
-      });
-      // Adjusted spacing after section
-      const certMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "certifications",
-        resume.certifications,
-      );
-      doc.y += ds.spacing.section * certMultiplier;
+          .text(`• ${role.description}`, { indent: ds.spacing.bulletIndent });
+      }
+      doc.y += 2;
+    });
+    const leadMultiplier = this.getSectionSpacingAdjustment(doc, "leadership", resume.leadership);
+    doc.y += ds.spacing.section * leadMultiplier;
+  }
+
+  private renderAwards(doc: PDFKit.PDFDocument, ds: any, resume: GeneratedResume, fontRegular: string, fontBold: string, density: DensityLevel) {
+    if (!resume.awards?.length || !contentDensityEngine.isSectionVisible(density, "awards")) return;
+
+    const estimatedHeight = 40;
+    if (!this.hasEnoughSpace(doc, estimatedHeight)) {
+      doc.addPage();
     }
 
-    if (
-      resume.coursework?.length &&
-      contentDensityEngine.isSectionVisible(density, "coursework")
-    ) {
-      drawHeader("RELEVANT COURSEWORK");
-      resume.coursework.forEach((course) => {
-        doc
-          .font(fontBold)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(`• ${course.courseName}`, { continued: true });
-        doc
-          .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(
-            ` (${course.topic}${
-              course.institution ? " - " + course.institution : ""
-            })`,
-          );
-      });
-      // Adjusted spacing after section
-      const courseMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "coursework",
-        resume.coursework,
-      );
-      doc.y += ds.spacing.section * courseMultiplier;
-    }
-
-    if (
-      resume.leadership?.length &&
-      contentDensityEngine.isSectionVisible(density, "leadership")
-    ) {
-      drawHeader("LEADERSHIP & EXTRACURRICULAR");
-      resume.leadership.forEach((role) => {
-        doc
-          .font(fontBold)
-          .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.text)
-          .text(role.title, { continued: true });
+    this.drawHeader(doc, ds, "HONORS & AWARDS", fontBold);
+    resume.awards.forEach((award) => {
+      doc
+        .font(fontBold)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.primary)
+        .text(`• ${award.awardName}`, { continued: true });
+      doc
+        .font(fontRegular)
+        .fillColor(UnifiedDesignSystem.colors.textLight)
+        .text(` - ${award.organization}${award.awardDate ? " (" + award.awardDate + ")" : ""}`);
+      if (award.description) {
         doc
           .font(fontRegular)
-          .fillColor(UnifiedDesignSystem.colors.secondary)
-          .text(" | ", { continued: true })
-          .fillColor(UnifiedDesignSystem.colors.primary)
-          .text(role.organization, { continued: true });
-        doc
-          .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(role.location ? ` | ${role.location}` : "");
-        if (role.description) {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.body)
-            .fillColor(UnifiedDesignSystem.colors.text)
-            .text(`• ${role.description}`, {
-              indent: ds.spacing.bulletIndent,
-            });
-        }
-        doc.y += 2;
-      });
-      // Adjusted spacing after section
-      const leadMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "leadership",
-        resume.leadership,
-      );
-      doc.y += ds.spacing.section * leadMultiplier;
-    }
-
-    if (
-      resume.awards?.length &&
-      contentDensityEngine.isSectionVisible(density, "awards")
-    ) {
-      drawHeader("HONORS & AWARDS");
-      resume.awards.forEach((award) => {
-        doc
-          .font(fontBold)
           .fontSize(ds.fontSize.body)
-          .fillColor(UnifiedDesignSystem.colors.primary)
-          .text(`• ${award.awardName}`, { continued: true });
-        doc
-          .font(fontRegular)
           .fillColor(UnifiedDesignSystem.colors.textLight)
-          .text(
-            ` - ${award.organization}${award.awardDate ? " (" + award.awardDate + ")" : ""}`,
-          );
-        if (award.description) {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.body)
-            .fillColor(UnifiedDesignSystem.colors.textLight)
-            .text(award.description, { oblique: true });
-        }
-      });
-      // Adjusted spacing after section
-      const awardMultiplier = this.getSectionSpacingAdjustment(
-        doc,
-        "awards",
-        resume.awards,
-      );
-      doc.y += ds.spacing.section * awardMultiplier;
-    }
+          .text(award.description, { oblique: true });
+      }
+    });
+    const awardMultiplier = this.getSectionSpacingAdjustment(doc, "awards", resume.awards);
+    doc.y += ds.spacing.section * awardMultiplier;
   }
 }

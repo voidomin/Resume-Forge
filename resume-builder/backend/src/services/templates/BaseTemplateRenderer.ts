@@ -1,11 +1,9 @@
-import PDFDocument from "pdfkit";
 import { GeneratedResume } from "../gemini.service";
 import { TemplateRenderer } from "./TemplateRenderer.interface";
 import {
   contentDensityEngine,
   DensityLevel,
   ScaledDesignSystem,
-  UnifiedDesignSystem,
 } from "../../../../shared/design-system";
 
 export abstract class BaseTemplateRenderer implements TemplateRenderer {
@@ -26,8 +24,7 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
    * Helper to move down by exact points, accounting for line height
    */
   protected moveDownPoints(doc: PDFKit.PDFDocument, points: number): void {
-    const lineHeight = (doc.currentFontSize() || 12) * 1.2;
-    doc.moveDown(points / lineHeight);
+    doc.y += points;
   }
 
   /**
@@ -68,6 +65,25 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
     this.moveDownPoints(doc, adjustedPoints);
   }
 
+  /**
+   * Check if the document cursor has enough space before the bottom margin
+   */
+  protected hasEnoughSpace(
+    doc: PDFKit.PDFDocument,
+    requiredPoints: number,
+  ): boolean {
+    const bottomMargin = doc.page.margins.bottom;
+    const pageHeight = doc.page.height;
+    return doc.y + requiredPoints < pageHeight - bottomMargin;
+  }
+
+  /**
+   * Get the remaining vertical space on the current page in points
+   */
+  protected getRemainingSpace(doc: PDFKit.PDFDocument): number {
+    return doc.page.height - doc.page.margins.bottom - doc.y;
+  }
+
   protected getScaledDesignSystem(
     doc: PDFKit.PDFDocument,
     density: DensityLevel,
@@ -85,6 +101,48 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
     return contentDensityEngine.getScaledDesignSystem(density);
   }
 
+  private buildContactParts(
+    resume: GeneratedResume,
+  ): { text: string; link?: string }[] {
+    const parts: { text: string; link?: string }[] = [];
+    const { contactInfo } = resume;
+
+    const isValid = (val: string | undefined) =>
+      val &&
+      val.trim().toLowerCase() !== "n/a" &&
+      val.trim().toLowerCase() !== "none";
+
+    const addPart = (val: string | undefined, linkPrefix?: string) => {
+      if (!isValid(val)) return;
+      const text = linkPrefix ? this.formatUrl(val) : val;
+      const link = linkPrefix ? this.ensureProtocol(val, linkPrefix) : undefined;
+      parts.push({ text, link });
+    };
+
+    // Process each field
+    addPart(contactInfo.email, "mailto:");
+    addPart(contactInfo.phone, "tel:");
+
+    if (isValid(contactInfo.location)) {
+      parts.push({ text: contactInfo.location });
+    }
+
+    addPart(contactInfo.linkedin, "https://");
+    addPart(contactInfo.github, "https://");
+    addPart(contactInfo.portfolio, "https://");
+
+    return parts;
+  }
+
+  private formatUrl(url: string): string {
+    return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+  }
+
+  private ensureProtocol(val: string, prefix: string): string {
+    if (prefix === "mailto:" || prefix === "tel:") return prefix + val;
+    return val.startsWith("http") ? val : prefix + val;
+  }
+
   protected renderContactLine(
     doc: PDFKit.PDFDocument,
     resume: GeneratedResume,
@@ -93,50 +151,7 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
     center: boolean,
     align: "center" | "left" | "right" = "center",
   ) {
-    const parts: { text: string; link?: string }[] = [];
-    const isValid = (val: string | undefined) =>
-      val &&
-      val.trim().toLowerCase() !== "n/a" &&
-      val.trim().toLowerCase() !== "none";
-
-    if (resume.contactInfo.email && isValid(resume.contactInfo.email))
-      parts.push({
-        text: resume.contactInfo.email,
-        link: `mailto:${resume.contactInfo.email}`,
-      });
-    if (resume.contactInfo.phone && isValid(resume.contactInfo.phone))
-      parts.push({
-        text: resume.contactInfo.phone,
-        link: `tel:${resume.contactInfo.phone}`,
-      });
-    if (resume.contactInfo.location && isValid(resume.contactInfo.location))
-      parts.push({ text: resume.contactInfo.location });
-
-    // Helper to strip protocol for display
-    const formatUrl = (url: string) =>
-      url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
-
-    if (resume.contactInfo.linkedin && isValid(resume.contactInfo.linkedin))
-      parts.push({
-        text: formatUrl(resume.contactInfo.linkedin),
-        link: resume.contactInfo.linkedin.startsWith("http")
-          ? resume.contactInfo.linkedin
-          : `https://${resume.contactInfo.linkedin}`,
-      });
-    if (resume.contactInfo.github && isValid(resume.contactInfo.github))
-      parts.push({
-        text: formatUrl(resume.contactInfo.github),
-        link: resume.contactInfo.github.startsWith("http")
-          ? resume.contactInfo.github
-          : `https://${resume.contactInfo.github}`,
-      });
-    if (resume.contactInfo.portfolio && isValid(resume.contactInfo.portfolio))
-      parts.push({
-        text: formatUrl(resume.contactInfo.portfolio),
-        link: resume.contactInfo.portfolio.startsWith("http")
-          ? resume.contactInfo.portfolio
-          : `https://${resume.contactInfo.portfolio}`,
-      });
+    const parts = this.buildContactParts(resume);
 
     doc.font(font).fontSize(size);
 
@@ -173,5 +188,46 @@ export abstract class BaseTemplateRenderer implements TemplateRenderer {
 
     // Reset to separate line
     doc.text(" ", { continued: false });
+  }
+
+  /**
+   * Generic helper to render a resume section with a header and a loop of items.
+   * Helps reduce code duplication across templates.
+   */
+  protected renderSection<T>(
+    doc: PDFKit.PDFDocument,
+    title: string,
+    items: T[] | undefined,
+    ds: ScaledDesignSystem,
+    sectionName: string,
+    options: {
+      density?: DensityLevel;
+      itemSpacing?: number;
+      drawHeader: (title: string) => void;
+      renderItem: (item: T) => void;
+    },
+  ) {
+    // 1. Visibility Check
+    if (!items?.length) return;
+    if (
+      options.density &&
+      !contentDensityEngine.isSectionVisible(options.density, sectionName)
+    ) {
+      return;
+    }
+
+    // 2. Draw Header
+    options.drawHeader(title);
+
+    // 3. Render Items
+    items.forEach((item) => {
+      options.renderItem(item);
+      if (options.itemSpacing) {
+        this.moveDownPoints(doc, options.itemSpacing);
+      }
+    });
+
+    // 4. Section Spacing
+    this.moveDownAdjusted(doc, ds.spacing.section, sectionName, items);
   }
 }

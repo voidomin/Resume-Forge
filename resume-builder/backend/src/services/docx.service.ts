@@ -24,18 +24,11 @@ export class DocxService {
    */
   async generateResumeDocx(resume: GeneratedResume): Promise<Buffer> {
     const ds = UnifiedDesignSystem;
-
-    // Page setup using design system
-    const pageWidthInches = ds.page.widthInches;
-    const pageHeightInches = ds.page.heightInches;
-    const pageMarginInches = UnitConverter.ptToInches(ds.margins.page);
-    const rightTabStop = convertInchesToTwip(
-      pageWidthInches - pageMarginInches,
-    );
-
-    // Use Arial font family from design system
     const bodyFont = ds.fonts.primary.docx;
     const headerFont = ds.fonts.primary.docx;
+
+    const { pageWidthInches, pageHeightInches, pageMarginInches, rightTabStop } =
+      this.getPageSetup(ds);
 
     const doc = new Document({
       sections: [
@@ -55,99 +48,140 @@ export class DocxService {
             },
           },
           children: [
-            // Header - Name
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              spacing: { after: UnitConverter.ptToTwip(ds.spacing.tight) },
-              children: [
-                new TextRun({
-                  text: resume.contactInfo.name.toUpperCase(),
-                  bold: true,
-                  size: UnitConverter.ptToHalfPoint(ds.fontSize.h1),
-                  font: headerFont,
-                  color: getCleanColor(ds.colors.primary),
-                }),
-              ],
-            }),
-
-            // Contact Info Line (Email, Phone, Location)
+            this.createDocxHeader(resume.contactInfo.name, ds, headerFont),
             this.createContactLine(resume.contactInfo, bodyFont),
-
-            // Links Line (LinkedIn, GitHub, Portfolio)
             this.createLinksLine(resume.contactInfo, bodyFont),
 
-            // Spacing
             new Paragraph({
               spacing: { after: UnitConverter.ptToTwip(ds.spacing.section) },
             }),
 
-            // Professional Summary
-            ...(resume.summary
-              ? this.createSummarySection(resume.summary, bodyFont)
-              : []),
-
-            // Work Experience
-            ...(resume.experiences.length > 0
-              ? this.createExperienceSection(
-                  resume.experiences,
-                  rightTabStop,
-                  bodyFont,
-                )
-              : []),
-
-            // Projects
-            ...(resume.projects && resume.projects.length > 0
-              ? this.createProjectsSection(resume.projects, bodyFont)
-              : []),
-
-            // Education
-            ...(resume.education.length > 0
-              ? this.createEducationSection(
-                  resume.education,
-                  rightTabStop,
-                  bodyFont,
-                )
-              : []),
-
-            // Certifications
-            ...(resume.certifications && resume.certifications.length > 0
-              ? this.createCertificationsSection(
-                  resume.certifications,
-                  rightTabStop,
-                  bodyFont,
-                )
-              : []),
-
-            // Coursework
-            ...(resume.coursework && resume.coursework.length > 0
-              ? this.createCourseworkSection(resume.coursework, bodyFont)
-              : []),
-
-            // Leadership
-            ...(resume.leadership && resume.leadership.length > 0
-              ? this.createLeadershipSection(
-                  resume.leadership,
-                  rightTabStop,
-                  bodyFont,
-                )
-              : []),
-
-            // Awards
-            ...(resume.awards && resume.awards.length > 0
-              ? this.createAwardsSection(resume.awards, rightTabStop, bodyFont)
-              : []),
-
-            // Skills
-            ...(resume.skills.length > 0
-              ? this.createSkillsSection(resume.skills, bodyFont)
-              : []),
+            ...this.renderCoreSections(resume, rightTabStop, bodyFont),
+            ...this.renderOptionalSections(resume, rightTabStop, bodyFont),
+            ...this.renderSkillsSection(resume, bodyFont),
           ],
         },
       ],
     });
 
-    const buffer = await Packer.toBuffer(doc);
-    return buffer;
+    return await Packer.toBuffer(doc);
+  }
+
+  private getPageSetup(ds: any) {
+    const pageWidthInches = ds.page.widthInches;
+    const pageHeightInches = ds.page.heightInches;
+    const pageMarginInches = UnitConverter.ptToInches(ds.margins.page);
+    const rightTabStop = convertInchesToTwip(pageWidthInches - pageMarginInches);
+    return {
+      pageWidthInches,
+      pageHeightInches,
+      pageMarginInches,
+      rightTabStop,
+    };
+  }
+
+  private createDocxHeader(name: string, ds: any, font: string): Paragraph {
+    return new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: UnitConverter.ptToTwip(ds.spacing.tight) },
+      children: [
+        new TextRun({
+          text: name.toUpperCase(),
+          bold: true,
+          size: UnitConverter.ptToHalfPoint(ds.fontSize.h1),
+          font: font,
+          color: getCleanColor(ds.colors.primary),
+        }),
+      ],
+    });
+  }
+
+  private renderCoreSections(
+    resume: GeneratedResume,
+    rightTabStop: number,
+    font: string,
+  ): Paragraph[] {
+    const parts: Paragraph[] = [];
+
+    if (resume.summary) {
+      parts.push(...this.createSummarySection(resume.summary, font));
+    }
+
+    if (resume.experiences.length > 0) {
+      parts.push(
+        ...this.createExperienceSection(
+          resume.experiences,
+          rightTabStop,
+          font,
+        ),
+      );
+    }
+
+    if (resume.projects && resume.projects.length > 0) {
+      parts.push(...this.createProjectsSection(resume.projects, font));
+    }
+
+    return parts;
+  }
+
+  private renderOptionalSections(
+    resume: GeneratedResume,
+    rightTabStop: number,
+    font: string,
+  ): Paragraph[] {
+    const parts: Paragraph[] = [];
+
+    if (resume.education.length > 0) {
+      parts.push(
+        ...this.createEducationSection(resume.education, rightTabStop, font),
+      );
+    }
+
+    if (resume.certifications && resume.certifications.length > 0) {
+      parts.push(
+        ...this.createCertificationsSection(
+          resume.certifications,
+          rightTabStop,
+          font,
+        ),
+      );
+    }
+
+    if (resume.coursework && resume.coursework.length > 0) {
+      parts.push(...this.createCourseworkSection(resume.coursework, font));
+    }
+
+    if (resume.leadership && resume.leadership.length > 0) {
+      parts.push(
+        ...this.createLeadershipSection(resume.leadership, rightTabStop, font),
+      );
+    }
+
+    if (resume.awards && resume.awards.length > 0) {
+      parts.push(
+        ...this.createAwardsSection(resume.awards, rightTabStop, font),
+      );
+    }
+
+    return parts;
+  }
+
+  private renderSkillsSection(
+    resume: GeneratedResume,
+    font: string,
+  ): Paragraph[] {
+    if (
+      resume.skillsCategories &&
+      Object.keys(resume.skillsCategories).length > 0
+    ) {
+      return this.createSkillsCategoriesSection(resume.skillsCategories, font);
+    }
+
+    if (resume.skills && resume.skills.length > 0) {
+      return this.createSkillsSection(resume.skills, font);
+    }
+
+    return [];
   }
 
   private createContactLine(
@@ -496,6 +530,44 @@ export class DocxService {
           }),
         );
       }
+    });
+
+    return paragraphs;
+  }
+
+  private createSkillsCategoriesSection(
+    categories: Record<string, string[] | string>,
+    font: string,
+  ): Paragraph[] {
+    const ds = UnifiedDesignSystem;
+    const paragraphs: Paragraph[] = [this.createSectionHeader("SKILLS", font)];
+
+    Object.entries(categories).forEach(([category, skills], index) => {
+      const isLast = index === Object.keys(categories).length - 1;
+      paragraphs.push(
+        new Paragraph({
+          spacing: {
+            after: UnitConverter.ptToTwip(
+              isLast ? ds.spacing.element : ds.spacing.minimal,
+            ),
+          },
+          children: [
+            new TextRun({
+              text: `${category}: `,
+              bold: true,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+              font: font,
+              color: getCleanColor(ds.colors.text),
+            }),
+            new TextRun({
+              text: Array.isArray(skills) ? skills.join(", ") : skills,
+              size: UnitConverter.ptToHalfPoint(ds.fontSize.body),
+              font: font,
+              color: getCleanColor(ds.colors.text),
+            }),
+          ],
+        }),
+      );
     });
 
     return paragraphs;

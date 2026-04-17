@@ -1,9 +1,28 @@
-import { useRef, useLayoutEffect, useState } from "react";
+import React, { useRef, useLayoutEffect, useState, Suspense } from "react";
 import { GeneratedResume } from "../../types/resume";
-import { StandardTemplate } from "./templates/StandardTemplate";
-import { ModernTemplate } from "./templates/ModernTemplate";
-import { ExecutiveTemplate } from "./templates/ExecutiveTemplate";
-import { MinimalistTemplate } from "./templates/MinimalistTemplate";
+import { Loader2 } from "lucide-react";
+import { ErrorBoundary } from "../common/ErrorBoundary";
+
+const StandardTemplate = React.lazy(() =>
+  import("./templates/StandardTemplate").then((m) => ({
+    default: m.StandardTemplate,
+  })),
+);
+const ModernTemplate = React.lazy(() =>
+  import("./templates/ModernTemplate").then((m) => ({
+    default: m.ModernTemplate,
+  })),
+);
+const ExecutiveTemplate = React.lazy(() =>
+  import("./templates/ExecutiveTemplate").then((m) => ({
+    default: m.ExecutiveTemplate,
+  })),
+);
+const MinimalistTemplate = React.lazy(() =>
+  import("./templates/MinimalistTemplate").then((m) => ({
+    default: m.MinimalistTemplate,
+  })),
+);
 
 type DensityLevel = "normal" | "compact" | "ultra-compact";
 
@@ -21,10 +40,10 @@ function ResumePreview({
   // Calculate density-based CSS scaling multipliers
   const densityScaling = {
     normal: {
-      fontSize: 1.0,
-      lineHeight: 1.0,
-      margin: 1.0,
-      padding: 1.0,
+      fontSize: 1,
+      lineHeight: 1,
+      margin: 1,
+      padding: 1,
     },
     compact: {
       fontSize: 0.9,
@@ -119,7 +138,17 @@ function ResumePreview({
           }
         }
       >
-        {renderTemplate()}
+        <ErrorBoundary>
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center h-full min-h-[500px]">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              </div>
+            }
+          >
+            {renderTemplate()}
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </div>
   );

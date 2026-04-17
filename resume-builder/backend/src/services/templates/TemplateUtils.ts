@@ -1,8 +1,5 @@
-import PDFDocument from "pdfkit";
-import { GeneratedResume } from "../gemini.service";
 import {
   UnifiedDesignSystem,
-  DensityLevel,
   ScaledDesignSystem,
 } from "../../../../shared/design-system";
 import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
@@ -10,26 +7,34 @@ import { BaseTemplateRenderer } from "./BaseTemplateRenderer";
 /**
  * Shared layout/rendering functions for generating PDF resumes
  */
+export interface HeaderOptions {
+  doc: PDFKit.PDFDocument;
+  renderer: BaseTemplateRenderer;
+  ds: ScaledDesignSystem;
+  title: string;
+  fontBold: string;
+  color: string;
+  align?: "left" | "center";
+  drawLine?: boolean;
+}
+
 export class TemplateUtils {
   /**
    * Helper to draw a section header with standard styling.
    * Customize layout inside specific renderers based on their theme.
    */
-  static drawHeader(
-    doc: PDFKit.PDFDocument,
-    renderer: BaseTemplateRenderer,
-    ds: ScaledDesignSystem,
-    title: string,
-    fontBold: string,
-    color: string,
-    align: "left" | "center" = "left",
-    drawLine: boolean = true,
-  ) {
-    // moveDownPoints is protected, so this will either need to be implemented within
-    // the calling class or be worked around by having the renderer pass a callback.
-    // Instead we can just do raw moveDown since we know the current doc context
-    const lineHeight = (doc.currentFontSize() || 12) * 1.2;
-    doc.moveDown(ds.spacing.tight / lineHeight);
+  static drawHeader(options: HeaderOptions) {
+    const {
+      doc,
+      ds,
+      title,
+      fontBold,
+      color,
+      align = "left",
+      drawLine = true,
+    } = options;
+
+    doc.y += ds.spacing.tight;
 
     doc
       .font(fontBold)

@@ -21,8 +21,18 @@ function Register() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    const validatePassword = (pass: string) => {
+      if (pass.length < 8) return "Password must be at least 8 characters";
+      if (!/[A-Z]/.test(pass)) return "Password must contain at least one uppercase letter";
+      if (!/[a-z]/.test(pass)) return "Password must contain at least one lowercase letter";
+      if (!/\d/.test(pass)) return "Password must contain at least one number";
+      if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pass)) return "Password must contain at least one special character (!@#$%^&*)";
+      return null;
+    };
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      toast.error(passwordError);
       return;
     }
 
@@ -51,7 +61,7 @@ function Register() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl p-8 border border-white/10 relative">
+        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] p-8 border border-white/20 relative group hover:border-white/30 transition-colors duration-500">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>

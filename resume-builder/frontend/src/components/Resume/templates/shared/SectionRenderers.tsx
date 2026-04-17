@@ -269,6 +269,27 @@ export function ProjectSection({
               >
                 {proj.name}
               </span>
+
+              {proj.link && (
+                <a
+                  href={
+                    proj.link.startsWith("http")
+                      ? proj.link
+                      : `https://${proj.link}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: `${ds.fontSize.small}pt`,
+                    color: ds.colors.primary,
+                    textDecoration: "underline",
+                    marginLeft: `${ds.spacing.element}pt`,
+                  }}
+                >
+                  {proj.link.replace(/^https?:\/\//, "")}
+                </a>
+              )}
+
               {proj.technologies && !isExecutive && !isMinimalist && (
                 <span
                   style={{

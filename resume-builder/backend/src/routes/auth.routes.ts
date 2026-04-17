@@ -90,11 +90,25 @@ async function authRoutes(server: FastifyInstance) {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create user
-        const user = await prisma.user.create({
-          data: { email, password: hashedPassword },
-          select: { id: true, email: true, createdAt: true },
+        // Create user and profile in a transaction
+        const result = await prisma.$transaction(async (tx) => {
+          const newUser = await tx.user.create({
+            data: { email, password: hashedPassword },
+          });
+
+          const newProfile = await tx.profile.create({
+            data: {
+              userId: newUser.id,
+              firstName: "",
+              lastName: "",
+              email: newUser.email,
+            },
+          });
+
+          return { user: newUser, profile: newProfile };
         });
+
+        const { user } = result;
 
         // Generate JWT token
         const token = server.jwt.sign(

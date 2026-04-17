@@ -43,7 +43,7 @@ function Login() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-white/10 backdrop-blur-2xl rounded-3xl shadow-2xl p-8 border border-white/10 relative">
+        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] p-8 border border-white/20 relative group hover:border-white/30 transition-colors duration-500">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
