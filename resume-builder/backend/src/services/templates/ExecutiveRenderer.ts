@@ -229,19 +229,16 @@ export class ExecutiveRenderer extends BaseTemplateRenderer {
       const skillsMultiplier = this.getSectionSpacingAdjustment(doc, "skills", resume.skillsCategories);
       doc.y += ds.spacing.section * skillsMultiplier;
     } else if (resume.skills?.length) {
-      this.renderSection(doc, "COMPETENCIES", resume.skills, ds, "skills", {
-        drawHeader: (t) => this.drawSectionHeader(doc, t, ds, fontBold),
-        renderItem: (skill) => {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.body)
-            .fillColor(UnifiedDesignSystem.colors.text)
-            .text(resume.skills.join("  •  "), {
-              align: "left",
-              lineGap: ds.spacing.minimal,
-            });
-        },
-      });
+      this.drawSectionHeader(doc, "COMPETENCIES", ds, fontBold);
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(resume.skills.join("  •  "), {
+          align: "left",
+          lineGap: ds.spacing.minimal,
+        });
+      this.moveDownAdjusted(doc, ds.spacing.section, "skills", resume.skills);
     }
   }
 

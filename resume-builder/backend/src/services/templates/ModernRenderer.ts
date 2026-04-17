@@ -133,19 +133,16 @@ export class ModernRenderer extends BaseTemplateRenderer {
       });
       this.moveDownAdjusted(doc, ds.spacing.section, "skills", resume.skillsCategories);
     } else if (resume.skills?.length) {
-      this.renderSection(doc, "SKILLS", resume.skills, ds, "skills", {
-        drawHeader: (t) => this.drawModernHeader(doc, t, ds),
-        renderItem: (skill) => {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.body)
-            .fillColor(UnifiedDesignSystem.colors.text)
-            .text(resume.skills.join("  •  "), {
-              align: "left",
-              lineGap: ds.spacing.minimal,
-            });
-        },
-      });
+      this.drawModernHeader(doc, "SKILLS", ds);
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(resume.skills.join("  •  "), {
+          align: "left",
+          lineGap: ds.spacing.minimal,
+        });
+      this.moveDownAdjusted(doc, ds.spacing.section, "skills", resume.skills);
     }
   }
 

@@ -254,19 +254,16 @@ export class MinimalistRenderer extends BaseTemplateRenderer {
       });
       this.moveDownAdjusted(doc, ds.spacing.section, "skills", resume.skillsCategories);
     } else if (resume.skills?.length) {
-      this.renderSection(doc, "SKILLS", resume.skills, ds, "skills", {
-        drawHeader: (t) => this.drawMinimalistHeader(doc, t, ds, fontBold),
-        renderItem: (skill) => {
-          doc
-            .font(fontRegular)
-            .fontSize(ds.fontSize.body)
-            .fillColor(UnifiedDesignSystem.colors.text)
-            .text(resume.skills.join("  •  "), {
-              align: "left",
-              lineGap: ds.spacing.minimal,
-            });
-        },
-      });
+      this.drawMinimalistHeader(doc, "SKILLS", ds, fontBold);
+      doc
+        .font(fontRegular)
+        .fontSize(ds.fontSize.body)
+        .fillColor(UnifiedDesignSystem.colors.text)
+        .text(resume.skills.join("  •  "), {
+          align: "left",
+          lineGap: ds.spacing.minimal,
+        });
+      this.moveDownAdjusted(doc, ds.spacing.section, "skills", resume.skills);
     }
   }
 
