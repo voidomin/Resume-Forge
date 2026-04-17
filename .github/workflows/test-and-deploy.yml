@@ -79,6 +79,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/resume_builder_test
           JWT_SECRET: test-secret-key-minimum-32-characters-long
           GEMINI_API_KEY: test-key-value-for-ci
+          FRONTEND_URL: http://127.0.0.1:5173
 
       - name: Run Frontend Tests
         run: cd resume-builder/frontend && npm test
