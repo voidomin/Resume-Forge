@@ -10,7 +10,7 @@ if (!API_KEY) {
 }
 
 async function listModels() {
-  console.log(`Fetching models for API Key: ${API_KEY!.slice(0, 5)}...`);
+  console.log(`Fetching models for API Key: ${API_KEY.slice(0, 5)}...`);
   const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${API_KEY}`;
 
   try {
@@ -20,7 +20,7 @@ async function listModels() {
         `HTTP error! status: ${response.status} ${response.statusText}`,
       );
     }
-    const data = (await response.json()) as any;
+    const data = await response.json();
 
     console.log("\n=== Available Gemini Models ===");
     if (data.models) {
