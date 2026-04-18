@@ -14,9 +14,8 @@
     "baseUrl": "./src",
     "paths": {
       "@shared/*": ["../../shared/*"]
-    },
-    "types": ["node"]
+    }
   },
-  "include": ["src/**/*", "../shared/**/*"],
+  "include": ["src/**/*", "src/types/**/*.d.ts", "../shared/**/*"],
   "exclude": ["node_modules", "dist", "tests"]
 }
