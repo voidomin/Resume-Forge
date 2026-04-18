@@ -1,6 +1,7 @@
+/// <reference path="../types/fastify.d.ts" />
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { prisma } from "../lib/prisma";
 import { sanitizeInput } from "../lib/sanitize";
 import { sendResetEmail } from "../services/emailService";
@@ -44,13 +45,15 @@ function validatePasswordStrength(password: string): {
       error: "Password must contain at least one lowercase letter",
     };
   }
-  if (!/[0-9]/.test(password)) {
+  const hasNumber = /\d/.test(password);
+  if (!hasNumber) {
     return {
       isValid: false,
       error: "Password must contain at least one number",
     };
   }
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  if (!hasSpecial) {
     return {
       isValid: false,
       error: "Password must contain at least one special character (!@#$%^&*)",
