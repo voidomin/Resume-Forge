@@ -63,6 +63,7 @@ function Login() {
                   placeholder="you@example.com"
                   required
                   className="w-full pl-12 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all placeholder-slate-500 font-medium text-white shadow-inner"
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -85,6 +86,7 @@ function Login() {
                   placeholder="••••••••"
                   required
                   className="w-full pl-12 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all placeholder-slate-500 font-medium text-white shadow-inner"
+                  autoComplete="current-password"
                 />
               </div>
             </div>
