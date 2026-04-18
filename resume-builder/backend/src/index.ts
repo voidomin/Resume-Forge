@@ -78,15 +78,14 @@ async function registerPlugins() {
     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
   });
 
-  // CORS
   await server.register(cors, {
-    origin: process.env.FRONTEND_URL!,
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   });
 
   // JWT
   await server.register(jwt, {
-    secret: process.env.JWT_SECRET!,
+    secret: process.env.JWT_SECRET,
   });
 
   // Multipart for file uploads
@@ -118,7 +117,7 @@ async function registerPlugins() {
       auth: oauth2.GOOGLE_CONFIGURATION,
     },
     startRedirectPath: "/api/auth/google",
-    callbackUri: `${process.env.API_URL || "http://localhost:3000"}/api/auth/google/callback`,
+    callbackUri: process.env.GOOGLE_CALLBACK_URL || `${process.env.API_URL || "http://localhost:3000"}/api/auth/google/callback`,
   });
 }
 
@@ -203,7 +202,7 @@ const start = async () => {
     await registerRoutes();
     await registerDocumentation();
 
-    const port = parseInt(process.env.PORT || "3000", 10);
+    const port = Number.parseInt(process.env.PORT || "3000", 10);
     await server.listen({ port, host: "0.0.0.0" });
 
     server.log.info(`
