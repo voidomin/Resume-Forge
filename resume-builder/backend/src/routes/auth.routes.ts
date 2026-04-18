@@ -1,7 +1,9 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { prisma } from "../lib/prisma";
 import { sanitizeInput } from "../lib/sanitize";
+import { sendResetEmail } from "../services/emailService";
 
 interface RegisterBody {
   email: string;
@@ -10,6 +12,15 @@ interface RegisterBody {
 
 interface LoginBody {
   email: string;
+  password: string;
+}
+
+interface ForgotPasswordBody {
+  email: string;
+}
+
+interface ResetPasswordBody {
+  token: string;
   password: string;
 }
 
@@ -219,6 +230,194 @@ async function authRoutes(server: FastifyInstance) {
       return reply.send({ message: "Logged out successfully" });
     },
   );
+
+  // Forgot Password
+  server.post<{ Body: ForgotPasswordBody }>(
+    "/forgot-password",
+    async (
+      request: FastifyRequest<{ Body: ForgotPasswordBody }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        let { email } = request.body;
+
+        if (!email) {
+          return reply.status(400).send({ error: "Email is required" });
+        }
+
+        try {
+          email = sanitizeInput.email(email);
+        } catch (err) {
+          return reply.status(400).send({ error: (err as Error).message });
+        }
+
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        // For security, don't confirm if user exists or not
+        if (!user) {
+          return reply.send({
+            message: "If an account with that email exists, a reset link has been sent.",
+          });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            resetToken,
+            resetTokenExpiry,
+          },
+        });
+
+        await sendResetEmail(email, resetToken);
+
+        return reply.send({
+          message: "If an account with that email exists, a reset link has been sent.",
+        });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to process request" });
+      }
+    },
+  );
+
+  // Reset Password
+  server.post<{ Body: ResetPasswordBody }>(
+    "/reset-password",
+    async (
+      request: FastifyRequest<{ Body: ResetPasswordBody }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { token, password } = request.body;
+
+        if (!token || !password) {
+          return reply.status(400).send({ error: "Token and password are required" });
+        }
+
+        // Validate password strength
+        const passwordValidation = validatePasswordStrength(password);
+        if (!passwordValidation.isValid) {
+          return reply.status(400).send({ error: passwordValidation.error });
+        }
+
+        // Find user with valid token and not expired
+        const user = await prisma.user.findFirst({
+          where: {
+            resetToken: token,
+            resetTokenExpiry: {
+              gt: new Date(),
+            },
+          },
+        });
+
+        if (!user) {
+          return reply.status(400).send({ error: "Invalid or expired reset token" });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Update user password and clear token
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            password: hashedPassword,
+            resetToken: null,
+            resetTokenExpiry: null,
+          },
+        });
+
+        return reply.send({ message: "Password reset successful. You can now log in." });
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to reset password" });
+      }
+    },
+  );
+
+  // Google OAuth Callback
+  server.get("/google/callback", async (request, reply) => {
+    try {
+      const tokenResult =
+        await server.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(
+          request,
+        );
+
+      // Get user info from Google
+      const response = await fetch(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${tokenResult.token.access_token}`,
+          },
+        },
+      );
+
+      const googleUser = (await response.json()) as {
+        id: string;
+        email: string;
+        given_name: string;
+        family_name: string;
+      };
+
+      if (!googleUser.email) {
+        return reply.status(400).send({ error: "Google account must have an email" });
+      }
+
+      // Find or create user
+      let user = await prisma.user.findFirst({
+        where: {
+          OR: [{ googleId: googleUser.id }, { email: googleUser.email }],
+        },
+      });
+
+      if (!user) {
+        // Create new user
+        user = await prisma.$transaction(async (tx) => {
+          const newUser = await tx.user.create({
+            data: {
+              email: googleUser.email,
+              googleId: googleUser.id,
+            },
+          });
+
+          await tx.profile.create({
+            data: {
+              userId: newUser.id,
+              firstName: googleUser.given_name || "",
+              lastName: googleUser.family_name || "",
+              email: googleUser.email,
+            },
+          });
+
+          return newUser;
+        });
+      } else if (!user.googleId) {
+        // Link google account to existing email account
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { googleId: googleUser.id },
+        });
+      }
+
+      // Generate JWT
+      const token = server.jwt.sign(
+        { userId: user.id, email: user.email },
+        { expiresIn: "7d" },
+      );
+
+      // Redirect to frontend with token
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      return reply.redirect(`${frontendUrl}/auth-callback?token=${token}`);
+    } catch (error) {
+      request.log.error(error);
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      return reply.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+    }
+  });
 }
 
 // Auth middleware

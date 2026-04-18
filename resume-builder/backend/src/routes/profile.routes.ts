@@ -172,143 +172,23 @@ async function profileRoutes(server: FastifyInstance) {
         }
 
         // Create or update profile
-        const profile = await prisma.profile.upsert({
-          where: { userId },
-          update: {
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-            phone: data.phone,
-            location: data.location,
-            linkedin: data.linkedin,
-            github: data.github,
-            portfolio: data.portfolio,
-            summary: data.summary,
-          },
-          create: {
-            userId,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-            phone: data.phone,
-            location: data.location,
-            linkedin: data.linkedin,
-            github: data.github,
-            portfolio: data.portfolio,
-            summary: data.summary,
-          },
-        });
+        const profile = await handleProfileUpsert(userId, data);
 
-        console.log(`Clearing existing profile data for id: ${profile.id}`);
-        // Delete existing experiences, education, skills, projects, certifications
-        await prisma.experience.deleteMany({
-          where: { profileId: profile.id },
-        });
-        await prisma.education.deleteMany({ where: { profileId: profile.id } });
-        await prisma.skill.deleteMany({ where: { profileId: profile.id } });
-        await prisma.project.deleteMany({ where: { profileId: profile.id } });
-        await prisma.certification.deleteMany({
-          where: { profileId: profile.id },
-        });
+        // Delete existing data
+        await clearAllProfileData(profile.id);
 
-        console.log(
-          `Importing ${data.experiences?.length || 0} experiences...`,
-        );
-        // Add experiences
-        if (data.experiences && Array.isArray(data.experiences)) {
-          for (const exp of data.experiences) {
-            await prisma.experience.create({
-              data: {
-                profileId: profile.id,
-                company: exp.company,
-                role: exp.role,
-                location: exp.location,
-                startDate: exp.startDate,
-                endDate: exp.endDate,
-                current: exp.current || false,
-                bullets: JSON.stringify(exp.bullets || []),
-                keywords: exp.keywords ? JSON.stringify(exp.keywords) : null,
-              },
-            });
-          }
-        }
+        // Add sub-entities
+        await importExperiences(profile.id, data.experiences);
+        await importEducation(profile.id, data.education);
+        await importSkills(profile.id, data.skills);
+        await importProjects(profile.id, data.projects);
+        await importCertifications(profile.id, data.certifications);
 
-        console.log(
-          `Importing ${data.education?.length || 0} education entries...`,
-        );
-        // Add education
-        if (data.education && Array.isArray(data.education)) {
-          for (const edu of data.education) {
-            await prisma.education.create({
-              data: {
-                profileId: profile.id,
-                institution: edu.institution,
-                degree: edu.degree,
-                field: edu.field,
-                location: edu.location,
-                startDate: edu.startDate,
-                endDate: edu.endDate,
-                gpa: edu.gpa,
-                achievements: edu.achievements
-                  ? JSON.stringify(edu.achievements)
-                  : null,
-              },
-            });
-          }
-        }
-
-        console.log("Importing skills, projects, and certifications...");
-        // Add skills
-        if (data.skills && Array.isArray(data.skills)) {
-          for (const skill of data.skills) {
-            await prisma.skill.create({
-              data: {
-                profileId: profile.id,
-                name: skill.name,
-                category: skill.category || "technical",
-                proficiency: skill.proficiency,
-              },
-            });
-          }
-        }
-
-        // Add projects
-        if (data.projects && Array.isArray(data.projects)) {
-          for (const proj of data.projects) {
-            await prisma.project.create({
-              data: {
-                profileId: profile.id,
-                name: proj.name,
-                description: proj.description,
-                technologies: proj.technologies,
-                link: proj.link,
-              },
-            });
-          }
-        }
-
-        // Add certifications
-        if (data.certifications && Array.isArray(data.certifications)) {
-          for (const cert of data.certifications) {
-            await prisma.certification.create({
-              data: {
-                profileId: profile.id,
-                name: cert.name,
-                issuer: cert.issuer,
-                date: cert.date,
-                link: cert.link,
-              },
-            });
-          }
-        }
-
-        console.log("Profile import complete.");
         return reply.send({
+          success: true,
           message: "Profile imported successfully",
-          profileId: profile.id,
         });
       } catch (error) {
-        console.error("Profile import error:", error);
         request.log.error(error);
         return reply.status(500).send({ error: "Failed to import profile" });
       }
@@ -743,185 +623,23 @@ async function profileRoutes(server: FastifyInstance) {
         const data = request.body as any;
 
         // Create or update profile
-        const profile = await prisma.profile.upsert({
-          where: { userId },
-          update: {
-            firstName: data.firstName || "-",
-            lastName: data.lastName || "-",
-            email: data.email || "-",
-            phone: data.phone,
-            location: data.location,
-            linkedin: data.linkedin,
-            github: data.github,
-            portfolio: data.portfolio,
-            summary: data.summary,
-          },
-          create: {
-            userId,
-            firstName: data.firstName || "-",
-            lastName: data.lastName || "-",
-            email: data.email || "-",
-            phone: data.phone,
-            location: data.location,
-            linkedin: data.linkedin,
-            github: data.github,
-            portfolio: data.portfolio,
-            summary: data.summary,
-          },
-        });
+        const profile = await handleProfileUpsert(userId, data, true);
 
-        // Delete existing data and add new
-        await prisma.experience.deleteMany({
-          where: { profileId: profile.id },
-        });
-        await prisma.education.deleteMany({ where: { profileId: profile.id } });
-        await prisma.skill.deleteMany({ where: { profileId: profile.id } });
-        await prisma.project.deleteMany({ where: { profileId: profile.id } });
-        await prisma.certification.deleteMany({
-          where: { profileId: profile.id },
-        });
-        await prisma.coursework.deleteMany({
-          where: { profileId: profile.id },
-        });
-        await prisma.leadership.deleteMany({
-          where: { profileId: profile.id },
-        });
-        await prisma.award.deleteMany({
-          where: { profileId: profile.id },
-        });
+        // Delete existing data
+        await clearAllProfileData(profile.id);
 
-        // Add experiences
-        if (data.experiences && Array.isArray(data.experiences)) {
-          for (const exp of data.experiences) {
-            await prisma.experience.create({
-              data: {
-                profileId: profile.id,
-                company: exp.company || "Unknown Company",
-                role: exp.role || "Professional",
-                location: exp.location,
-                startDate: exp.startDate || "N/A",
-                endDate: exp.endDate,
-                current: exp.current || false,
-                bullets: JSON.stringify(exp.bullets || []),
-              },
-            });
-          }
-        }
-
-        // Add education
-        if (data.education && Array.isArray(data.education)) {
-          for (const edu of data.education) {
-            await prisma.education.create({
-              data: {
-                profileId: profile.id,
-                institution: edu.institution || "Unknown Institution",
-                degree: edu.degree || "Degree",
-                field: edu.field || "General",
-                location: edu.location,
-                startDate: edu.startDate,
-                endDate: edu.endDate,
-                gpa: edu.gpa,
-              },
-            });
-          }
-        }
-
-        // Add skills
-        if (data.skills && Array.isArray(data.skills)) {
-          for (const skill of data.skills) {
-            await prisma.skill.create({
-              data: {
-                profileId: profile.id,
-                name: skill.name,
-                category: skill.category || "technical",
-              },
-            });
-          }
-        }
-
-        // Add projects
-        if (data.projects && Array.isArray(data.projects)) {
-          for (const proj of data.projects) {
-            await prisma.project.create({
-              data: {
-                profileId: profile.id,
-                name: proj.name,
-                description: proj.description,
-                technologies: proj.technologies,
-                link: proj.link,
-              },
-            });
-          }
-        }
-
-        // Add certifications
-        if (data.certifications && Array.isArray(data.certifications)) {
-          for (const cert of data.certifications) {
-            await prisma.certification.create({
-              data: {
-                profileId: profile.id,
-                name: cert.name,
-                issuer: cert.issuer,
-                date: cert.date,
-                link: cert.link,
-              },
-            });
-          }
-        }
-
-        // Add coursework
-        if (data.coursework && Array.isArray(data.coursework)) {
-          for (const cw of data.coursework) {
-            await prisma.coursework.create({
-              data: {
-                profileId: profile.id,
-                courseName: cw.courseName,
-                topic: cw.topic,
-                institution: cw.institution || "",
-              },
-            });
-          }
-        }
-
-        // Add leadership
-        if (data.leadership && Array.isArray(data.leadership)) {
-          for (const lead of data.leadership) {
-            await prisma.leadership.create({
-              data: {
-                profileId: profile.id,
-                title: lead.title,
-                organization: lead.organization,
-                location: lead.location,
-                startDate: lead.startDate,
-                endDate: lead.endDate,
-                current: lead.current || false,
-                description: lead.description,
-              },
-            });
-          }
-        }
-
-        // Add awards
-        if (data.awards && Array.isArray(data.awards)) {
-          for (const award of data.awards) {
-            await prisma.award.create({
-              data: {
-                profileId: profile.id,
-                awardName: award.awardName || "Award",
-                organization: award.organization || "N/A",
-                awardDate: award.awardDate || "N/A",
-                description: award.description,
-              },
-            });
-          }
-        }
-
-        // Invalidate cache
-        // Assuming profileCache is defined elsewhere and is an LRU cache
-        // profileCache.delete(userId); // Uncomment if profileCache is available
+        // Add sub-entities with slightly different mapping for resume parser
+        await importExperiences(profile.id, data.experiences, true);
+        await importEducation(profile.id, data.education, true);
+        await importSkills(profile.id, data.skills);
+        await importProjects(profile.id, data.projects);
+        await importCertifications(profile.id, data.certifications);
+        await importCoursework(profile.id, data.coursework);
+        await importLeadership(profile.id, data.leadership);
+        await importAwards(profile.id, data.awards);
 
         return reply.send({
-          profile,
+          success: true,
           message: "Profile imported successfully",
         });
       } catch (error: any) {
@@ -1247,6 +965,197 @@ async function profileRoutes(server: FastifyInstance) {
       }
     },
   );
+}
+
+/**
+ * HELPER FUNCTIONS FOR PROFILE IMPORT
+ */
+
+async function handleProfileUpsert(
+  userId: string,
+  data: any,
+  usePlaceholders = false,
+) {
+  const defaultVal = usePlaceholders ? "-" : undefined;
+  return await prisma.profile.upsert({
+    where: { userId },
+    update: {
+      firstName: data.firstName || (usePlaceholders ? "-" : data.firstName),
+      lastName: data.lastName || (usePlaceholders ? "-" : data.lastName),
+      email: data.email || (usePlaceholders ? "-" : data.email),
+      phone: data.phone,
+      location: data.location,
+      linkedin: data.linkedin,
+      github: data.github,
+      portfolio: data.portfolio,
+      summary: data.summary,
+    },
+    create: {
+      userId,
+      firstName: data.firstName || defaultVal || "-",
+      lastName: data.lastName || defaultVal || "-",
+      email: data.email || defaultVal || "-",
+      phone: data.phone,
+      location: data.location,
+      linkedin: data.linkedin,
+      github: data.github,
+      portfolio: data.portfolio,
+      summary: data.summary,
+    },
+  });
+}
+
+async function clearAllProfileData(profileId: string) {
+  console.log(`Clearing existing profile data for id: ${profileId}`);
+  const where = { profileId };
+  await Promise.all([
+    prisma.experience.deleteMany({ where }),
+    prisma.education.deleteMany({ where }),
+    prisma.skill.deleteMany({ where }),
+    prisma.project.deleteMany({ where }),
+    prisma.certification.deleteMany({ where }),
+    prisma.coursework.deleteMany({ where }),
+    prisma.leadership.deleteMany({ where }),
+    prisma.award.deleteMany({ where }),
+  ]);
+}
+
+async function importExperiences(
+  profileId: string,
+  experiences: any[],
+  usePlaceholders = false,
+) {
+  if (!experiences || !Array.isArray(experiences)) return;
+  for (const exp of experiences) {
+    await prisma.experience.create({
+      data: {
+        profileId,
+        company: exp.company || (usePlaceholders ? "Unknown Company" : "-"),
+        role: exp.role || (usePlaceholders ? "Professional" : "-"),
+        location: exp.location,
+        startDate: exp.startDate || (usePlaceholders ? "N/A" : "-"),
+        endDate: exp.endDate,
+        current: exp.current || false,
+        bullets: JSON.stringify(exp.bullets || []),
+        keywords: exp.keywords ? JSON.stringify(exp.keywords) : null,
+      },
+    });
+  }
+}
+
+async function importEducation(
+  profileId: string,
+  education: any[],
+  usePlaceholders = false,
+) {
+  if (!education || !Array.isArray(education)) return;
+  for (const edu of education) {
+    await prisma.education.create({
+      data: {
+        profileId,
+        institution:
+          edu.institution || (usePlaceholders ? "Unknown Institution" : "-"),
+        degree: edu.degree || (usePlaceholders ? "Degree" : "-"),
+        field: edu.field || (usePlaceholders ? "General" : "-"),
+        location: edu.location,
+        startDate: edu.startDate,
+        endDate: edu.endDate,
+        gpa: edu.gpa,
+        achievements: edu.achievements ? JSON.stringify(edu.achievements) : null,
+      },
+    });
+  }
+}
+
+async function importSkills(profileId: string, skills: any[]) {
+  if (!skills || !Array.isArray(skills)) return;
+  for (const skill of skills) {
+    await prisma.skill.create({
+      data: {
+        profileId,
+        name: skill.name,
+        category: skill.category || "technical",
+        proficiency: skill.proficiency,
+      },
+    });
+  }
+}
+
+async function importProjects(profileId: string, projects: any[]) {
+  if (!projects || !Array.isArray(projects)) return;
+  for (const proj of projects) {
+    await prisma.project.create({
+      data: {
+        profileId,
+        name: proj.name,
+        description: proj.description || "-",
+        technologies: proj.technologies,
+        link: proj.link,
+      },
+    });
+  }
+}
+
+async function importCertifications(profileId: string, certifications: any[]) {
+  if (!certifications || !Array.isArray(certifications)) return;
+  for (const cert of certifications) {
+    await prisma.certification.create({
+      data: {
+        profileId,
+        name: cert.name,
+        issuer: cert.issuer,
+        date: cert.date,
+        link: cert.link,
+      },
+    });
+  }
+}
+
+async function importLeadership(profileId: string, leadership: any[]) {
+  if (!leadership || !Array.isArray(leadership)) return;
+  for (const lead of leadership) {
+    await prisma.leadership.create({
+      data: {
+        profileId,
+        title: lead.title || lead.role || "Volunteer",
+        organization: lead.organization || "-",
+        location: lead.location,
+        startDate: lead.startDate,
+        endDate: lead.endDate,
+        current: lead.current || false,
+        description: lead.description,
+      },
+    });
+  }
+}
+
+async function importAwards(profileId: string, awards: any[]) {
+  if (!awards || !Array.isArray(awards)) return;
+  for (const award of awards) {
+    await prisma.award.create({
+      data: {
+        profileId,
+        awardName: award.awardName || "Award",
+        organization: award.organization || "N/A",
+        awardDate: award.awardDate || "N/A",
+        description: award.description,
+      },
+    });
+  }
+}
+
+async function importCoursework(profileId: string, coursework: any[]) {
+  if (!coursework || !Array.isArray(coursework)) return;
+  for (const course of coursework) {
+    await prisma.coursework.create({
+      data: {
+        profileId,
+        courseName: course.courseName,
+        topic: course.topic || "-",
+        institution: course.institution,
+      },
+    });
+  }
 }
 
 export default profileRoutes;

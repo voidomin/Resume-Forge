@@ -18,6 +18,9 @@ const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const ProfileEdit = React.lazy(() => import("./pages/ProfileEdit"));
 const ResumeGenerator = React.lazy(() => import("./pages/ResumeGenerator"));
 const ResumeView = React.lazy(() => import("./pages/ResumeView"));
+const ForgotPassword = React.lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
+const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
 
 // Suspense Fallback
 const PageLoader = () => (
@@ -55,6 +58,27 @@ function App() {
                     )
                   }
                 />
+                <Route
+                  path="/forgot-password"
+                  element={
+                    isAuthenticated ? (
+                      <Navigate to="/dashboard" />
+                    ) : (
+                      <ForgotPassword />
+                    )
+                  }
+                />
+                <Route
+                  path="/reset-password"
+                  element={
+                    isAuthenticated ? (
+                      <Navigate to="/dashboard" />
+                    ) : (
+                      <ResetPassword />
+                    )
+                  }
+                />
+                <Route path="/auth-callback" element={<AuthCallback />} />
 
                 {/* Protected routes */}
                 <Route

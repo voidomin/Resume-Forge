@@ -6,6 +6,7 @@ import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
+import oauth2 from "@fastify/oauth2";
 import { config } from "dotenv";
 
 // Import middleware
@@ -103,6 +104,21 @@ async function registerPlugins() {
     max: Number.isFinite(rateLimitMax) ? rateLimitMax : 120,
     timeWindow: rateLimitWindow,
     skipOnError: true,
+  });
+
+  // Google OAuth
+  await server.register(oauth2, {
+    name: "googleOAuth2",
+    scope: ["profile", "email"],
+    credentials: {
+      client: {
+        id: process.env.GOOGLE_CLIENT_ID || "",
+        secret: process.env.GOOGLE_CLIENT_SECRET || "",
+      },
+      auth: oauth2.GOOGLE_CONFIGURATION,
+    },
+    startRedirectPath: "/api/auth/google",
+    callbackUri: `${process.env.API_URL || "http://localhost:3000"}/api/auth/google/callback`,
   });
 }
 
