@@ -9,13 +9,16 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  profile   Profile?
-  resumes   Resume[]
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String?
+  googleId         String?   @unique
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  profile          Profile?
+  resumes          Resume[]
 }
 
 model Profile {
