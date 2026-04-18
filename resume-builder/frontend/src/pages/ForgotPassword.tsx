@@ -54,7 +54,20 @@ function ForgotPassword() {
 
         {/* Form Card */}
         <div className="bg-white/5 backdrop-blur-3xl rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] p-8 border border-white/20 relative group hover:border-white/30 transition-colors duration-500">
-          {!isSent ? (
+          {isSent ? (
+            <div className="text-center py-4">
+              <div className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm p-4 rounded-xl font-medium mb-6">
+                If an account exists for {email}, a reset link has been sent. Please check your inbox and spam folder.
+              </div>
+              <Link
+                to="/login"
+                className="inline-flex items-center space-x-2 text-slate-300 hover:text-white font-semibold transition-colors"
+              >
+                <span>Back to Login</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>
@@ -95,19 +108,6 @@ function ForgotPassword() {
                 )}
               </button>
             </form>
-          ) : (
-            <div className="text-center py-4">
-              <div className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm p-4 rounded-xl font-medium mb-6">
-                If an account exists for {email}, a reset link has been sent. Please check your inbox and spam folder.
-              </div>
-              <Link
-                to="/login"
-                className="inline-flex items-center space-x-2 text-slate-300 hover:text-white font-semibold transition-colors"
-              >
-                <span>Back to Login</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
           )}
 
           {/* Footer */}
