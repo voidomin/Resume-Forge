@@ -177,7 +177,7 @@ function Register() {
             </div>
 
             <a
-              href={`${import.meta.env.VITE_API_URL}/api/auth/google`}
+              href={`${import.meta.env.VITE_API_URL}/auth/google`}
               className="w-full py-3 px-4 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-bold shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-3 border border-slate-200"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
