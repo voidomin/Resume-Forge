@@ -8,13 +8,15 @@ function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const apiBaseUrl =
+    import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "/api";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/forgot-password`, {
+      const response = await fetch(`${apiBaseUrl}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -48,7 +50,8 @@ function ForgotPassword() {
             Reset Password
           </h1>
           <p className="text-slate-400 font-medium">
-            Enter your email and we'll send you a link to get back into your account.
+            Enter your email and we'll send you a link to get back into your
+            account.
           </p>
         </div>
 
@@ -57,7 +60,8 @@ function ForgotPassword() {
           {isSent ? (
             <div className="text-center py-4">
               <div className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm p-4 rounded-xl font-medium mb-6">
-                If an account exists for {email}, a reset link has been sent. Please check your inbox and spam folder.
+                If an account exists for {email}, a reset link has been sent.
+                Please check your inbox and spam folder.
               </div>
               <Link
                 to="/login"
@@ -71,7 +75,10 @@ function ForgotPassword() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-slate-300 mb-2"
+                >
                   Email Address
                 </label>
                 <div className="relative group">
@@ -115,7 +122,10 @@ function ForgotPassword() {
             <div className="mt-8 text-center border-t border-slate-700/50 pt-6">
               <p className="text-slate-400 font-medium">
                 Remember your password?{" "}
-                <Link to="/login" className="text-blue-400 font-bold hover:text-blue-300 transition-colors">
+                <Link
+                  to="/login"
+                  className="text-blue-400 font-bold hover:text-blue-300 transition-colors"
+                >
                   Sign in
                 </Link>
               </p>
