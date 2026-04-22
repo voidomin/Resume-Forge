@@ -5,12 +5,46 @@ import { Mail, Lock, ArrowRight, Loader2, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { AuthHeroBackground } from "../components/common/AuthHeroBackground";
 
+const passwordRules = [
+  {
+    id: "length",
+    label: "At least 8 characters",
+    test: (value: string) => value.length >= 8,
+  },
+  {
+    id: "uppercase",
+    label: "At least 1 uppercase letter (A-Z)",
+    test: (value: string) => /[A-Z]/.test(value),
+  },
+  {
+    id: "lowercase",
+    label: "At least 1 lowercase letter (a-z)",
+    test: (value: string) => /[a-z]/.test(value),
+  },
+  {
+    id: "number",
+    label: "At least 1 number (0-9)",
+    test: (value: string) => /\d/.test(value),
+  },
+  {
+    id: "special",
+    label: "At least 1 special character (!@#$%^&*)",
+    test: (value: string) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(value),
+  },
+];
+
 function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { register, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
+  const apiBaseUrl =
+    import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "/api";
+
+  const failedPasswordRules = passwordRules.filter(
+    (rule) => !rule.test(password),
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,18 +55,12 @@ function Register() {
       return;
     }
 
-    const validatePassword = (pass: string) => {
-      if (pass.length < 8) return "Password must be at least 8 characters";
-      if (!/[A-Z]/.test(pass)) return "Password must contain at least one uppercase letter";
-      if (!/[a-z]/.test(pass)) return "Password must contain at least one lowercase letter";
-      if (!/\d/.test(pass)) return "Password must contain at least one number";
-      if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pass)) return "Password must contain at least one special character (!@#$%^&*)";
-      return null;
-    };
-
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      toast.error(passwordError);
+    if (failedPasswordRules.length > 0) {
+      toast.error(
+        `Password requirements not met: ${failedPasswordRules
+          .map((rule) => rule.label)
+          .join(", ")}`,
+      );
       return;
     }
 
@@ -107,9 +135,26 @@ function Register() {
                   autoComplete="new-password"
                 />
               </div>
-              <p className="text-xs text-slate-400 mt-2 ml-1">
-                Minimum 6 characters
-              </p>
+              <div className="mt-3 space-y-1.5">
+                {passwordRules.map((rule) => {
+                  const passed = rule.test(password);
+                  return (
+                    <p
+                      key={rule.id}
+                      className={`text-xs flex items-center gap-2 ${
+                        passed ? "text-emerald-400" : "text-slate-400"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block w-1.5 h-1.5 rounded-full ${
+                          passed ? "bg-emerald-400" : "bg-slate-500"
+                        }`}
+                      />
+                      {rule.label}
+                    </p>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Confirm Password */}
@@ -172,12 +217,14 @@ function Register() {
                 <div className="w-full border-t border-slate-700/50"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-[#0f172a] px-2 text-slate-500 font-bold">Or continue with</span>
+                <span className="bg-[#0f172a] px-2 text-slate-500 font-bold">
+                  Or continue with
+                </span>
               </div>
             </div>
 
             <a
-              href={`${import.meta.env.VITE_API_URL}/auth/google`}
+              href={`${apiBaseUrl}/auth/google`}
               className="w-full py-3 px-4 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-bold shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-3 border border-slate-200"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">

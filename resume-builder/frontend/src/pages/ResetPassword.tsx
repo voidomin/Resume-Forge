@@ -11,6 +11,8 @@ function ResetPassword() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get("token");
+  const apiBaseUrl =
+    import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "/api";
 
   useEffect(() => {
     if (!token) {
@@ -30,7 +32,7 @@ function ResetPassword() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/reset-password`, {
+      const response = await fetch(`${apiBaseUrl}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, password }),
@@ -73,7 +75,10 @@ function ResetPassword() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* New Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-slate-300 mb-2"
+              >
                 New Password
               </label>
               <div className="relative group">
@@ -93,7 +98,10 @@ function ResetPassword() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-2">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-slate-300 mb-2"
+              >
                 Confirm New Password
               </label>
               <div className="relative group">
