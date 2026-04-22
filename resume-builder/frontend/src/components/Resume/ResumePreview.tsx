@@ -27,14 +27,14 @@ const MinimalistTemplate = React.lazy(() =>
 type DensityLevel = "normal" | "compact" | "ultra-compact";
 
 interface ResumePreviewProps {
-  resume: GeneratedResume;
-  template?: "modern" | "executive" | "minimalist" | "standard";
-  density?: DensityLevel;
+  readonly resume: GeneratedResume;
+  readonly template?: "modern" | "executive" | "minimalist" | "standard";
+  readonly density?: DensityLevel;
 }
 
 function ResumePreview({
   resume,
-  template = "modern",
+  template = "standard",
   density = "normal",
 }: ResumePreviewProps) {
   // Calculate density-based CSS scaling multipliers

@@ -95,39 +95,30 @@ export class ATSCheckerService {
    * Run all ATS compatibility checks on a generated resume
    */
   checkResume(resume: GeneratedResume, jobDescription?: string): ATSReport {
-    const checks: ATSCheckResult[] = [];
-
-    // 1. Standard Sections Check
-    checks.push(this.checkStandardSections(resume));
-
-    // 2. Contact Info Check
-    checks.push(this.checkContactInfo(resume));
-
-    // 3. Date Format Check
-    checks.push(this.checkDateFormats(resume));
-
-    // 4. Action Verbs Check
-    checks.push(this.checkActionVerbs(resume));
-
-    // 5. Resume Length Check
-    checks.push(this.checkResumeLength(resume));
-
-    // 6. Special Characters Check
-    checks.push(this.checkSpecialCharacters(resume));
-
-    // 7. Single Column Layout Check (our templates are always single column)
-    checks.push(this.checkSingleColumnLayout());
-
-    // 8. No Tables/Images Check (our generator doesn't add these)
-    checks.push(this.checkNoTablesImages());
-
-    // 9. Keyword Match Check (if JD provided)
-    if (jobDescription || resume.keywordAnalysis) {
-      checks.push(this.checkKeywordMatch(resume));
-    }
-
-    // 10. Professional Email Check
-    checks.push(this.checkProfessionalEmail(resume));
+    const checks: ATSCheckResult[] = [
+      // 1. Standard Sections Check
+      this.checkStandardSections(resume),
+      // 2. Contact Info Check
+      this.checkContactInfo(resume),
+      // 3. Date Format Check
+      this.checkDateFormats(resume),
+      // 4. Action Verbs Check
+      this.checkActionVerbs(resume),
+      // 5. Resume Length Check
+      this.checkResumeLength(resume),
+      // 6. Special Characters Check
+      this.checkSpecialCharacters(resume),
+      // 7. Single Column Layout Check (our templates are always single column)
+      this.checkSingleColumnLayout(),
+      // 8. No Tables/Images Check (our generator doesn't add these)
+      this.checkNoTablesImages(),
+      // 9. Keyword Match Check (if JD provided)
+      ...(jobDescription || resume.keywordAnalysis
+        ? [this.checkKeywordMatch(resume)]
+        : []),
+      // 10. Professional Email Check
+      this.checkProfessionalEmail(resume),
+    ];
 
     const passedChecks = checks.filter((c) => c.passed).length;
     const totalChecks = checks.length;
@@ -278,17 +269,22 @@ export class ATSCheckerService {
     });
 
     const passed = wordCount >= 150 && wordCount <= 800;
+    let details: string;
+
+    if (passed) {
+      details = `~${wordCount} words (optimal range)`;
+    } else if (wordCount < 150) {
+      details = `Only ~${wordCount} words. Add more detail to experiences.`;
+    } else {
+      details = `~${wordCount} words. Consider condensing for a 1-page resume.`;
+    }
 
     return {
       id: "resume-length",
       name: "Optimal Resume Length",
       description: "Resume has appropriate content density (150-800 words)",
       passed,
-      details: passed
-        ? `~${wordCount} words (optimal range)`
-        : wordCount < 150
-          ? `Only ~${wordCount} words. Add more detail to experiences.`
-          : `~${wordCount} words. Consider condensing for a 1-page resume.`,
+      details,
     };
   }
 

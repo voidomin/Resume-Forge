@@ -112,7 +112,7 @@ Once your master profile is complete, generate tailored resumes for specific job
 
 ### 3. ATS Optimization & Scoring
 
-ATS (Applicant Tracking System) scoring helps ensure your resume passes automated screening.
+ATS (Applicant Tracking System) scoring provides guidance to improve screening readiness, but it does not guarantee automated pass outcomes.
 
 #### Understanding Your ATS Score
 

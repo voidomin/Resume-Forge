@@ -105,7 +105,7 @@ interface GeneratedResume {
 function ResumeGenerator() {
   const [step, setStep] = useState<"input" | "generating" | "preview">("input");
   const [selectedTemplate, setSelectedTemplate] =
-    useState<TemplateType>("modern");
+    useState<TemplateType>("standard");
   const [jobDescription, setJobDescription] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [generatedResume, setGeneratedResume] =
@@ -226,11 +226,12 @@ function ResumeGenerator() {
       a.download = `Resume.${format}`;
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      a.remove();
       URL.revokeObjectURL(url);
 
       toast.success(`Downloaded as ${format.toUpperCase()}`);
     } catch (error) {
+      console.error(`Failed to download ${format.toUpperCase()}:`, error);
       toast.error(`Failed to download ${format.toUpperCase()}`);
     }
   };
@@ -265,10 +266,14 @@ function ResumeGenerator() {
 
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="target-role"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Target Role (optional)
               </label>
               <input
+                id="target-role"
                 type="text"
                 value={targetRole}
                 onChange={(e) => setTargetRole(e.target.value)}
@@ -281,10 +286,14 @@ function ResumeGenerator() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="job-description"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Job Description *
               </label>
               <textarea
+                id="job-description"
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
                 placeholder="Paste the full job description here...
@@ -479,9 +488,9 @@ Required Skills:
                             <div className="flex flex-wrap gap-1">
                               {generatedResume.atsScoreBreakdown.missingKeywords
                                 .slice(0, 3)
-                                .map((k, i) => (
+                                .map((k) => (
                                   <span
-                                    key={i}
+                                    key={k}
                                     className="px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-100 rounded text-[10px]"
                                   >
                                     {k}
@@ -521,9 +530,9 @@ Required Skills:
                         <div className="flex flex-wrap gap-1">
                           {generatedResume.keywords
                             .slice(0, 8)
-                            .map((keyword, i) => (
+                            .map((keyword) => (
                               <span
-                                key={i}
+                                key={keyword}
                                 className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full"
                               >
                                 {keyword}

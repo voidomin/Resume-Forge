@@ -99,7 +99,7 @@ function ResumeView() {
   const navigate = useNavigate();
   const [resume, setResume] = useState<Resume | null>(null);
   const [selectedTemplate, setSelectedTemplate] =
-    useState<TemplateType>("modern");
+    useState<TemplateType>("standard");
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
   const [atsReport, setAtsReport] = useState<any>(null);
@@ -111,6 +111,7 @@ function ResumeView() {
       setResume(response.data.resume);
       setAtsReport(response.data.atsReport || null);
     } catch (error) {
+      console.error("Failed to load resume:", error);
       toast.error("Failed to load resume");
       navigate("/dashboard");
     } finally {
@@ -139,26 +140,24 @@ function ResumeView() {
       resume?.content.contactInfo.name.replace(/\s+/g, "_") || "Resume";
 
     try {
-      const exportHtml = `<!DOCTYPE html><html><head><meta charset="utf-8" />
+      const exportHtml = `<head><meta charset="utf-8" />
         <style>
           @page { size: A4; margin: 0.5in; }
           * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
           body { margin: 0; padding: 0; background: #fff; }
           .resume-preview { width: 8.27in; height: 11.69in; box-shadow: none !important; border: none !important; }
         </style>
-      </head><body>${exportElement.innerHTML}</body></html>`;
+      </head><body>${exportElement.innerHTML}</body>`;
 
       if (format === "pdf") {
-        const printWindow = window.open("", "_blank");
+        const printWindow = globalThis.open("", "_blank");
         if (!printWindow) {
           toast.error("Popup blocked. Please allow popups to export PDF.");
           return;
         }
 
-        printWindow.document.open();
-        printWindow.document.write(exportHtml);
         printWindow.document.title = "";
-        printWindow.document.close();
+        printWindow.document.documentElement.innerHTML = exportHtml;
 
         printWindow.onload = () => {
           printWindow.focus();
@@ -185,11 +184,12 @@ function ResumeView() {
       a.download = `${fileBase}.docx`;
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      a.remove();
       URL.revokeObjectURL(url);
 
       toast.success("Downloaded as DOCX");
     } catch (error) {
+      console.error(`Failed to download ${format.toUpperCase()}:`, error);
       toast.error(`Failed to download ${format.toUpperCase()}`);
     }
   };
@@ -216,6 +216,7 @@ function ResumeView() {
       setAtsReport(response.data.atsReport || null);
       toast.success("Resume regenerated!");
     } catch (error) {
+      console.error("Failed to regenerate resume:", error);
       toast.error("Failed to regenerate resume");
     } finally {
       setRegenerating(false);
@@ -277,7 +278,7 @@ function ResumeView() {
 
               {/* Refresh Button */}
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => globalThis.location.reload()}
                 className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
                 title="Refresh the page"
               >
@@ -354,9 +355,9 @@ function ResumeView() {
                             <div className="flex flex-wrap gap-1">
                               {resume.content.atsScoreBreakdown.missingKeywords
                                 .slice(0, 3)
-                                .map((k, i) => (
+                                .map((k) => (
                                   <span
-                                    key={i}
+                                    key={k}
                                     className="px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-100 rounded text-[10px]"
                                   >
                                     {k}

@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 export function SkeletonLoader({
   className = "",
   count = 1,
@@ -5,12 +7,16 @@ export function SkeletonLoader({
   readonly className?: string;
   readonly count?: number;
 }) {
+  const skeletonKeys = useMemo(
+    () => Array.from({ length: count }, () => crypto.randomUUID()),
+    [count],
+  );
+
   return (
     <>
-      {Array.from({ length: count }).map((_, i) => (
+      {skeletonKeys.map((key) => (
         <div
-          // eslint-disable-next-line react/no-array-index-key
-          key={i}
+          key={key}
           className={`bg-gray-200 rounded-xl animate-pulse ${className}`}
         />
       ))}

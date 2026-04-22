@@ -20,6 +20,7 @@ main (Production) ◄──── PR Merge (Release Ready)
 ## Branches
 
 ### `main` (Production Branch)
+
 - **Purpose:** Stable, production-ready code only
 - **Protection:** Yes (requires PR review and passing checks)
 - **Deploy:** Automatic deployment to production (Netlify + Render)
@@ -27,6 +28,7 @@ main (Production) ◄──── PR Merge (Release Ready)
 - **Tag:** Version tags (v1.2.0) created on main
 
 **When to merge to main:**
+
 - Feature is complete and tested
 - PR approved by at least 1 reviewer
 - All status checks pass (SonarCloud, Tests, Build)
@@ -34,6 +36,7 @@ main (Production) ◄──── PR Merge (Release Ready)
 - No failing tests
 
 ### `develop` (Integration Branch)
+
 - **Purpose:** Integration point for all features before production
 - **Protection:** Recommended (but less strict than main)
 - **Deploy:** None (staging/preview only)
@@ -41,11 +44,13 @@ main (Production) ◄──── PR Merge (Release Ready)
 - **Lifecycle:** Features merge here first, then batched to main
 
 **When to merge to develop:**
+
 - Feature complete and self-tested
 - Code follows naming/style conventions
 - No merge conflicts with current develop
 
 ### Feature Branches
+
 - **Naming:** `feat/`, `fix/`, `perf/`, `docs/`, `test/`, `refactor/`, `chore/`, `ci/`
 - **Source:** Branch from `develop`
 - **Target:** Merge back to `develop` via PR
@@ -55,6 +60,7 @@ main (Production) ◄──── PR Merge (Release Ready)
 ## Workflow: Creating a Feature
 
 ### 1. Create Feature Branch
+
 ```bash
 # Update develop to latest
 git checkout develop
@@ -68,6 +74,7 @@ git checkout -b fix/auth-bug
 ```
 
 ### 2. Development Work
+
 ```bash
 # Make your commits with clear messages
 git add .
@@ -82,6 +89,7 @@ git push origin feat/my-new-feature
 ```
 
 ### 3. Create Pull Request (to develop)
+
 ```bash
 # After pushing, create PR on GitHub
 # Base: develop
@@ -95,11 +103,13 @@ git push origin feat/my-new-feature
 ```
 
 ### 4. Code Review
+
 - Address review comments
 - Push fixes to the same branch
 - Request re-review after changes
 
 ### 5. Merge to Develop
+
 ```bash
 # After approval and all checks pass
 # Use "Squash and merge" for clean history
@@ -111,6 +121,7 @@ git push origin --delete feat/my-new-feature
 ```
 
 ### 6. Merge to Main (Release)
+
 ```bash
 # When ready for production (usually weekly)
 # Create PR: develop → main
@@ -135,6 +146,7 @@ Follow **Conventional Commits** format:
 ```
 
 ### Type
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `perf:` - Performance improvement
@@ -145,6 +157,7 @@ Follow **Conventional Commits** format:
 - `ci:` - CI/CD changes
 
 ### Examples
+
 ```
 feat(auth): implement google oauth callback
 fix(password): correct validation regex pattern
@@ -159,18 +172,21 @@ ci: add sonarcloud configuration
 ## Status Checks (Must Pass Before Merge)
 
 ### On develop → main PR
+
 - ✅ Test & Deploy
 - ✅ SonarCloud Code Analysis (Quality Gate: ≤3% duplication)
 - ✅ Netlify Deploy Preview
 - ✅ Branch protection rules
 
 ### On feature → develop PR
+
 - ✅ SonarCloud Code Analysis (soft check)
 - ✅ 1 Approval required
 
 ## Release Schedule
 
 ### Weekly Release Process
+
 1. **Monday:** Batch completed features from develop
 2. **Create PR:** develop → main
 3. **Review:** Ensure quality gate passes
@@ -181,6 +197,7 @@ ci: add sonarcloud configuration
 ## Common Scenarios
 
 ### Scenario 1: Update Feature Branch from develop
+
 ```bash
 git fetch origin
 git rebase origin/develop
@@ -188,6 +205,7 @@ git push origin feat/my-feature --force-with-lease
 ```
 
 ### Scenario 2: Accidentally Committed to develop
+
 ```bash
 git log --oneline -5  # Find your commit
 git reset --soft HEAD~1  # Undo commit, keep changes
@@ -197,6 +215,7 @@ git push origin fix/my-fix
 ```
 
 ### Scenario 3: Need to Merge Latest Main into Feature
+
 ```bash
 git fetch origin
 git merge origin/main
@@ -205,6 +224,7 @@ git push origin feat/my-feature
 ```
 
 ### Scenario 4: Delete Old Stale Branches
+
 ```bash
 # Locally
 git branch -d old-branch
@@ -216,6 +236,7 @@ git push origin --delete old-branch
 ## Best Practices
 
 ### ✅ DO
+
 - Keep branches focused on single feature/fix
 - Push frequently to avoid loss
 - Write clear, descriptive commit messages
@@ -225,6 +246,7 @@ git push origin --delete old-branch
 - Rebase before merging to keep history clean
 
 ### ❌ DON'T
+
 - Push directly to main or develop
 - Leave branches stale/unmaintained
 - Create huge PRs with multiple features
@@ -236,6 +258,7 @@ git push origin --delete old-branch
 ## GitHub Settings (Recommended)
 
 ### Protection Rules for `main`
+
 - ✅ Require pull request reviews before merging (1 approval)
 - ✅ Require status checks to pass before merging
 - ✅ Require branches to be up to date before merging
@@ -243,6 +266,7 @@ git push origin --delete old-branch
 - ✅ Delete head branch on merge (auto-cleanup)
 
 ### Protection Rules for `develop`
+
 - ✅ Require pull request reviews before merging (1 approval)
 - ✅ Allow squash and merge
 - ✅ Delete head branch on merge (auto-cleanup)
@@ -250,6 +274,7 @@ git push origin --delete old-branch
 ## Tools
 
 ### Useful Git Commands
+
 ```bash
 # Show branches with last commit
 git branch -vv

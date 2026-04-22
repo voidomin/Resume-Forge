@@ -15,7 +15,7 @@ An **ATS-optimized, role-based resume builder** that generates tailored resumes 
 
 - **Master Profile Management** – Store all your experiences, skills, and education in one place
 - **AI-Powered Matching** – Automatically selects relevant content based on job descriptions using Gemini 3 Flash and fallback models
-- **ATS Optimization** – Ensures your resume passes Applicant Tracking Systems with a dedicated score and keyword analysis
+- **ATS Optimization** – Provides ATS-oriented scoring and keyword analysis to improve screening readiness (guidance, not a guarantee)
 - **A4 One-Page Constraint** – Real-time "Scale-to-Fit" logic ensures your resume stays on a single professional page
 - **AI Model Transparency** – Displays the exact AI model used for generation with clear fallback indicators
 - **Multiple Export Formats** – Download as professional PDF or editable DOCX
@@ -89,7 +89,6 @@ No installation required! Create an account and start building your resume immed
 ### Development
 
 Please refer to the [docs/](docs/) folder for detailed technical documentation.
-
 
 ---
 
@@ -224,7 +223,6 @@ Resume-Forge/
 - [ ] Mobile app (iOS/Android)
 - [ ] AI interview coach
 - [ ] Collaborative resume reviews
-
 
 ---
 

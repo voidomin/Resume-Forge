@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { config } from "dotenv";
-import path from "path";
+import path from "node:path";
 import { logger } from "../lib/logger";
 import { contentDensityEngine } from "../../../shared/design-system";
 
@@ -200,8 +200,8 @@ export interface GeneratedResume {
 }
 
 export class GeminiService {
-  private primaryModel = "gemini-2.5-flash";
-  private fallbackModels = [
+  private readonly primaryModel = "gemini-2.5-flash";
+  private readonly fallbackModels = [
     "gemini-2.5-flash-lite",
     "gemini-flash-latest",
     "gemini-pro-latest",
@@ -244,8 +244,8 @@ Return this exact JSON structure:
         const result = await withTimeout(model.generateContent(prompt));
         const response = result.response.text();
         const cleanJson = response
-          .replace(/```json\n?/g, "")
-          .replace(/```\n?/g, "")
+          .replaceAll("```json", "")
+          .replaceAll("```", "")
           .trim();
         const parsed = JSON.parse(cleanJson);
         logger.debug(`✅ JD analysis successful with ${modelName}`);
@@ -762,17 +762,41 @@ Return ONLY valid JSON with this structure:
   }
 }`;
 
+    const generateWithModel = async (modelName: string) => {
+      logger.debug(`Generating resume with model: ${modelName}...`);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await withTimeout(model.generateContent(prompt));
+      return { response: result.response.text(), modelUsed: modelName };
+    };
+
+    const retryRateLimitedModel = async (
+      modelName: string,
+      errorMessage: string,
+    ) => {
+      const match = /retry in\s+([\d.]+)\s*s/.exec(errorMessage);
+      const waitSeconds = match ? Number.parseFloat(match[1]) + 2 : 5;
+      logger.debug(
+        `Rate limit (429) hit for ${modelName}. Waiting ${waitSeconds.toFixed(1)}s...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
+
+      try {
+        logger.debug(`Retrying ${modelName} after wait...`);
+        return await generateWithModel(modelName);
+      } catch (retryError) {
+        logger.debug(
+          `Retry failed for ${modelName}: ${(retryError as Error).message}`,
+        );
+        return null;
+      }
+    };
+
     const generateWithFallback = async () => {
       const modelsToTry = [this.primaryModel, ...this.fallbackModels];
 
       for (const modelName of modelsToTry) {
         try {
-          logger.debug(`Generating resume with model: ${modelName}...`);
-          const currentModel = genAI.getGenerativeModel({ model: modelName });
-          const result = await withTimeout(
-            currentModel.generateContent(prompt),
-          );
-          return { response: result.response.text(), modelUsed: modelName };
+          return await generateWithModel(modelName);
         } catch (error: any) {
           const info = extractGeminiErrorInfo(error);
           logger.warn(
@@ -780,30 +804,19 @@ Return ONLY valid JSON with this structure:
           );
           logger.warn("Gemini error info:", info);
 
+          if (error.message?.includes("404")) {
+            continue;
+          }
+
           if (error.message?.includes("429")) {
-            const match = error.message.match(/retry in\s+([\d.]+)\s*s/);
-            const waitSeconds = match ? parseFloat(match[1]) + 2 : 5;
-            logger.debug(
-              `Rate limit (429) hit for ${modelName}. Waiting ${waitSeconds.toFixed(
-                1,
-              )}s...`,
+            const retryResult = await retryRateLimitedModel(
+              modelName,
+              error.message,
             );
-            await new Promise((resolve) =>
-              setTimeout(resolve, waitSeconds * 1000),
-            );
-            // Retry the same model once
-            try {
-              logger.debug(`Retrying ${modelName} after wait...`);
-              const retryModel = genAI.getGenerativeModel({ model: modelName });
-              const result = await withTimeout(
-                retryModel.generateContent(prompt),
-              );
-              return { response: result.response.text(), modelUsed: modelName };
-            } catch (retryError) {
-              continue;
+            if (retryResult) {
+              return retryResult;
             }
           }
-          if (error.message?.includes("404")) continue;
         }
       }
       logger.error("CRITICAL: All AI models failed to generate content.");
@@ -813,8 +826,8 @@ Return ONLY valid JSON with this structure:
     try {
       const { response, modelUsed } = await generateWithFallback();
       const cleanJson = response
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
+        .replaceAll("```json", "")
+        .replaceAll("```", "")
         .trim();
       const parsed = JSON.parse(cleanJson);
       parsed.modelUsed = modelUsed;
@@ -960,6 +973,9 @@ Return ONLY the improved bullet point, no quotes or explanation.`;
       const result = await model.generateContent(prompt);
       return result.response.text().trim();
     } catch (error) {
+      logger.debug(
+        `Bullet improvement fallback used: ${(error as Error).message}`,
+      );
       return bullet;
     }
   }
