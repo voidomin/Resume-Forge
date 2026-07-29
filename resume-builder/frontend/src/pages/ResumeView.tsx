@@ -96,6 +96,13 @@ interface Resume {
 
 function ResumeView() {
   const { id } = useParams<{ id: string }>();
+  // Remount the whole view when the id param changes so state resets
+  // naturally instead of manually clearing it inside an effect.
+  if (!id) return null;
+  return <ResumeViewContent key={id} id={id} />;
+}
+
+function ResumeViewContent({ id }: { id: string }) {
   const navigate = useNavigate();
   const [resume, setResume] = useState<Resume | null>(null);
   const [selectedTemplate, setSelectedTemplate] =
@@ -105,8 +112,8 @@ function ResumeView() {
   const [atsReport, setAtsReport] = useState<any>(null);
 
   const fetchResume = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const response = await api.get(`/resumes/${id}`);
       setResume(response.data.resume);
       setAtsReport(response.data.atsReport || null);
@@ -119,12 +126,8 @@ function ResumeView() {
   }, [id, navigate]);
 
   useEffect(() => {
-    // Reset state immediately when id changes to prevent stale data
-    setResume(null);
-    setAtsReport(null);
-    setLoading(true);
     fetchResume();
-  }, [id, fetchResume]);
+  }, [fetchResume]);
 
   const handleExport = async (format: "pdf" | "docx") => {
     if (!id) return;

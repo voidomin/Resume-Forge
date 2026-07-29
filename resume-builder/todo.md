@@ -8,7 +8,7 @@ Based on the `app-improvements.md` roadmap, the recent completion of the AI sche
 
 - [x] **Implement Component Lazy Loading**: Dynamically import heavy React components (like the PDF previewer and specific template renderers) to reduce the initial JavaScript payload.
 - [x] **Bundle Size Reduction**: Analyze and optimize dependencies.
-- [ ] **Lighthouse Audit**: Run a baseline Lighthouse test and ensure the performance score passes > 90.
+- [x] **Lighthouse Audit**: Baseline run scored 89 (render-blocking Google Fonts stylesheet cost ~1.3s). Deferred the font stylesheet with the standard `media="print" onload` non-blocking pattern; re-run scored 94.
 
 ### Backend & Database Optimization
 
@@ -35,7 +35,7 @@ While the UX and Performance tasks are nearly complete, the repository is missin
 
 - [x] **Root Documentation**: Create a comprehensive `README.md` in the root directory detailing the tech stack, architecture, and local development setup instructions.
 - [x] **Environment Templates**: Create `.env.example` files in both the frontend and backend to document required secrets (e.g., Gemini API keys, Database URLs, JWT secrets) without leaking actual keys.
-- [ ] **Frontend Linting Setup**: Install and configure ESLint for the `frontend` React application (Deferred due to ESM/CJS compatibility hurdles).
-- [ ] **Pre-commit Hooks (Husky)**: Set up Husky and lint-staged to automatically run formatters (Prettier) and linters before allowing a git commit.
+- [x] **Pre-commit Hooks (Husky)**: Root-level `package.json` + `.husky/pre-commit` wired to `lint-staged` — Prettier on all staged files, plus each project's own `npm run lint` when its files are touched.
 - [x] **CI/CD Pipeline**: Created GitHub Actions workflow (`.github/workflows/test-and-deploy.yml`) to automatically build and run tests (Jest & Playwright).
-- [ ] **Lighthouse Baseline Audit**: Run the final Lighthouse test to ensure the performance score passes > 90 (carried over from Performance Optimization).
+- [x] **Frontend Linting Setup**: Installed ESLint 9 flat config (`eslint.config.js`) with typescript-eslint + react-hooks/react-refresh plugins; backend's `.eslintrc.json` was also missing entirely (lint script was broken) and has been added.
+- [x] **Lighthouse Baseline Audit**: Done — see Performance Optimization section above (94/100 after the font-loading fix).

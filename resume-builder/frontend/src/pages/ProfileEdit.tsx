@@ -290,7 +290,7 @@ function ProfileEdit() {
     fetchProfile();
   }, []);
 
-  const fetchProfile = async () => {
+  async function fetchProfile() {
     try {
       const response = await api.get("/profile");
       const data = response.data.profile;
@@ -368,7 +368,7 @@ function ProfileEdit() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const saveProfile = async () => {
     setSaving(true);
