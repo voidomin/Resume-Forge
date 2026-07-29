@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthState>()(
         } catch (error: any) {
           const message = error.response?.data?.error || "Login failed";
           set({ error: message, isLoading: false });
-          throw new Error(message);
+          throw new Error(message, { cause: error });
         }
       },
 
@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>()(
         } catch (error: any) {
           const message = error.response?.data?.error || "Registration failed";
           set({ error: message, isLoading: false });
-          throw new Error(message);
+          throw new Error(message, { cause: error });
         }
       },
 

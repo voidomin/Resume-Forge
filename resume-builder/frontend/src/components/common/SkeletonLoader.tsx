@@ -9,7 +9,6 @@ export function SkeletonLoader({
     <>
       {Array.from({ length: count }).map((_, i) => (
         <div
-          // eslint-disable-next-line react/no-array-index-key
           key={i}
           className={`bg-gray-200 rounded-xl animate-pulse ${className}`}
         />

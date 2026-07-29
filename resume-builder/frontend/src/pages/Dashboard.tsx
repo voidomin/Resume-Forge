@@ -48,7 +48,7 @@ function Dashboard() {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  async function fetchData() {
     try {
       const [resumeRes, profileRes] = await Promise.all([
         api.get("/resumes"),
@@ -61,7 +61,7 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleDeleteResume = async (id: string) => {
     if (!confirm("Are you sure you want to delete this resume?")) return;

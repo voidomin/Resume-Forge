@@ -1,4 +1,3 @@
-/// <reference path="../types/fastify.d.ts" />
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import bcrypt from "bcrypt";
 import crypto from "node:crypto";
@@ -71,7 +70,8 @@ async function authRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
-        let { email, password } = request.body;
+        let { email } = request.body;
+        const { password } = request.body;
 
         // Validation
         if (!email || !password) {
@@ -148,7 +148,8 @@ async function authRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
-        let { email, password } = request.body;
+        let { email } = request.body;
+        const { password } = request.body;
 
         if (!email || !password) {
           return reply
