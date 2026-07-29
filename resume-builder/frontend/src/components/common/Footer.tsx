@@ -23,7 +23,7 @@ function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Quick Links</h3>
+            <h2 className="text-white font-semibold mb-4">Quick Links</h2>
             <ul className="space-y-2 text-sm">
               <li>
                 <a
@@ -54,7 +54,7 @@ function Footer() {
 
           {/* Features */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Features</h3>
+            <h2 className="text-white font-semibold mb-4">Features</h2>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>✓ AI-Powered Resume Generation</li>
               <li>✓ ATS Optimization</li>
@@ -66,7 +66,7 @@ function Footer() {
 
         {/* Bottom bar */}
         <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-gray-500 mb-4 md:mb-0">
+          <p className="text-sm text-gray-400 mb-4 md:mb-0">
             © {currentYear} SmartResume Builder. All rights reserved.
           </p>
           <div className="flex space-x-4">

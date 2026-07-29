@@ -762,6 +762,7 @@ function ProfileEdit() {
                 <button
                   onClick={cancelParsedData}
                   className="text-gray-400 hover:text-gray-600"
+                  aria-label="Dismiss parsed resume preview"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -1243,6 +1244,7 @@ function ProfileEdit() {
                             removeExperience(expIndex);
                           }}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          aria-label="Remove experience"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1396,6 +1398,7 @@ function ProfileEdit() {
                                   removeBullet(expIndex, bulletIndex)
                                 }
                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                aria-label="Remove bullet point"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -1464,6 +1467,7 @@ function ProfileEdit() {
                       <button
                         onClick={() => removeEducation(index)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        aria-label="Remove education"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1640,6 +1644,7 @@ function ProfileEdit() {
                             removeProject(index);
                           }}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          aria-label="Remove project"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1792,6 +1797,7 @@ function ProfileEdit() {
                             removeCertification(index);
                           }}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          aria-label="Remove certification"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1929,6 +1935,7 @@ function ProfileEdit() {
                   <button
                     onClick={addSkill}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    aria-label="Add skill"
                   >
                     <Plus className="w-5 h-5" />
                   </button>
@@ -2047,6 +2054,7 @@ function ProfileEdit() {
                             setCoursework(newCoursework);
                           }}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          aria-label="Remove coursework"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -2204,6 +2212,7 @@ function ProfileEdit() {
                             setLeadership(newLeadership);
                           }}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          aria-label="Remove leadership entry"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -2428,6 +2437,7 @@ function ProfileEdit() {
                             setAwards(newAwards);
                           }}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          aria-label="Remove award"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
