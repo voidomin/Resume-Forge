@@ -9,6 +9,22 @@ const profileCache = new LRUCache<string, any>({
   ttl: 1000 * 60 * 5, // 5 minutes
 });
 
+// Verifies a sub-resource (experience/education/skill/coursework/leadership/award)
+// both exists and belongs to the given profile, to prevent one user from
+// mutating another user's data by guessing an id.
+async function belongsToProfile(
+  model: {
+    findUnique: (args: {
+      where: { id: string };
+    }) => Promise<{ profileId: string } | null>;
+  },
+  id: string,
+  profileId: string,
+): Promise<boolean> {
+  const record = await model.findUnique({ where: { id } });
+  return !!record && record.profileId === profileId;
+}
+
 interface ProfileBody {
   firstName: string;
   lastName: string;
@@ -328,8 +344,17 @@ async function profileRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
         const expData = request.body;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (
+          !profile ||
+          !(await belongsToProfile(prisma.experience, id, profile.id))
+        ) {
+          return reply.status(404).send({ error: "Experience not found" });
+        }
 
         const experience = await prisma.experience.update({
           where: { id },
@@ -361,7 +386,17 @@ async function profileRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (
+          !profile ||
+          !(await belongsToProfile(prisma.experience, id, profile.id))
+        ) {
+          return reply.status(404).send({ error: "Experience not found" });
+        }
+
         await prisma.experience.delete({ where: { id } });
         return reply.send({ message: "Experience deleted" });
       } catch (error) {
@@ -422,7 +457,17 @@ async function profileRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (
+          !profile ||
+          !(await belongsToProfile(prisma.education, id, profile.id))
+        ) {
+          return reply.status(404).send({ error: "Education not found" });
+        }
+
         await prisma.education.delete({ where: { id } });
         return reply.send({ message: "Education deleted" });
       } catch (error) {
@@ -477,7 +522,17 @@ async function profileRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (
+          !profile ||
+          !(await belongsToProfile(prisma.skill, id, profile.id))
+        ) {
+          return reply.status(404).send({ error: "Skill not found" });
+        }
+
         await prisma.skill.delete({ where: { id } });
         return reply.send({ message: "Skill deleted" });
       } catch (error) {
@@ -717,8 +772,17 @@ async function profileRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
         const data = request.body;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (
+          !profile ||
+          !(await belongsToProfile(prisma.coursework, id, profile.id))
+        ) {
+          return reply.status(404).send({ error: "Coursework not found" });
+        }
 
         const coursework = await prisma.coursework.update({
           where: { id },
@@ -746,7 +810,17 @@ async function profileRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (
+          !profile ||
+          !(await belongsToProfile(prisma.coursework, id, profile.id))
+        ) {
+          return reply.status(404).send({ error: "Coursework not found" });
+        }
+
         await prisma.coursework.delete({ where: { id } });
         return reply.send({ message: "Coursework deleted" });
       } catch (error) {
@@ -824,8 +898,17 @@ async function profileRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
         const data = request.body;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (
+          !profile ||
+          !(await belongsToProfile(prisma.leadership, id, profile.id))
+        ) {
+          return reply.status(404).send({ error: "Leadership role not found" });
+        }
 
         const leadership = await prisma.leadership.update({
           where: { id },
@@ -859,7 +942,17 @@ async function profileRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (
+          !profile ||
+          !(await belongsToProfile(prisma.leadership, id, profile.id))
+        ) {
+          return reply.status(404).send({ error: "Leadership role not found" });
+        }
+
         await prisma.leadership.delete({ where: { id } });
         return reply.send({ message: "Leadership role deleted" });
       } catch (error) {
@@ -926,8 +1019,17 @@ async function profileRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
         const data = request.body;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (
+          !profile ||
+          !(await belongsToProfile(prisma.award, id, profile.id))
+        ) {
+          return reply.status(404).send({ error: "Award not found" });
+        }
 
         const award = await prisma.award.update({
           where: { id },
@@ -956,7 +1058,17 @@ async function profileRoutes(server: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       try {
+        const { userId } = (request as any).user;
         const { id } = request.params;
+
+        const profile = await prisma.profile.findUnique({ where: { userId } });
+        if (
+          !profile ||
+          !(await belongsToProfile(prisma.award, id, profile.id))
+        ) {
+          return reply.status(404).send({ error: "Award not found" });
+        }
+
         await prisma.award.delete({ where: { id } });
         return reply.send({ message: "Award deleted" });
       } catch (error) {
@@ -1061,7 +1173,9 @@ async function importEducation(
         startDate: edu.startDate,
         endDate: edu.endDate,
         gpa: edu.gpa,
-        achievements: edu.achievements ? JSON.stringify(edu.achievements) : null,
+        achievements: edu.achievements
+          ? JSON.stringify(edu.achievements)
+          : null,
       },
     });
   }
