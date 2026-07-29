@@ -10,8 +10,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node"
+    "resolveJsonModule": true
   },
   "include": ["src/**/*", "src/types/**/*.d.ts", "../shared/**/*"],
   "exclude": ["node_modules", "dist", "tests"]
