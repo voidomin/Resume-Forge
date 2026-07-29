@@ -133,7 +133,7 @@ function Login() {
                 <div className="w-full border-t border-slate-700/50"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-[#0f172a] px-2 text-slate-500 font-bold">
+                <span className="bg-[#0f172a] px-2 text-slate-400 font-bold">
                   Or continue with
                 </span>
               </div>
