@@ -1,0 +1,14 @@
+{
+  "name": "resume-forge",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Repo-level tooling (Husky pre-commit hooks, Prettier) for the resume-builder app",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.4.2"
+  }
+}
