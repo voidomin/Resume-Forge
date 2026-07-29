@@ -1,3 +1,4 @@
+import type {} from "../types/fastify";
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import bcrypt from "bcrypt";
 import crypto from "node:crypto";
@@ -260,7 +261,8 @@ async function authRoutes(server: FastifyInstance) {
         // For security, don't confirm if user exists or not
         if (!user) {
           return reply.send({
-            message: "If an account with that email exists, a reset link has been sent.",
+            message:
+              "If an account with that email exists, a reset link has been sent.",
           });
         }
 
@@ -278,7 +280,8 @@ async function authRoutes(server: FastifyInstance) {
         await sendResetEmail(email, resetToken);
 
         return reply.send({
-          message: "If an account with that email exists, a reset link has been sent.",
+          message:
+            "If an account with that email exists, a reset link has been sent.",
         });
       } catch (error) {
         request.log.error(error);
@@ -298,7 +301,9 @@ async function authRoutes(server: FastifyInstance) {
         const { token, password } = request.body;
 
         if (!token || !password) {
-          return reply.status(400).send({ error: "Token and password are required" });
+          return reply
+            .status(400)
+            .send({ error: "Token and password are required" });
         }
 
         // Validate password strength
@@ -318,7 +323,9 @@ async function authRoutes(server: FastifyInstance) {
         });
 
         if (!user) {
-          return reply.status(400).send({ error: "Invalid or expired reset token" });
+          return reply
+            .status(400)
+            .send({ error: "Invalid or expired reset token" });
         }
 
         // Hash new password
@@ -334,7 +341,9 @@ async function authRoutes(server: FastifyInstance) {
           },
         });
 
-        return reply.send({ message: "Password reset successful. You can now log in." });
+        return reply.send({
+          message: "Password reset successful. You can now log in.",
+        });
       } catch (error) {
         request.log.error(error);
         return reply.status(500).send({ error: "Failed to reset password" });
@@ -368,7 +377,9 @@ async function authRoutes(server: FastifyInstance) {
       };
 
       if (!googleUser.email) {
-        return reply.status(400).send({ error: "Google account must have an email" });
+        return reply
+          .status(400)
+          .send({ error: "Google account must have an email" });
       }
 
       // Find or create user
