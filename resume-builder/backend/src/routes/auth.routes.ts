@@ -25,6 +25,24 @@ interface ResetPasswordBody {
   password: string;
 }
 
+// Per-route rate limits, overridable via env vars (same pattern as the
+// app-wide default in index.ts) so CI/e2e runs and ops tuning don't need
+// a code change - e2e specs alone register several users per run.
+function routeRateLimit(
+  envPrefix: string,
+  defaultMax: number,
+  defaultWindow: string,
+) {
+  const max = Number.parseInt(
+    process.env[`${envPrefix}_RATE_LIMIT_MAX`] || String(defaultMax),
+    10,
+  );
+  return {
+    max: Number.isFinite(max) ? max : defaultMax,
+    timeWindow: process.env[`${envPrefix}_RATE_LIMIT_WINDOW`] || defaultWindow,
+  };
+}
+
 // Password reset tokens are high-entropy random values (not user-chosen
 // secrets), so a plain fast hash is sufficient here - unlike passwords,
 // they don't need bcrypt's slow, salted hashing to resist brute force.
@@ -75,7 +93,7 @@ async function authRoutes(server: FastifyInstance) {
   // Register new user
   server.post<{ Body: RegisterBody }>(
     "/register",
-    { config: { rateLimit: { max: 5, timeWindow: "1 hour" } } },
+    { config: { rateLimit: routeRateLimit("REGISTER", 5, "1 hour") } },
     async (
       request: FastifyRequest<{ Body: RegisterBody }>,
       reply: FastifyReply,
@@ -155,7 +173,7 @@ async function authRoutes(server: FastifyInstance) {
   // Login user
   server.post<{ Body: LoginBody }>(
     "/login",
-    { config: { rateLimit: { max: 10, timeWindow: "15 minutes" } } },
+    { config: { rateLimit: routeRateLimit("LOGIN", 10, "15 minutes") } },
     async (
       request: FastifyRequest<{ Body: LoginBody }>,
       reply: FastifyReply,
@@ -251,7 +269,11 @@ async function authRoutes(server: FastifyInstance) {
   // Forgot Password
   server.post<{ Body: ForgotPasswordBody }>(
     "/forgot-password",
-    { config: { rateLimit: { max: 5, timeWindow: "1 hour" } } },
+    {
+      config: {
+        rateLimit: routeRateLimit("FORGOT_PASSWORD", 5, "1 hour"),
+      },
+    },
     async (
       request: FastifyRequest<{ Body: ForgotPasswordBody }>,
       reply: FastifyReply,
