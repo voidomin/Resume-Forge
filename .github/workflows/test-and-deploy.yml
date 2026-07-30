@@ -48,7 +48,7 @@ jobs:
         run: cd resume-builder/backend && npm run build
 
       - name: Set Up Test Database Schema
-        run: cd resume-builder/backend && npx prisma db push --accept-data-loss
+        run: cd resume-builder/backend && npm run prisma:push:ci
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/resume_builder_test
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/resume_builder_test
