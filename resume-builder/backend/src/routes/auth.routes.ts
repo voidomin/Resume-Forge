@@ -25,6 +25,15 @@ interface ResetPasswordBody {
   password: string;
 }
 
+// Password reset tokens are high-entropy random values (not user-chosen
+// secrets), so a plain fast hash is sufficient here - unlike passwords,
+// they don't need bcrypt's slow, salted hashing to resist brute force.
+// Storing only the hash means a DB read/leak can't be used to reset
+// anyone's password directly.
+function hashResetToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
 // Password strength validation
 function validatePasswordStrength(password: string): {
   isValid: boolean;
@@ -272,11 +281,12 @@ async function authRoutes(server: FastifyInstance) {
         await prisma.user.update({
           where: { id: user.id },
           data: {
-            resetToken,
+            resetToken: hashResetToken(resetToken),
             resetTokenExpiry,
           },
         });
 
+        // Send the raw token in the email link - only its hash is stored
         await sendResetEmail(email, resetToken);
 
         return reply.send({
@@ -315,7 +325,7 @@ async function authRoutes(server: FastifyInstance) {
         // Find user with valid token and not expired
         const user = await prisma.user.findFirst({
           where: {
-            resetToken: token,
+            resetToken: hashResetToken(token),
             resetTokenExpiry: {
               gt: new Date(),
             },
