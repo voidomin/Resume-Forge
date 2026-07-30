@@ -118,6 +118,7 @@ async function authRoutes(server: FastifyInstance) {
         const result = await prisma.$transaction(async (tx) => {
           const newUser = await tx.user.create({
             data: { email, password: hashedPassword },
+            select: { id: true, email: true, createdAt: true },
           });
 
           const newProfile = await tx.profile.create({
