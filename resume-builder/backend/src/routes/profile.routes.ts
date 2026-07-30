@@ -9,6 +9,141 @@ const profileCache = new LRUCache<string, any>({
   ttl: 1000 * 60 * 5, // 5 minutes
 });
 
+// Loads the caller's profile and verifies the given sub-resource
+// (experience/education/skill/coursework/leadership/award) belongs to it,
+// sending a 404 (never confirming the id exists to a non-owner) and
+// returning null if either check fails. Used by every sub-resource
+// update/delete route to prevent one user from mutating another user's
+// data by guessing an id.
+async function requireOwnedRecord(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  model: {
+    findUnique: (args: {
+      where: { id: string };
+    }) => Promise<{ profileId: string } | null>;
+  },
+  id: string,
+  notFoundMessage: string,
+): Promise<boolean> {
+  const { userId } = (request as any).user;
+  const profile = await prisma.profile.findUnique({ where: { userId } });
+  const record = profile ? await model.findUnique({ where: { id } }) : null;
+
+  if (!profile || !record || record.profileId !== profile.id) {
+    reply.status(404).send({ error: notFoundMessage });
+    return false;
+  }
+  return true;
+}
+
+type OwnedModel = {
+  findUnique: (args: {
+    where: { id: string };
+  }) => Promise<{ profileId: string } | null>;
+};
+
+// Registers `DELETE <path>` for a profile sub-resource: verifies ownership,
+// deletes, and replies - shared across every sub-resource type so the
+// (ownership check + delete + response) shape isn't duplicated per model.
+function registerDeleteSubResourceRoute(
+  server: FastifyInstance,
+  path: string,
+  model: OwnedModel & {
+    delete: (args: { where: { id: string } }) => Promise<unknown>;
+  },
+  resourceName: string,
+) {
+  const lowerName =
+    resourceName.charAt(0).toLowerCase() + resourceName.slice(1);
+  server.delete<{ Params: { id: string } }>(
+    path,
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{ Params: { id: string } }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = request.params;
+        if (
+          !(await requireOwnedRecord(
+            request,
+            reply,
+            model,
+            id,
+            `${resourceName} not found`,
+          ))
+        ) {
+          return;
+        }
+
+        await model.delete({ where: { id } });
+        return reply.send({ message: `${resourceName} deleted` });
+      } catch (error) {
+        request.log.error(error);
+        return reply
+          .status(500)
+          .send({ error: `Failed to delete ${lowerName}` });
+      }
+    },
+  );
+}
+
+// Registers `PUT <path>` for a profile sub-resource: verifies ownership,
+// applies `buildData(body)` as the Prisma update payload, and replies under
+// `responseKey` - shared across every sub-resource type for the same reason
+// as registerDeleteSubResourceRoute above.
+function registerUpdateSubResourceRoute<TBody>(
+  server: FastifyInstance,
+  path: string,
+  model: OwnedModel & {
+    update: (args: { where: { id: string }; data: unknown }) => Promise<any>;
+  },
+  resourceName: string,
+  responseKey: string,
+  buildData: (body: TBody) => Record<string, unknown>,
+) {
+  const lowerName =
+    resourceName.charAt(0).toLowerCase() + resourceName.slice(1);
+  server.put<{ Body: TBody; Params: { id: string } }>(
+    path,
+    { preHandler: authenticateToken },
+    async (
+      request: FastifyRequest<{ Body: TBody; Params: { id: string } }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = request.params;
+        if (
+          !(await requireOwnedRecord(
+            request,
+            reply,
+            model,
+            id,
+            `${resourceName} not found`,
+          ))
+        ) {
+          return;
+        }
+
+        const updated = await model.update({
+          where: { id },
+          data: buildData(request.body as TBody),
+        });
+        return reply.send({
+          [responseKey]: updated,
+          message: `${resourceName} updated`,
+        });
+      } catch (error) {
+        request.log.error(error);
+        return reply
+          .status(500)
+          .send({ error: `Failed to update ${lowerName}` });
+      }
+    },
+  );
+}
+
 interface ProfileBody {
   firstName: string;
   lastName: string;
@@ -320,55 +455,29 @@ async function profileRoutes(server: FastifyInstance) {
   );
 
   // Update experience
-  server.put<{ Body: ExperienceBody; Params: { id: string } }>(
+  registerUpdateSubResourceRoute<ExperienceBody>(
+    server,
     "/experiences/:id",
-    { preHandler: authenticateToken },
-    async (
-      request: FastifyRequest<{ Body: ExperienceBody; Params: { id: string } }>,
-      reply: FastifyReply,
-    ) => {
-      try {
-        const { id } = request.params;
-        const expData = request.body;
-
-        const experience = await prisma.experience.update({
-          where: { id },
-          data: {
-            company: expData.company,
-            role: expData.role,
-            location: expData.location,
-            startDate: expData.startDate,
-            endDate: expData.endDate,
-            current: expData.current,
-            bullets: JSON.stringify(expData.bullets || []),
-          },
-        });
-
-        return reply.send({ experience, message: "Experience updated" });
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ error: "Failed to update experience" });
-      }
-    },
+    prisma.experience,
+    "Experience",
+    "experience",
+    (body) => ({
+      company: body.company,
+      role: body.role,
+      location: body.location,
+      startDate: body.startDate,
+      endDate: body.endDate,
+      current: body.current,
+      bullets: JSON.stringify(body.bullets || []),
+    }),
   );
 
   // Delete experience
-  server.delete<{ Params: { id: string } }>(
+  registerDeleteSubResourceRoute(
+    server,
     "/experiences/:id",
-    { preHandler: authenticateToken },
-    async (
-      request: FastifyRequest<{ Params: { id: string } }>,
-      reply: FastifyReply,
-    ) => {
-      try {
-        const { id } = request.params;
-        await prisma.experience.delete({ where: { id } });
-        return reply.send({ message: "Experience deleted" });
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ error: "Failed to delete experience" });
-      }
-    },
+    prisma.experience,
+    "Experience",
   );
 
   // Add education
@@ -414,22 +523,11 @@ async function profileRoutes(server: FastifyInstance) {
   );
 
   // Delete education
-  server.delete<{ Params: { id: string } }>(
+  registerDeleteSubResourceRoute(
+    server,
     "/education/:id",
-    { preHandler: authenticateToken },
-    async (
-      request: FastifyRequest<{ Params: { id: string } }>,
-      reply: FastifyReply,
-    ) => {
-      try {
-        const { id } = request.params;
-        await prisma.education.delete({ where: { id } });
-        return reply.send({ message: "Education deleted" });
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ error: "Failed to delete education" });
-      }
-    },
+    prisma.education,
+    "Education",
   );
 
   // Add skill
@@ -469,23 +567,7 @@ async function profileRoutes(server: FastifyInstance) {
   );
 
   // Delete skill
-  server.delete<{ Params: { id: string } }>(
-    "/skills/:id",
-    { preHandler: authenticateToken },
-    async (
-      request: FastifyRequest<{ Params: { id: string } }>,
-      reply: FastifyReply,
-    ) => {
-      try {
-        const { id } = request.params;
-        await prisma.skill.delete({ where: { id } });
-        return reply.send({ message: "Skill deleted" });
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ error: "Failed to delete skill" });
-      }
-    },
-  );
+  registerDeleteSubResourceRoute(server, "/skills/:id", prisma.skill, "Skill");
 
   // Bulk add skills
   server.post<{ Body: { skills: SkillBody[] } }>(
@@ -706,54 +788,25 @@ async function profileRoutes(server: FastifyInstance) {
   );
 
   // Update coursework
-  server.put<{ Body: CourseworkBody; Params: { id: string } }>(
+  registerUpdateSubResourceRoute<CourseworkBody>(
+    server,
     "/coursework/:id",
-    { preHandler: authenticateToken },
-    async (
-      request: FastifyRequest<{
-        Body: CourseworkBody;
-        Params: { id: string };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      try {
-        const { id } = request.params;
-        const data = request.body;
-
-        const coursework = await prisma.coursework.update({
-          where: { id },
-          data: {
-            courseName: data.courseName,
-            topic: data.topic,
-            institution: data.institution,
-          },
-        });
-
-        return reply.send({ coursework, message: "Coursework updated" });
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ error: "Failed to update coursework" });
-      }
-    },
+    prisma.coursework,
+    "Coursework",
+    "coursework",
+    (body) => ({
+      courseName: body.courseName,
+      topic: body.topic,
+      institution: body.institution,
+    }),
   );
 
   // Delete coursework
-  server.delete<{ Params: { id: string } }>(
+  registerDeleteSubResourceRoute(
+    server,
     "/coursework/:id",
-    { preHandler: authenticateToken },
-    async (
-      request: FastifyRequest<{ Params: { id: string } }>,
-      reply: FastifyReply,
-    ) => {
-      try {
-        const { id } = request.params;
-        await prisma.coursework.delete({ where: { id } });
-        return reply.send({ message: "Coursework deleted" });
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ error: "Failed to delete coursework" });
-      }
-    },
+    prisma.coursework,
+    "Coursework",
   );
 
   // ==================== LEADERSHIP ROUTES ====================
@@ -813,62 +866,29 @@ async function profileRoutes(server: FastifyInstance) {
   );
 
   // Update leadership
-  server.put<{ Body: LeadershipBody; Params: { id: string } }>(
+  registerUpdateSubResourceRoute<LeadershipBody>(
+    server,
     "/leadership/:id",
-    { preHandler: authenticateToken },
-    async (
-      request: FastifyRequest<{
-        Body: LeadershipBody;
-        Params: { id: string };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      try {
-        const { id } = request.params;
-        const data = request.body;
-
-        const leadership = await prisma.leadership.update({
-          where: { id },
-          data: {
-            title: data.title,
-            organization: data.organization,
-            location: data.location,
-            startDate: data.startDate,
-            endDate: data.endDate,
-            current: data.current,
-            description: data.description,
-          },
-        });
-
-        return reply.send({ leadership, message: "Leadership role updated" });
-      } catch (error) {
-        request.log.error(error);
-        return reply
-          .status(500)
-          .send({ error: "Failed to update leadership role" });
-      }
-    },
+    prisma.leadership,
+    "Leadership role",
+    "leadership",
+    (body) => ({
+      title: body.title,
+      organization: body.organization,
+      location: body.location,
+      startDate: body.startDate,
+      endDate: body.endDate,
+      current: body.current,
+      description: body.description,
+    }),
   );
 
   // Delete leadership
-  server.delete<{ Params: { id: string } }>(
+  registerDeleteSubResourceRoute(
+    server,
     "/leadership/:id",
-    { preHandler: authenticateToken },
-    async (
-      request: FastifyRequest<{ Params: { id: string } }>,
-      reply: FastifyReply,
-    ) => {
-      try {
-        const { id } = request.params;
-        await prisma.leadership.delete({ where: { id } });
-        return reply.send({ message: "Leadership role deleted" });
-      } catch (error) {
-        request.log.error(error);
-        return reply
-          .status(500)
-          .send({ error: "Failed to delete leadership role" });
-      }
-    },
+    prisma.leadership,
+    "Leadership role",
   );
 
   // ==================== AWARDS ROUTES ====================
@@ -918,53 +938,22 @@ async function profileRoutes(server: FastifyInstance) {
   );
 
   // Update award
-  server.put<{ Body: AwardBody; Params: { id: string } }>(
+  registerUpdateSubResourceRoute<AwardBody>(
+    server,
     "/awards/:id",
-    { preHandler: authenticateToken },
-    async (
-      request: FastifyRequest<{ Body: AwardBody; Params: { id: string } }>,
-      reply: FastifyReply,
-    ) => {
-      try {
-        const { id } = request.params;
-        const data = request.body;
-
-        const award = await prisma.award.update({
-          where: { id },
-          data: {
-            awardName: data.awardName,
-            organization: data.organization,
-            awardDate: data.awardDate,
-            description: data.description,
-          },
-        });
-
-        return reply.send({ award, message: "Award updated" });
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ error: "Failed to update award" });
-      }
-    },
+    prisma.award,
+    "Award",
+    "award",
+    (body) => ({
+      awardName: body.awardName,
+      organization: body.organization,
+      awardDate: body.awardDate,
+      description: body.description,
+    }),
   );
 
   // Delete award
-  server.delete<{ Params: { id: string } }>(
-    "/awards/:id",
-    { preHandler: authenticateToken },
-    async (
-      request: FastifyRequest<{ Params: { id: string } }>,
-      reply: FastifyReply,
-    ) => {
-      try {
-        const { id } = request.params;
-        await prisma.award.delete({ where: { id } });
-        return reply.send({ message: "Award deleted" });
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ error: "Failed to delete award" });
-      }
-    },
-  );
+  registerDeleteSubResourceRoute(server, "/awards/:id", prisma.award, "Award");
 }
 
 /**
@@ -1061,7 +1050,9 @@ async function importEducation(
         startDate: edu.startDate,
         endDate: edu.endDate,
         gpa: edu.gpa,
-        achievements: edu.achievements ? JSON.stringify(edu.achievements) : null,
+        achievements: edu.achievements
+          ? JSON.stringify(edu.achievements)
+          : null,
       },
     });
   }

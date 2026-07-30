@@ -117,7 +117,9 @@ async function registerPlugins() {
       auth: oauth2.GOOGLE_CONFIGURATION,
     },
     startRedirectPath: "/api/auth/google",
-    callbackUri: process.env.GOOGLE_CALLBACK_URL || `${process.env.API_URL || "http://localhost:3000"}/api/auth/google/callback`,
+    callbackUri:
+      process.env.GOOGLE_CALLBACK_URL ||
+      `${process.env.API_URL || "http://localhost:3000"}/api/auth/google/callback`,
   });
 }
 
