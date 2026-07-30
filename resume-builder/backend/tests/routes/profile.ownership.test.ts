@@ -14,6 +14,12 @@ import { prisma } from "../setup";
  * oauth2/swagger/rate-limit aren't relevant to this check and only add
  * risk/noise to a route-level test.
  */
+// beforeAll does 2 real bcrypt hashes (cost 10) plus several sequential
+// DB round trips via server.inject() - comfortably over Jest's default
+// 5000ms hook timeout on a loaded CI runner. No other test file in this
+// repo does real bcrypt+DB+HTTP work, so this is the first to need it.
+jest.setTimeout(30000);
+
 describe("Profile sub-resource ownership", () => {
   let server: FastifyInstance;
   const password = "TestPassword123!";
