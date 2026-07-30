@@ -1,11 +1,18 @@
-import type { FastifyInstance } from "fastify";
-import { buildServer } from "../../src/index";
+import Fastify, { FastifyInstance } from "fastify";
+import jwtPlugin from "@fastify/jwt";
+import authRoutes from "../../src/routes/auth.routes";
+import profileRoutes from "../../src/routes/profile.routes";
 import { prisma } from "../setup";
 
 /**
  * Regression tests for the IDOR fix: profile sub-resource update/delete
  * routes must verify the record belongs to the authenticated user's own
  * profile, not just that the record exists.
+ *
+ * Builds a minimal Fastify instance (just JWT + the two route modules
+ * under test) rather than the full production app, since plugins like
+ * oauth2/swagger/rate-limit aren't relevant to this check and only add
+ * risk/noise to a route-level test.
  */
 describe("Profile sub-resource ownership", () => {
   let server: FastifyInstance;
@@ -32,7 +39,12 @@ describe("Profile sub-resource ownership", () => {
   }
 
   beforeAll(async () => {
-    server = await buildServer();
+    server = Fastify();
+    await server.register(jwtPlugin, {
+      secret: process.env.JWT_SECRET as string,
+    });
+    await server.register(authRoutes, { prefix: "/api/auth" });
+    await server.register(profileRoutes, { prefix: "/api/profile" });
     await server.ready();
 
     const a = await register(userAEmail);

@@ -5,7 +5,6 @@ import { afterAll, beforeEach } from "@jest/globals";
 process.env.NODE_ENV = "test";
 process.env.JWT_SECRET = "test-secret-key-minimum-32-characters-long";
 process.env.GEMINI_API_KEY = "test-key";
-process.env.FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // Prisma client for testing
 export const prisma = new PrismaClient();

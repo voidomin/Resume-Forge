@@ -49,8 +49,17 @@ import authRoutes from "./routes/auth.routes";
 import profileRoutes from "./routes/profile.routes";
 import resumeRoutes from "./routes/resume.routes";
 
+// Validate before starting
+validateEnvironment();
+
+const server = Fastify({
+  logger: {
+    level: process.env.LOG_LEVEL || "info",
+  },
+});
+
 // Register plugins
-async function registerPlugins(server: ReturnType<typeof Fastify>) {
+async function registerPlugins() {
   // Request ID tracking middleware
   server.addHook("onRequest", requestIdMiddleware);
 
@@ -115,14 +124,42 @@ async function registerPlugins(server: ReturnType<typeof Fastify>) {
 }
 
 // Register routes
-async function registerRoutes(server: ReturnType<typeof Fastify>) {
+async function registerRoutes() {
   server.register(authRoutes, { prefix: "/api/auth" });
   server.register(profileRoutes, { prefix: "/api/profile" });
   server.register(resumeRoutes, { prefix: "/api/resumes" });
 }
 
+// Health check
+server.get("/health", async () => {
+  return { status: "ok", timestamp: new Date().toISOString() };
+});
+
+// Root route
+server.get("/", async () => {
+  return {
+    message: "Resume Builder API",
+    version: "1.0.0",
+    endpoints: {
+      health: "/health",
+      auth: "/api/auth",
+      profile: "/api/profile",
+      resumes: "/api/resumes",
+    },
+  };
+});
+
+// Error handler
+server.setErrorHandler((error: any, request, reply) => {
+  server.log.error(error);
+  reply.status(error.statusCode || 500).send({
+    error: error.message || "Internal Server Error",
+    statusCode: error.statusCode || 500,
+  });
+});
+
 // Register API documentation
-async function registerDocumentation(server: ReturnType<typeof Fastify>) {
+async function registerDocumentation() {
   await server.register(swagger, {
     swagger: {
       info: {
@@ -160,53 +197,12 @@ async function registerDocumentation(server: ReturnType<typeof Fastify>) {
   });
 }
 
-// Builds a fully configured Fastify instance without binding a port -
-// used both by the real server (below) and by route-level tests via .inject().
-export async function buildServer() {
-  validateEnvironment();
-
-  const server = Fastify({
-    logger: {
-      level: process.env.LOG_LEVEL || "info",
-    },
-  });
-
-  await registerPlugins(server);
-  await registerRoutes(server);
-  await registerDocumentation(server);
-
-  server.get("/health", async () => {
-    return { status: "ok", timestamp: new Date().toISOString() };
-  });
-
-  server.get("/", async () => {
-    return {
-      message: "Resume Builder API",
-      version: "1.0.0",
-      endpoints: {
-        health: "/health",
-        auth: "/api/auth",
-        profile: "/api/profile",
-        resumes: "/api/resumes",
-      },
-    };
-  });
-
-  server.setErrorHandler((error: any, request, reply) => {
-    server.log.error(error);
-    reply.status(error.statusCode || 500).send({
-      error: error.message || "Internal Server Error",
-      statusCode: error.statusCode || 500,
-    });
-  });
-
-  return server;
-}
-
 // Start server
 const start = async () => {
   try {
-    const server = await buildServer();
+    await registerPlugins();
+    await registerRoutes();
+    await registerDocumentation();
 
     const port = Number.parseInt(process.env.PORT || "3000", 10);
     await server.listen({ port, host: "0.0.0.0" });
@@ -225,13 +221,9 @@ const start = async () => {
 ╚══════════════════════════════════════════════════════════╝
     `);
   } catch (err) {
-    console.error(err);
+    server.log.error(err);
     process.exit(1);
   }
 };
 
-// Only auto-start when this file is the actual entrypoint (`ts-node src/index.ts`,
-// or `node dist/.../index.js`) - not when imported by tests for buildServer().
-if (require.main === module) {
-  start();
-}
+start();
